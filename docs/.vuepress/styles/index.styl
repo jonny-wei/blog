@@ -1,0 +1,41 @@
+html {
+    ::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: $accentColor;
+    }
+
+    ::-webkit-scrollbar-track {
+        -webkit-box-shadow: inset 0 0 3px rgba(0, 0, 0, 0.3);
+        background: #fff;
+    }
+
+    ::-webkit-scrollbar-thumb:vertical {
+        background: $accentColor;
+    }
+}
+
+.theme-container {
+    ::-webkit-scrollbar {
+        display: none;
+    }
+}
+
+.right-anchor {
+    ::-webkit-scrollbar {
+        display: none;
+    }
+}
+
+.theme-default-content{
+    margin: 0 2rem!important;
+}
+
+@media screen and (max-width: 1500px) {
+    .right-anchor {
+        display: none !important;
+    }
+}

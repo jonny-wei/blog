@@ -1,0 +1,36 @@
+{
+  "name": "blog",
+  "version": "1.0.0",
+  "description": "花帽子的博客",
+  "main": "index.js",
+  "scripts": {
+    "docs:dev": "vuepress dev docs",
+    "docs:build": "vuepress build docs",
+    "deploy": "bash deploy.sh",
+    "deploy:build": "vuepress build docs && gh-pages -d docs/.vuepress/dist -b master -r https://github.com/jonny-wei/blog.git"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jonny-wei/blog.git"
+  },
+  "keywords": [
+    "blog",
+    "vuepress"
+  ],
+  "author": "jonny-wei",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/jonny-wei/blog/issues"
+  },
+  "homepage": "https://github.com/jonny-wei/blog#readme",
+  "devDependencies": {
+    "@vuepress/plugin-back-to-top": "^1.7.1",
+    "@vuepress/plugin-medium-zoom": "^1.7.1",
+    "@vuepress/plugin-pwa": "^1.7.1",
+    "gh-pages": "^3.1.0",
+    "vuepress": "^1.7.1",
+    "vuepress-plugin-reading-progress": "^1.0.10",
+    "vuepress-plugin-reading-time": "^0.1.1",
+    "vuepress-plugin-right-anchor": "^0.4.5"
+  }
+}
