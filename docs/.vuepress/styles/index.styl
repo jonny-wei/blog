@@ -25,16 +25,22 @@ html {
 }
 
 .right-anchor {
+    max-width 12.5rem
     ::-webkit-scrollbar {
         display: none;
     }
 }
 
 .theme-default-content{
-    margin: 0 2rem!important;
+    margin: 0 !important;
+    padding: 2rem 14rem 2rem 6rem!important;
 }
 
-@media screen and (max-width: 1500px) {
+.page-edit,.page-nav{
+     padding: 2rem 14rem 2rem 6rem!important;
+}
+
+@media screen and (max-width: 1200px) {
     .right-anchor {
         display: none !important;
     }
