@@ -32,6 +32,9 @@ html {
 }
 
 .theme-default-content{
+    ::-webkit-scrollbar {
+        display: block;
+    }
     margin: 0 !important;
     padding: 2rem 14rem 2rem 6rem!important;
 }
@@ -41,6 +44,13 @@ html {
 }
 
 @media screen and (max-width: 1200px) {
+    .theme-default-content{
+        ::-webkit-scrollbar {
+            display: block;
+        }
+        margin: 0 !important;
+        padding: 2rem 6rem 2rem 6rem!important;
+    }
     .right-anchor {
         display: none !important;
     }
