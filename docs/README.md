@@ -4,7 +4,7 @@ heroImage: /hero.jpg
 heroText: 花帽子的博客
 tagline: 我命由我不由天，学习吧少年！
 actionText: 阅读文章
-actionLink: /vue/
+actionLink: /vue/vue/vue-render.html
 features:
 - title: Vue专题
   details: 收录vue,vue-router,vuex知识和底层源码解析,收录vue3的一些新特性。

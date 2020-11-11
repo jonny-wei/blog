@@ -1,13 +1,13 @@
 {
   "name": "blog",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "花帽子的博客",
   "main": "index.js",
   "scripts": {
     "docs:dev": "vuepress dev docs",
     "docs:build": "vuepress build docs",
     "deploy": "bash deploy.sh",
-    "deploy:build": "vuepress build docs && gh-pages -d docs/.vuepress/dist -b master -r https://github.com/jonny-wei/blog.git"
+    "deploy:build": "vuepress build docs && gh-pages -d docs/.vuepress/dist -b build -r https://github.com/jonny-wei/blog.git"
   },
   "repository": {
     "type": "git",

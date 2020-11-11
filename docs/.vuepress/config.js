@@ -153,7 +153,7 @@ module.exports = {
     ['meta', { name: 'msapplication-TileImage', content: '/icons/ms-icon-144x144.png' }],
     ['meta', { name: 'msapplication-TileColor', content: '#000000' }]
   ],
-  dest: '.vuepress/dist',
+  dest: 'docs/.vuepress/dist',
   port: 9999,
   themeConfig: {
     logo: '/logo.png',
@@ -187,7 +187,7 @@ module.exports = {
     ['@vuepress/back-to-top',true],
     ['@vuepress/medium-zoom',true],
     ['vuepress-plugin-reading-time'],
-    [''],
+    ['reading-progress'],
     [
       '@vuepress/pwa',
       {
