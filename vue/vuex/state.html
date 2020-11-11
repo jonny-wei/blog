@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>State 相关 | 花帽子的博客</title>
+    <meta name="generator" content="VuePress 1.7.1">
+    <link rel="icon" href="/blog/logo.png">
+    <link rel="manifest" href="/blog/manifest.json">
+    <link rel="apple-touch-icon" href="/blog/images/icons/apple-icon-152x152.png">
+    <meta name="description" content="我命由我不由天，学习吧少年">
+    <meta name="theme-color" content="#3eaf7c">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="msapplication-TileImage" content="/icons/ms-icon-144x144.png">
+    <meta name="msapplication-TileColor" content="#000000">
+    
+    <link rel="preload" href="/blog/assets/css/0.styles.dbb62a93.css" as="style"><link rel="preload" href="/blog/assets/js/app.566cf3e9.js" as="script"><link rel="preload" href="/blog/assets/js/2.4f9efc98.js" as="script"><link rel="preload" href="/blog/assets/js/44.bd86ca74.js" as="script"><link rel="preload" href="/blog/assets/js/3.07d27621.js" as="script"><link rel="prefetch" href="/blog/assets/js/10.e0ef691c.js"><link rel="prefetch" href="/blog/assets/js/11.34ce1eef.js"><link rel="prefetch" href="/blog/assets/js/12.a515e35b.js"><link rel="prefetch" href="/blog/assets/js/13.270a6794.js"><link rel="prefetch" href="/blog/assets/js/14.9092cece.js"><link rel="prefetch" href="/blog/assets/js/15.c63721c9.js"><link rel="prefetch" href="/blog/assets/js/16.ab1faabc.js"><link rel="prefetch" href="/blog/assets/js/17.447660d7.js"><link rel="prefetch" href="/blog/assets/js/18.88cfe15f.js"><link rel="prefetch" href="/blog/assets/js/19.670ddd74.js"><link rel="prefetch" href="/blog/assets/js/20.d76d0bab.js"><link rel="prefetch" href="/blog/assets/js/21.3bd7d10d.js"><link rel="prefetch" href="/blog/assets/js/22.bfea1beb.js"><link rel="prefetch" href="/blog/assets/js/23.52be8b8c.js"><link rel="prefetch" href="/blog/assets/js/24.8de3d90d.js"><link rel="prefetch" href="/blog/assets/js/25.8fd7fb08.js"><link rel="prefetch" href="/blog/assets/js/26.996765cf.js"><link rel="prefetch" href="/blog/assets/js/27.10dc293f.js"><link rel="prefetch" href="/blog/assets/js/28.6cdbdc05.js"><link rel="prefetch" href="/blog/assets/js/29.ae2811a9.js"><link rel="prefetch" href="/blog/assets/js/30.e8190a3f.js"><link rel="prefetch" href="/blog/assets/js/31.7fbdde0b.js"><link rel="prefetch" href="/blog/assets/js/32.82a30c77.js"><link rel="prefetch" href="/blog/assets/js/33.59a8034b.js"><link rel="prefetch" href="/blog/assets/js/34.e836d9f2.js"><link rel="prefetch" href="/blog/assets/js/35.1441a461.js"><link rel="prefetch" href="/blog/assets/js/36.b2d96674.js"><link rel="prefetch" href="/blog/assets/js/37.59ba895f.js"><link rel="prefetch" href="/blog/assets/js/38.4017e48c.js"><link rel="prefetch" href="/blog/assets/js/39.625e0490.js"><link rel="prefetch" href="/blog/assets/js/4.d42ebbba.js"><link rel="prefetch" href="/blog/assets/js/40.ff816dd8.js"><link rel="prefetch" href="/blog/assets/js/41.eb69ae8e.js"><link rel="prefetch" href="/blog/assets/js/42.f2d91b93.js"><link rel="prefetch" href="/blog/assets/js/43.828b72e0.js"><link rel="prefetch" href="/blog/assets/js/45.d0b8236b.js"><link rel="prefetch" href="/blog/assets/js/46.0b7bd0c7.js"><link rel="prefetch" href="/blog/assets/js/5.5d40c251.js"><link rel="prefetch" href="/blog/assets/js/6.08d6e999.js"><link rel="prefetch" href="/blog/assets/js/7.96560134.js"><link rel="prefetch" href="/blog/assets/js/8.f4a7eed1.js"><link rel="prefetch" href="/blog/assets/js/9.2f37877f.js">
+    <link rel="stylesheet" href="/blog/assets/css/0.styles.dbb62a93.css">
+  </head>
+  <body>
+    <div id="app" data-server-rendered="true"><div class="theme-container"><header class="navbar"><div class="sidebar-button"><svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="img" viewBox="0 0 448 512" class="icon"><path fill="currentColor" d="M436 124H12c-6.627 0-12-5.373-12-12V80c0-6.627 5.373-12 12-12h424c6.627 0 12 5.373 12 12v32c0 6.627-5.373 12-12 12zm0 160H12c-6.627 0-12-5.373-12-12v-32c0-6.627 5.373-12 12-12h424c6.627 0 12 5.373 12 12v32c0 6.627-5.373 12-12 12zm0 160H12c-6.627 0-12-5.373-12-12v-32c0-6.627 5.373-12 12-12h424c6.627 0 12 5.373 12 12v32c0 6.627-5.373 12-12 12z"></path></svg></div> <a href="/blog/" class="home-link router-link-active"><img src="/blog/logo.png" alt="花帽子的博客" class="logo"> <span class="site-name can-hide">花帽子的博客</span></a> <div class="links"><div class="search-box"><input aria-label="Search" autocomplete="off" spellcheck="false" value=""> <!----></div> <nav class="nav-links can-hide"><div class="nav-item"><a href="/blog/" class="nav-link">
+  主页
+</a></div><div class="nav-item"><a href="/blog/vue/" class="nav-link router-link-active">
+  Vue
+</a></div><div class="nav-item"><a href="/blog/css/" class="nav-link">
+  CSS
+</a></div><div class="nav-item"><a href="/blog/typescript/" class="nav-link">
+  TS
+</a></div><div class="nav-item"><a href="/blog/optimization/" class="nav-link">
+  优化
+</a></div><div class="nav-item"><a href="/blog/mobile/" class="nav-link">
+  移动端
+</a></div><div class="nav-item"><div class="dropdown-wrapper"><button type="button" aria-label="GitHub" class="dropdown-title"><span class="title">GitHub</span> <span class="arrow down"></span></button> <button type="button" aria-label="GitHub" class="mobile-dropdown-title"><span class="title">GitHub</span> <span class="arrow right"></span></button> <ul class="nav-dropdown" style="display:none;"><li class="dropdown-item"><!----> <a href="https://github.com/jonny-wei" target="_blank" rel="noopener noreferrer" class="nav-link external">
+  GitHub地址
+  <span><svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg> <span class="sr-only">(opens new window)</span></span></a></li></ul></div></div> <!----></nav></div></header> <div class="sidebar-mask"></div> <aside class="sidebar"><nav class="nav-links"><div class="nav-item"><a href="/blog/" class="nav-link">
+  主页
+</a></div><div class="nav-item"><a href="/blog/vue/" class="nav-link router-link-active">
+  Vue
+</a></div><div class="nav-item"><a href="/blog/css/" class="nav-link">
+  CSS
+</a></div><div class="nav-item"><a href="/blog/typescript/" class="nav-link">
+  TS
+</a></div><div class="nav-item"><a href="/blog/optimization/" class="nav-link">
+  优化
+</a></div><div class="nav-item"><a href="/blog/mobile/" class="nav-link">
+  移动端
+</a></div><div class="nav-item"><div class="dropdown-wrapper"><button type="button" aria-label="GitHub" class="dropdown-title"><span class="title">GitHub</span> <span class="arrow down"></span></button> <button type="button" aria-label="GitHub" class="mobile-dropdown-title"><span class="title">GitHub</span> <span class="arrow right"></span></button> <ul class="nav-dropdown" style="display:none;"><li class="dropdown-item"><!----> <a href="https://github.com/jonny-wei" target="_blank" rel="noopener noreferrer" class="nav-link external">
+  GitHub地址
+  <span><svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg> <span class="sr-only">(opens new window)</span></span></a></li></ul></div></div> <!----></nav>  <ul class="sidebar-links"><li><section class="sidebar-group depth-0"><p class="sidebar-heading"><span>Vue秘籍</span> <!----></p> <ul class="sidebar-links sidebar-group-items"><li><a href="/blog/vue/vue/guide.html" class="sidebar-link">js 高级技巧</a></li><li><a href="/blog/vue/vue/vue-render.html" class="sidebar-link">vue渲染原理</a></li></ul></section></li><li><section class="sidebar-group depth-0"><p class="sidebar-heading"><span>Vue源码解析</span> <!----></p> <!----></section></li><li><section class="sidebar-group depth-0"><p class="sidebar-heading"><span>VueRouter源码解析</span> <!----></p> <ul class="sidebar-links sidebar-group-items"><li><a href="/blog/vue/vue-router/abstract.html" class="sidebar-link">摘要</a></li><li><a href="/blog/vue/vue-router/warmUp.html" class="sidebar-link">准备工作</a></li><li><a href="/blog/vue/vue-router/plugin.html" class="sidebar-link">插件机制</a></li><li><a href="/blog/vue/vue-router/initialization.html" class="sidebar-link">初始化与降级处理</a></li><li><a href="/blog/vue/vue-router/transitions.html" class="sidebar-link">路由过渡与视图渲染</a></li><li><a href="/blog/vue/vue-router/match.html" class="sidebar-link">路由匹配</a></li><li><a href="/blog/vue/vue-router/scroll.html" class="sidebar-link">滚动行为处理</a></li><li><a href="/blog/vue/vue-router/summary.html" class="sidebar-link">总结</a></li></ul></section></li><li><section class="sidebar-group depth-0"><p class="sidebar-heading open"><span>Vuex源码解析</span> <!----></p> <ul class="sidebar-links sidebar-group-items"><li><a href="/blog/vue/vuex/abstract.html" class="sidebar-link">摘要</a></li><li><a href="/blog/vue/vuex/warmUp.html" class="sidebar-link">准备工作</a></li><li><a href="/blog/vue/vuex/initialization.html" class="sidebar-link">初始化与模块安装</a></li><li><a href="/blog/vue/vuex/state.html" aria-current="page" class="active sidebar-link">State 相关</a><ul class="sidebar-sub-headers"><li class="sidebar-sub-header"><a href="/blog/vue/vuex/state.html#构造器选项之一" class="sidebar-link">构造器选项之一</a></li><li class="sidebar-sub-header"><a href="/blog/vue/vuex/state.html#实例属性" class="sidebar-link">实例属性</a></li><li class="sidebar-sub-header"><a href="/blog/vue/vuex/state.html#实例方法" class="sidebar-link">实例方法</a><ul class="sidebar-sub-headers"><li class="sidebar-sub-header"><a href="/blog/vue/vuex/state.html#replacestate" class="sidebar-link">replaceState</a></li></ul></li><li class="sidebar-sub-header"><a href="/blog/vue/vuex/state.html#mapstate-辅助函数" class="sidebar-link">mapState 辅助函数</a><ul class="sidebar-sub-headers"><li class="sidebar-sub-header"><a href="/blog/vue/vuex/state.html#normalizenamespace-的实现" class="sidebar-link">normalizeNamespace 的实现</a></li><li class="sidebar-sub-header"><a href="/blog/vue/vuex/state.html#normalizemap-的实现" class="sidebar-link">normalizeMap 的实现</a></li></ul></li></ul></li><li><a href="/blog/vue/vuex/getters.html" class="sidebar-link">Getters 相关</a></li><li><a href="/blog/vue/vuex/mutations.html" class="sidebar-link">Mutations 相关</a></li><li><a href="/blog/vue/vuex/actions.html" class="sidebar-link">Actions 相关</a></li><li><a href="/blog/vue/vuex/modules.html" class="sidebar-link">Modules 相关</a></li><li><a href="/blog/vue/vuex/others.html" class="sidebar-link">其他</a></li></ul></section></li><li><section class="sidebar-group depth-0"><p class="sidebar-heading"><span>Vue3新特性</span> <!----></p> <ul class="sidebar-links sidebar-group-items"><li><a href="/blog/vue/vue3.x/abstract.html" class="sidebar-link">摘要</a></li><li><a href="/blog/vue/vue3.x/reactivity.html" class="sidebar-link">响应式系统</a></li><li><a href="/blog/vue/vue3.x/features.html" class="sidebar-link">功能方面</a></li><li><a href="/blog/vue/vue3.x/performance.html" class="sidebar-link">性能方面</a></li></ul></section></li></ul> </aside> <main class="page"> <div class="theme-default-content content__default"><h1 id="state-相关"><a href="#state-相关" class="header-anchor">#</a> State 相关</h1> <h2 id="构造器选项之一"><a href="#构造器选项之一" class="header-anchor">#</a> 构造器选项之一</h2> <p><strong>state</strong> 是 <code>Vuex.Store</code> 构造器选项之一，需要用户设置，官方 API 说明如下：</p> <div class="language-text extra-class"><pre class="language-text"><code>state
+
+  类型: Object | Function
+  
+  Vuex store 实例的根 state 对象。
+</code></pre></div><p>如果你传入 <code>返回一个对象的</code> 函数，其 <code>返回的对象</code> 会被用作 <code>根 state</code>。
+这在你想要<code>重用 state 对象</code>，尤其是对于<code>重用 module</code> 来说<strong>非常有用</strong>。</p> <div class="language-javascript extra-class"><pre class="language-javascript"><code><span class="token comment">/* src/store.js */</span>
+
+<span class="token function">constructor</span> <span class="token punctuation">(</span><span class="token parameter">options <span class="token operator">=</span> <span class="token punctuation">{</span><span class="token punctuation">}</span></span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+  <span class="token comment">// ... more</span>
+  <span class="token keyword">const</span> state <span class="token operator">=</span> <span class="token keyword">this</span><span class="token punctuation">.</span>_modules<span class="token punctuation">.</span>root<span class="token punctuation">.</span>state
+<span class="token punctuation">}</span>
+</code></pre></div><p>在 Store 类的构造方法中，初始化为 store 实例的根 state 对象。</p> <h2 id="实例属性"><a href="#实例属性" class="header-anchor">#</a> 实例属性</h2> <p><strong>state</strong> 是 <code>Vuex.Store</code> 的实例属性，官方 API 说明如下：</p> <div class="language-text extra-class"><pre class="language-text"><code>state
+
+  类型: Object
+
+  根状态，只读。
+</code></pre></div><p>可以通过 <code>this.$store.state</code> 读取 state 中的状态，该实例属性的定义如下：</p> <div class="language-javascript extra-class"><pre class="language-javascript"><code><span class="token comment">/* src/store.js */</span>
+
+   <span class="token comment">/* 将 store.state 即 rootState 代理到之前声明的 vm 实例中的 $state 中 */</span>
+  <span class="token keyword">get</span> <span class="token function">state</span> <span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+      <span class="token keyword">return</span> <span class="token keyword">this</span><span class="token punctuation">.</span>_vm<span class="token punctuation">.</span>_data<span class="token punctuation">.</span>$$state
+    <span class="token punctuation">}</span>
+
+  <span class="token keyword">set</span> <span class="token function">state</span> <span class="token punctuation">(</span><span class="token parameter">v</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token keyword">if</span> <span class="token punctuation">(</span>process<span class="token punctuation">.</span>env<span class="token punctuation">.</span><span class="token constant">NODE_ENV</span> <span class="token operator">!==</span> <span class="token string">'production'</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+      <span class="token function">assert</span><span class="token punctuation">(</span><span class="token boolean">false</span><span class="token punctuation">,</span> <span class="token template-string"><span class="token template-punctuation string">`</span><span class="token string">use store.replaceState() to explicit replace store state.</span><span class="token template-punctuation string">`</span></span><span class="token punctuation">)</span>
+    <span class="token punctuation">}</span>
+  <span class="token punctuation">}</span>
+</code></pre></div><p>只能 <code>get</code> 即只读，不能直接 <code>set</code>。可以使用 <code>store.replaceState()</code> 显式替换 state 状态。</p> <h2 id="实例方法"><a href="#实例方法" class="header-anchor">#</a> 实例方法</h2> <h3 id="replacestate"><a href="#replacestate" class="header-anchor">#</a> replaceState</h3> <p><strong>replaceState</strong> 是<code>Vuex.Store</code> 的实例方法，官方 API 说明如下：</p> <div class="language-text extra-class"><pre class="language-text"><code>replaceState
+
+  replaceState(state: Object)
+  
+  替换 store 的根状态，仅用于状态合并或时光旅行调试
+</code></pre></div><div class="language-javascript extra-class"><pre class="language-javascript"><code><span class="token comment">/* src/store.js */</span>
+
+<span class="token function">replaceState</span> <span class="token punctuation">(</span><span class="token parameter">state</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token keyword">this</span><span class="token punctuation">.</span><span class="token function">_withCommit</span><span class="token punctuation">(</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">=&gt;</span> <span class="token punctuation">{</span>
+      <span class="token keyword">this</span><span class="token punctuation">.</span>_vm<span class="token punctuation">.</span>_data<span class="token punctuation">.</span>$$state <span class="token operator">=</span> state
+    <span class="token punctuation">}</span><span class="token punctuation">)</span>
+  <span class="token punctuation">}</span>
+<span class="token comment">// 其内部调用了 _withCommit 方法  </span>
+ <span class="token function">_withCommit</span> <span class="token punctuation">(</span><span class="token parameter">fn</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token keyword">const</span> committing <span class="token operator">=</span> <span class="token keyword">this</span><span class="token punctuation">.</span>_committing
+    <span class="token keyword">this</span><span class="token punctuation">.</span>_committing <span class="token operator">=</span> <span class="token boolean">true</span>
+    <span class="token function">fn</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+    <span class="token keyword">this</span><span class="token punctuation">.</span>_committing <span class="token operator">=</span> committing
+  <span class="token punctuation">}</span>
+</code></pre></div><p>使用 <code>_withCommit</code> 包裹，修改 store 的<code>根状态</code>。之所以提供这个 API 是由于在我们是<strong>不能</strong>在 <code>muations</code> 的<strong>回调函数外部</strong>去<strong>改变 state</strong>。</p> <h2 id="mapstate-辅助函数"><a href="#mapstate-辅助函数" class="header-anchor">#</a> mapState 辅助函数</h2> <p><code>mapState</code> 组件绑定的辅助函数，为组件创建计算属性以返回 Vuex store 中的状态。官方 API 说明如下：</p> <div class="language-text extra-class"><pre class="language-text"><code>mapState(namespace?: string, map: Array&lt;string&gt; | Object&lt;string | function&gt;): Object
+</code></pre></div><p>由于 Vuex 的状态存储是响应式的，从 store 实例中读取状态最简单的方法就是在计算属性中返回某个状态。
+每当 state 变化的时候, 都会重新求取计算属性，并且触发更新相关联的 DOM。下面是 <code>mapState</code> 的使用方式：</p> <div class="language-javascript extra-class"><pre class="language-javascript"><code><span class="token comment">// 在单独构建的版本中辅助函数为 Vuex.mapState</span>
+<span class="token keyword">import</span> <span class="token punctuation">{</span> mapState <span class="token punctuation">}</span> <span class="token keyword">from</span> <span class="token string">'vuex'</span>
+
+<span class="token keyword">export</span> <span class="token keyword">default</span> <span class="token punctuation">{</span>
+  computed<span class="token operator">:</span> <span class="token punctuation">{</span>
+    <span class="token comment">/* namespace缺省 使用对象方式 */</span>
+    <span class="token function">mapState</span><span class="token punctuation">(</span><span class="token punctuation">{</span>
+        <span class="token comment">// 箭头函数可使代码更简练  </span>
+        <span class="token function-variable function">count</span><span class="token operator">:</span> <span class="token parameter">state</span> <span class="token operator">=&gt;</span> state<span class="token punctuation">.</span>count<span class="token punctuation">,</span> <span class="token comment">// 对象形式的第二个参数的成员可以是一个函数</span>
+    
+        <span class="token comment">// 传字符串参数 'count' 等同于 `state =&gt; state.count`</span>
+        countAlias<span class="token operator">:</span> <span class="token string">'count'</span><span class="token punctuation">,</span> <span class="token comment">// 对象形式的第二个参数的成员可以是一个字符串</span>
+    
+        <span class="token comment">// 为了能够使用 `this` 获取局部状态，必须使用常规函数</span>
+        <span class="token function">countPlusLocalState</span> <span class="token punctuation">(</span><span class="token parameter">state</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+          <span class="token keyword">return</span> state<span class="token punctuation">.</span>count <span class="token operator">+</span> <span class="token keyword">this</span><span class="token punctuation">.</span>localCount
+        <span class="token punctuation">}</span>
+      <span class="token punctuation">}</span><span class="token punctuation">)</span>
+    <span class="token comment">/* namespace缺省 使用数组映射 */</span>
+    <span class="token comment">// 当映射的计算属性的名称与 state 的子节点名称相同时，我们也可以给 mapState 传一个字符串数组</span>
+    <span class="token function">mapState</span><span class="token punctuation">(</span><span class="token punctuation">[</span>
+      <span class="token comment">// 映射 this.count 为 store.state.count</span>
+      <span class="token string">'count'</span>
+      <span class="token punctuation">]</span><span class="token punctuation">)</span>
+    <span class="token comment">/* namespace缺省 使用ES6对象展开运算符 */</span>
+    <span class="token comment">// mapState 函数返回的是一个对象。我们可以和局部计算属性混合使用</span>
+    <span class="token operator">...</span><span class="token function">mapState</span><span class="token punctuation">(</span><span class="token punctuation">{</span> <span class="token operator">...</span> <span class="token punctuation">}</span><span class="token punctuation">)</span>
+    <span class="token comment">// 或者</span>
+    <span class="token operator">...</span><span class="token function">mapState</span><span class="token punctuation">(</span><span class="token punctuation">[</span> <span class="token operator">...</span> <span class="token punctuation">]</span><span class="token punctuation">)</span>
+  <span class="token punctuation">}</span>
+<span class="token punctuation">}</span>
+</code></pre></div><p>下面具体分析 <code>mapState</code> 的实现：</p> <div class="language-javascript extra-class"><pre class="language-javascript"><code><span class="token comment">/* src/helpers.js */</span>
+
+<span class="token comment">/**
+ * Reduce the code which written in Vue.js for getting the state.
+ * @param {String} [namespace] - Module's namespace
+ * @param {Object|Array} states # Object's item can be a function which accept state 
+ * and getters for param, you can do something for state and getters in it.
+ * @param {Object}
+ */</span>
+<span class="token comment">/**
+* 
+*/</span>
+<span class="token keyword">export</span> <span class="token keyword">const</span> mapState <span class="token operator">=</span> <span class="token function">normalizeNamespace</span><span class="token punctuation">(</span><span class="token punctuation">(</span><span class="token parameter">namespace<span class="token punctuation">,</span> states</span><span class="token punctuation">)</span> <span class="token operator">=&gt;</span> <span class="token punctuation">{</span>
+  <span class="token comment">/* mapState 最终返回一个对象，并放入到 computed 属性中 */</span>
+  <span class="token keyword">const</span> res <span class="token operator">=</span> <span class="token punctuation">{</span><span class="token punctuation">}</span>
+  <span class="token keyword">if</span> <span class="token punctuation">(</span>process<span class="token punctuation">.</span>env<span class="token punctuation">.</span><span class="token constant">NODE_ENV</span> <span class="token operator">!==</span> <span class="token string">'production'</span> <span class="token operator">&amp;&amp;</span> <span class="token operator">!</span><span class="token function">isValidMap</span><span class="token punctuation">(</span>states<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    console<span class="token punctuation">.</span><span class="token function">error</span><span class="token punctuation">(</span><span class="token string">'[vuex] mapState: mapper parameter must be either an Array or an Object'</span><span class="token punctuation">)</span>
+  <span class="token punctuation">}</span>
+  <span class="token comment">/**
+  * 将 mapState 的参数转为 key/value 组成的对象数组，如果为数组则 key/value 相同
+  */</span>
+  <span class="token function">normalizeMap</span><span class="token punctuation">(</span>states<span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">forEach</span><span class="token punctuation">(</span><span class="token punctuation">(</span><span class="token parameter"><span class="token punctuation">{</span> key<span class="token punctuation">,</span> val <span class="token punctuation">}</span></span><span class="token punctuation">)</span> <span class="token operator">=&gt;</span> <span class="token punctuation">{</span>
+    <span class="token comment">/**
+    *  key 为映射到组件中的属性
+    *  computed 计算属性的值是一个函数，对应 mappedState
+    *  返回一个对象，值都是函数
+    */</span>
+    res<span class="token punctuation">[</span>key<span class="token punctuation">]</span> <span class="token operator">=</span> <span class="token keyword">function</span> <span class="token function">mappedState</span> <span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+      <span class="token comment">/* 依赖了 $store 属性，如果 $store 发生改变会重新触发计算 */</span>
+      <span class="token keyword">let</span> state <span class="token operator">=</span> <span class="token keyword">this</span><span class="token punctuation">.</span>$store<span class="token punctuation">.</span>state
+      <span class="token keyword">let</span> getters <span class="token operator">=</span> <span class="token keyword">this</span><span class="token punctuation">.</span>$store<span class="token punctuation">.</span>getters
+      <span class="token keyword">if</span> <span class="token punctuation">(</span>namespace<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+         <span class="token comment">/* 通过 namespace 从 store._modulesNamespaceMap 中找到这个 namespace 对应的模块 */</span>
+        <span class="token keyword">const</span> module <span class="token operator">=</span> <span class="token function">getModuleByNamespace</span><span class="token punctuation">(</span><span class="token keyword">this</span><span class="token punctuation">.</span>$store<span class="token punctuation">,</span> <span class="token string">'mapState'</span><span class="token punctuation">,</span> namespace<span class="token punctuation">)</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token operator">!</span>module<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+          <span class="token keyword">return</span>
+        <span class="token punctuation">}</span>
+        <span class="token comment">/* 将从当前模块的 context 中拿到作用域当前模块的 state 和 getters 并赋值给 state,getters */</span>
+        state <span class="token operator">=</span> module<span class="token punctuation">.</span>context<span class="token punctuation">.</span>state
+        getters <span class="token operator">=</span> module<span class="token punctuation">.</span>context<span class="token punctuation">.</span>getters
+      <span class="token punctuation">}</span>
+      <span class="token comment">/**
+      * 可以通过函数的返回值，方便的访问嵌套的子模块的 state
+      * 如果不含有子模块，可以直接从根模块中获取 state 的值
+      */</span>
+      <span class="token keyword">return</span> <span class="token keyword">typeof</span> val <span class="token operator">===</span> <span class="token string">'function'</span>
+        <span class="token operator">?</span> <span class="token function">val</span><span class="token punctuation">.</span><span class="token function">call</span><span class="token punctuation">(</span><span class="token keyword">this</span><span class="token punctuation">,</span> state<span class="token punctuation">,</span> getters<span class="token punctuation">)</span> 
+        <span class="token operator">:</span> state<span class="token punctuation">[</span>val<span class="token punctuation">]</span>
+    <span class="token punctuation">}</span>
+    <span class="token comment">// mark vuex getter for devtools 标记为 vuex 方便在 devtools 显示</span>
+    res<span class="token punctuation">[</span>key<span class="token punctuation">]</span><span class="token punctuation">.</span>vuex <span class="token operator">=</span> <span class="token boolean">true</span>
+  <span class="token punctuation">}</span><span class="token punctuation">)</span>
+  <span class="token keyword">return</span> res
+<span class="token punctuation">}</span><span class="token punctuation">)</span>
+</code></pre></div><p>首先 <code>mapState</code> 是执行 <code>normalizeNamespace</code> 后返回的函数，<code>normalizeNamespace</code> 方法用于标准化统一命名空间( normalizeNamespace 的实现在下文)。返回的函数接收 2 个参数：</p> <ul><li><code>namespace</code> 表示命名空间 可以缺省</li> <li><code>map</code> 表示具体的对象</li></ul> <h3 id="normalizenamespace-的实现"><a href="#normalizenamespace-的实现" class="header-anchor">#</a> normalizeNamespace 的实现</h3> <div class="language-javascript extra-class"><pre class="language-javascript"><code><span class="token comment">/* src/helpers.js */</span>
+
+<span class="token comment">/**
+ * Return a function expect two param contains namespace and map. 
+ * it will normalize the namespace and then the param's 
+ * function will handle the new namespace and the map.
+ * @param {Function} fn
+ * @return {Function}
+ * 标准化统一命名空间
+ */</span>
+<span class="token keyword">function</span> <span class="token function">normalizeNamespace</span> <span class="token punctuation">(</span><span class="token parameter">fn</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+  <span class="token keyword">return</span> <span class="token punctuation">(</span><span class="token parameter">namespace<span class="token punctuation">,</span> map</span><span class="token punctuation">)</span> <span class="token operator">=&gt;</span> <span class="token punctuation">{</span>
+    <span class="token comment">// 命名空间没传，交换参数，namespace 为空字符串</span>
+    <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token keyword">typeof</span> namespace <span class="token operator">!==</span> <span class="token string">'string'</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+      map <span class="token operator">=</span> namespace
+      namespace <span class="token operator">=</span> <span class="token string">''</span>
+    <span class="token punctuation">}</span> <span class="token keyword">else</span> <span class="token keyword">if</span> <span class="token punctuation">(</span>namespace<span class="token punctuation">.</span><span class="token function">charAt</span><span class="token punctuation">(</span>namespace<span class="token punctuation">.</span>length <span class="token operator">-</span> <span class="token number">1</span><span class="token punctuation">)</span> <span class="token operator">!==</span> <span class="token string">'/'</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+      <span class="token comment">// 如果是字符串，最后一个字符不是 / 添加 /</span>
+      namespace <span class="token operator">+=</span> <span class="token string">'/'</span>
+    <span class="token punctuation">}</span>
+    <span class="token keyword">return</span> <span class="token function">fn</span><span class="token punctuation">(</span>namespace<span class="token punctuation">,</span> map<span class="token punctuation">)</span>
+  <span class="token punctuation">}</span>
+<span class="token punctuation">}</span>
+</code></pre></div><p>内部调用了 <code>normalizeMap</code> 方法，我们先来分析一下  <code>normalizeMap</code> 方法的实现：</p> <h3 id="normalizemap-的实现"><a href="#normalizemap-的实现" class="header-anchor">#</a> normalizeMap 的实现</h3> <div class="language-javascript extra-class"><pre class="language-javascript"><code><span class="token comment">/* src/helpers.js */</span>
+
+<span class="token comment">/**
+ * Normalize the map
+ * normalizeMap([1, 2, 3]) =&gt; [ { key: 1, val: 1 }, { key: 2, val: 2 }, { key: 3, val: 3 } ]
+ * normalizeMap({a: 1, b: 2, c: 3}) =&gt; [ { key: 'a', val: 1 }, { key: 'b', val: 2 }, { key: 'c', val: 3 } ]
+ * @param {Array|Object} map
+ * @return {Object}
+ */</span>
+<span class="token keyword">function</span> <span class="token function">normalizeMap</span> <span class="token punctuation">(</span><span class="token parameter">map</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+  <span class="token comment">// 判断map 是数组或者对象</span>
+  <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token operator">!</span><span class="token function">isValidMap</span><span class="token punctuation">(</span>map<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token keyword">return</span> <span class="token punctuation">[</span><span class="token punctuation">]</span> <span class="token comment">// 如果既不是数组也不是对象 则返回[]</span>
+  <span class="token punctuation">}</span>
+  <span class="token comment">// 否则 统一为 { key，value} 形式的对象组成的数组</span>
+  <span class="token keyword">return</span> Array<span class="token punctuation">.</span><span class="token function">isArray</span><span class="token punctuation">(</span>map<span class="token punctuation">)</span>
+    <span class="token operator">?</span> map<span class="token punctuation">.</span><span class="token function">map</span><span class="token punctuation">(</span><span class="token parameter">key</span> <span class="token operator">=&gt;</span> <span class="token punctuation">(</span><span class="token punctuation">{</span> key<span class="token punctuation">,</span> val<span class="token operator">:</span> key <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+    <span class="token operator">:</span> Object<span class="token punctuation">.</span><span class="token function">keys</span><span class="token punctuation">(</span>map<span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">map</span><span class="token punctuation">(</span><span class="token parameter">key</span> <span class="token operator">=&gt;</span> <span class="token punctuation">(</span><span class="token punctuation">{</span> key<span class="token punctuation">,</span> val<span class="token operator">:</span> map<span class="token punctuation">[</span>key<span class="token punctuation">]</span> <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+<span class="token punctuation">}</span>
+
+<span class="token comment">/**
+ * 内部调用了 isValidMap 方法
+ * Validate whether given map is valid or not
+ * @param {*} map
+ * @return {Boolean}
+ */</span>
+<span class="token keyword">function</span> <span class="token function">isValidMap</span> <span class="token punctuation">(</span><span class="token parameter">map</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+  <span class="token keyword">return</span> Array<span class="token punctuation">.</span><span class="token function">isArray</span><span class="token punctuation">(</span>map<span class="token punctuation">)</span> <span class="token operator">||</span> <span class="token function">isObject</span><span class="token punctuation">(</span>map<span class="token punctuation">)</span>
+<span class="token punctuation">}</span>
+<span class="token comment">/* 内部调用了 isObject  src/util.js */</span>
+<span class="token keyword">export</span> <span class="token keyword">function</span> <span class="token function">isObject</span> <span class="token punctuation">(</span><span class="token parameter">obj</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+  <span class="token keyword">return</span> obj <span class="token operator">!==</span> <span class="token keyword">null</span> <span class="token operator">&amp;&amp;</span> <span class="token keyword">typeof</span> obj <span class="token operator">===</span> <span class="token string">'object'</span>
+<span class="token punctuation">}</span>
+</code></pre></div><p><code>normalizeMap</code> 方法判断参数 <code>map</code> 是否为数组，如果是数组，则调用数组的 <code>map</code> 方法，把数组的每个元素转换成一个 <code>{ key, val: key }</code> 的对象；
+否则传入的 <code>map</code> 就是一个对象（从 mapState 的使用场景来看，传入的参数不是数组就是对象），我们调用 <code>Object.keys</code> 方法遍历这个 <code>map</code> 对象的 <code>key</code>，
+把数组的每个 <code>key</code> 都转换成一个 <code>{ key, val: key }</code> 的对象。最后我们把这个<strong>对象数组</strong>作为 <code>normalizeMap</code> 的返回值。</p> <p>再回到 <code>mapState</code> 的实现逻辑中</p> <p>当执行 <code>mapState(namespace, map)</code> 函数的时候，实际上就是执行 <code>normalizeNamespace</code> 包裹的函数。mapState 最终是要构造一个对象，<strong>每个对象的元素都是一个方法</strong>，
+因为这个对象是要扩展到组件的 <code>computed</code> 计算属性中的。函数首先执行 <code>normalizeMap</code> 方法，把这个 <code>states</code> 变成一个<strong>数组</strong>，转换成由 <code>{ key, val }</code> 对象构成的数组，
+数组的每个元素都是 <code>{key, val}</code> 的形式。接着 <code>forEach</code> 遍历这个数组，以 <code>key</code> 作为对象的 <code>key</code>，值为一个 <strong><code>mappedState</code></strong> 的函数，构造一个新的对象，
+这个新对象每个元素都返回一个新的函数 <code>mappedState</code> 。在这个函数的内部，获取到 <code>$store.getters</code> 和 <code>$store.state</code>，然后再判断数组的 <code>val</code> 如果是一个函数，如果 <code>val</code> 是一个函数，
+则直接调用这个 <code>val</code> 函数，把当前 store 上的 <strong>state 和 getters 作为参数</strong>，返回值作为 <code>mappedState</code> 的返回值；否则直接把 <code>this.$store.state[val]</code> 作为 <code>mappedState</code> 的返回值。</p> <p>那么为何 <code>mapState</code> 函数的返回值是这样一个对象呢，因为 <code>mapState</code> 的作用是把全局的 state 和 getters 映射到当前组件的 <code>computed</code> 计算属性中，而 Vue 中每个计算属性都是一个函数。</p> <p>下面我们来看一下另一个参数 <code>namespace</code> 的作用：</p> <div class="language-javascript extra-class"><pre class="language-javascript"><code>  <span class="token keyword">if</span> <span class="token punctuation">(</span>namespace<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token comment">/* 通过 namespace 从 store._modulesNamespaceMap 中找到这个 namespace 对应的模块 */</span>
+    <span class="token keyword">const</span> module <span class="token operator">=</span> <span class="token function">getModuleByNamespace</span><span class="token punctuation">(</span><span class="token keyword">this</span><span class="token punctuation">.</span>$store<span class="token punctuation">,</span> <span class="token string">'mapState'</span><span class="token punctuation">,</span> namespace<span class="token punctuation">)</span>
+    <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token operator">!</span>module<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+      <span class="token keyword">return</span>
+    <span class="token punctuation">}</span>
+    <span class="token comment">/* 将从当前模块的 context 中拿到作用域当前模块的 state 和 getters 并赋值给 state,getters */</span>
+    state <span class="token operator">=</span> module<span class="token punctuation">.</span>context<span class="token punctuation">.</span>state
+    getters <span class="token operator">=</span> module<span class="token punctuation">.</span>context<span class="token punctuation">.</span>getters
+<span class="token punctuation">}</span>
+</code></pre></div><p><code>module.context</code> 这个赋值主要是给 helpers 中 <code>mapState</code>、<code>mapGetters</code>、<code>mapMutations</code>、<code>mapActions</code> 四个辅助函数使用的，<code>module.context</code> 的定义如下：</p> <div class="language-javascript extra-class"><pre class="language-javascript"><code><span class="token comment">/* src/store.js */</span>
+
+<span class="token keyword">function</span> <span class="token function">installModule</span> <span class="token punctuation">(</span><span class="token parameter">store<span class="token punctuation">,</span> rootState<span class="token punctuation">,</span> path<span class="token punctuation">,</span> module<span class="token punctuation">,</span> hot</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+  <span class="token comment">// .. more</span>
+  <span class="token comment">/**
+    * 给当前模块添加 context 属性，即 action 的第一个参数 ctx
+    * ctx 中的 dispatch 会添加当前模块的命名空间
+    * 再执行全局的 dispatch 去 _actions 中找到对应的 action
+    * local 返回的是一个含有 dispatch,commit,getters,state 的对象，即 ctx
+    */</span>
+    <span class="token keyword">const</span> local <span class="token operator">=</span> module<span class="token punctuation">.</span>context <span class="token operator">=</span> <span class="token function">makeLocalContext</span><span class="token punctuation">(</span>store<span class="token punctuation">,</span> namespace<span class="token punctuation">,</span> path<span class="token punctuation">)</span>
+<span class="token punctuation">}</span>
+</code></pre></div><p>在 <code>mapState</code> 的实现中，如果有 <code>namespace</code>，则执行 <code>getModuleByNamespace(this.$store, 'mapState', namespace)</code> 获取对应的 <code>module</code>，
+然后把 state 和 getters 修改为 module 对应的 state 和 getters。</p> <div class="language-javascript extra-class"><pre class="language-javascript"><code><span class="token comment">/* src/helpers.js */</span>
+
+<span class="token comment">/**
+ * Search a special module from store by namespace. if module not exist, print error message.
+ * @param {Object} store
+ * @param {String} helper
+ * @param {String} namespace
+ * @return {Object}
+ */</span>
+<span class="token keyword">function</span> <span class="token function">getModuleByNamespace</span> <span class="token punctuation">(</span><span class="token parameter">store<span class="token punctuation">,</span> helper<span class="token punctuation">,</span> namespace</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+  <span class="token keyword">const</span> module <span class="token operator">=</span> store<span class="token punctuation">.</span>_modulesNamespaceMap<span class="token punctuation">[</span>namespace<span class="token punctuation">]</span>
+  <span class="token keyword">if</span> <span class="token punctuation">(</span>process<span class="token punctuation">.</span>env<span class="token punctuation">.</span><span class="token constant">NODE_ENV</span> <span class="token operator">!==</span> <span class="token string">'production'</span> <span class="token operator">&amp;&amp;</span> <span class="token operator">!</span>module<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    console<span class="token punctuation">.</span><span class="token function">error</span><span class="token punctuation">(</span><span class="token template-string"><span class="token template-punctuation string">`</span><span class="token string">[vuex] module namespace not found in </span><span class="token interpolation"><span class="token interpolation-punctuation punctuation">${</span>helper<span class="token interpolation-punctuation punctuation">}</span></span><span class="token string">(): </span><span class="token interpolation"><span class="token interpolation-punctuation punctuation">${</span>namespace<span class="token interpolation-punctuation punctuation">}</span></span><span class="token template-punctuation string">`</span></span><span class="token punctuation">)</span>
+  <span class="token punctuation">}</span>
+  <span class="token keyword">return</span> module
+<span class="token punctuation">}</span>
+</code></pre></div><p>我们在 Vuex 初始化执行 <code>installModule</code> 的过程中，初始化了 <code>store._modulesNamespaceMap[namespace]</code> 这个映射表：</p> <div class="language-javascript extra-class"><pre class="language-javascript"><code><span class="token keyword">function</span> <span class="token function">installModule</span> <span class="token punctuation">(</span><span class="token parameter">store<span class="token punctuation">,</span> rootState<span class="token punctuation">,</span> path<span class="token punctuation">,</span> module<span class="token punctuation">,</span> hot</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+  <span class="token comment">// ...</span>
+  <span class="token keyword">const</span> namespace <span class="token operator">=</span> store<span class="token punctuation">.</span>_modules<span class="token punctuation">.</span><span class="token function">getNamespace</span><span class="token punctuation">(</span>path<span class="token punctuation">)</span>
+
+  <span class="token comment">// register in namespace map</span>
+  <span class="token keyword">if</span> <span class="token punctuation">(</span>module<span class="token punctuation">.</span>namespaced<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    store<span class="token punctuation">.</span>_modulesNamespaceMap<span class="token punctuation">[</span>namespace<span class="token punctuation">]</span> <span class="token operator">=</span> module
+  <span class="token punctuation">}</span>
+
+  <span class="token comment">// ...</span>
+<span class="token punctuation">}</span>
+</code></pre></div><p><code>mapState</code> 为组件创建计算属性以返回 Vuex store 中的状态，做的事情如同下面的例子：</p> <div class="language-javascript extra-class"><pre class="language-javascript"><code>computed<span class="token operator">:</span> <span class="token punctuation">{</span>
+    <span class="token operator">...</span><span class="token function">mapState</span><span class="token punctuation">(</span><span class="token string">'user'</span><span class="token punctuation">,</span> <span class="token punctuation">{</span>
+      <span class="token function-variable function">name</span><span class="token operator">:</span> <span class="token parameter">state</span> <span class="token operator">=&gt;</span> state<span class="token punctuation">.</span>user<span class="token punctuation">.</span>name
+    <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+<span class="token punctuation">}</span>
+</code></pre></div><p>如果没有命名空间会转化为这样：</p> <div class="language-javascript extra-class"><pre class="language-javascript"><code>computed<span class="token operator">:</span> <span class="token punctuation">{</span>
+    name<span class="token operator">:</span> <span class="token keyword">this</span><span class="token punctuation">.</span>$store<span class="token punctuation">.</span>user<span class="token punctuation">.</span>name
+<span class="token punctuation">}</span>
+</code></pre></div><p>如果有命名空间会转化成这样：</p> <div class="language-javascript extra-class"><pre class="language-javascript"><code>computed<span class="token operator">:</span> <span class="token punctuation">{</span>
+    name<span class="token operator">:</span> <span class="token keyword">this</span><span class="token punctuation">.</span>$store<span class="token punctuation">.</span>_modulesNamespaceMap<span class="token punctuation">.</span><span class="token punctuation">[</span><span class="token string">'user/'</span><span class="token punctuation">]</span><span class="token punctuation">.</span>context<span class="token punctuation">.</span>name
+<span class="token punctuation">}</span>
+</code></pre></div></div> <footer class="page-edit"><!----> <div class="last-updated"><span class="prefix">最近更新:</span> <span class="time">11/11/2020, 9:37:26 AM</span></div></footer> <div class="page-nav"><p class="inner"><span class="prev">
+      ←
+      <a href="/blog/vue/vuex/initialization.html" class="prev">
+        初始化与模块安装
+      </a></span> <span class="next"><a href="/blog/vue/vuex/getters.html">
+        Getters 相关
+      </a>
+      →
+    </span></p></div> </main></div><div class="global-ui"><!----><!----><!----><!----></div></div>
+    <script src="/blog/assets/js/app.566cf3e9.js" defer></script><script src="/blog/assets/js/2.4f9efc98.js" defer></script><script src="/blog/assets/js/44.bd86ca74.js" defer></script><script src="/blog/assets/js/3.07d27621.js" defer></script>
+  </body>
+</html>

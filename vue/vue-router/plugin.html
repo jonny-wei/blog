@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>插件机制 | 花帽子的博客</title>
+    <meta name="generator" content="VuePress 1.7.1">
+    <link rel="icon" href="/blog/logo.png">
+    <link rel="manifest" href="/blog/manifest.json">
+    <link rel="apple-touch-icon" href="/blog/images/icons/apple-icon-152x152.png">
+    <meta name="description" content="我命由我不由天，学习吧少年">
+    <meta name="theme-color" content="#3eaf7c">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="msapplication-TileImage" content="/icons/ms-icon-144x144.png">
+    <meta name="msapplication-TileColor" content="#000000">
+    
+    <link rel="preload" href="/blog/assets/css/0.styles.dbb62a93.css" as="style"><link rel="preload" href="/blog/assets/js/app.566cf3e9.js" as="script"><link rel="preload" href="/blog/assets/js/2.4f9efc98.js" as="script"><link rel="preload" href="/blog/assets/js/26.996765cf.js" as="script"><link rel="preload" href="/blog/assets/js/3.07d27621.js" as="script"><link rel="prefetch" href="/blog/assets/js/10.e0ef691c.js"><link rel="prefetch" href="/blog/assets/js/11.34ce1eef.js"><link rel="prefetch" href="/blog/assets/js/12.a515e35b.js"><link rel="prefetch" href="/blog/assets/js/13.270a6794.js"><link rel="prefetch" href="/blog/assets/js/14.9092cece.js"><link rel="prefetch" href="/blog/assets/js/15.c63721c9.js"><link rel="prefetch" href="/blog/assets/js/16.ab1faabc.js"><link rel="prefetch" href="/blog/assets/js/17.447660d7.js"><link rel="prefetch" href="/blog/assets/js/18.88cfe15f.js"><link rel="prefetch" href="/blog/assets/js/19.670ddd74.js"><link rel="prefetch" href="/blog/assets/js/20.d76d0bab.js"><link rel="prefetch" href="/blog/assets/js/21.3bd7d10d.js"><link rel="prefetch" href="/blog/assets/js/22.bfea1beb.js"><link rel="prefetch" href="/blog/assets/js/23.52be8b8c.js"><link rel="prefetch" href="/blog/assets/js/24.8de3d90d.js"><link rel="prefetch" href="/blog/assets/js/25.8fd7fb08.js"><link rel="prefetch" href="/blog/assets/js/27.10dc293f.js"><link rel="prefetch" href="/blog/assets/js/28.6cdbdc05.js"><link rel="prefetch" href="/blog/assets/js/29.ae2811a9.js"><link rel="prefetch" href="/blog/assets/js/30.e8190a3f.js"><link rel="prefetch" href="/blog/assets/js/31.7fbdde0b.js"><link rel="prefetch" href="/blog/assets/js/32.82a30c77.js"><link rel="prefetch" href="/blog/assets/js/33.59a8034b.js"><link rel="prefetch" href="/blog/assets/js/34.e836d9f2.js"><link rel="prefetch" href="/blog/assets/js/35.1441a461.js"><link rel="prefetch" href="/blog/assets/js/36.b2d96674.js"><link rel="prefetch" href="/blog/assets/js/37.59ba895f.js"><link rel="prefetch" href="/blog/assets/js/38.4017e48c.js"><link rel="prefetch" href="/blog/assets/js/39.625e0490.js"><link rel="prefetch" href="/blog/assets/js/4.d42ebbba.js"><link rel="prefetch" href="/blog/assets/js/40.ff816dd8.js"><link rel="prefetch" href="/blog/assets/js/41.eb69ae8e.js"><link rel="prefetch" href="/blog/assets/js/42.f2d91b93.js"><link rel="prefetch" href="/blog/assets/js/43.828b72e0.js"><link rel="prefetch" href="/blog/assets/js/44.bd86ca74.js"><link rel="prefetch" href="/blog/assets/js/45.d0b8236b.js"><link rel="prefetch" href="/blog/assets/js/46.0b7bd0c7.js"><link rel="prefetch" href="/blog/assets/js/5.5d40c251.js"><link rel="prefetch" href="/blog/assets/js/6.08d6e999.js"><link rel="prefetch" href="/blog/assets/js/7.96560134.js"><link rel="prefetch" href="/blog/assets/js/8.f4a7eed1.js"><link rel="prefetch" href="/blog/assets/js/9.2f37877f.js">
+    <link rel="stylesheet" href="/blog/assets/css/0.styles.dbb62a93.css">
+  </head>
+  <body>
+    <div id="app" data-server-rendered="true"><div class="theme-container"><header class="navbar"><div class="sidebar-button"><svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="img" viewBox="0 0 448 512" class="icon"><path fill="currentColor" d="M436 124H12c-6.627 0-12-5.373-12-12V80c0-6.627 5.373-12 12-12h424c6.627 0 12 5.373 12 12v32c0 6.627-5.373 12-12 12zm0 160H12c-6.627 0-12-5.373-12-12v-32c0-6.627 5.373-12 12-12h424c6.627 0 12 5.373 12 12v32c0 6.627-5.373 12-12 12zm0 160H12c-6.627 0-12-5.373-12-12v-32c0-6.627 5.373-12 12-12h424c6.627 0 12 5.373 12 12v32c0 6.627-5.373 12-12 12z"></path></svg></div> <a href="/blog/" class="home-link router-link-active"><img src="/blog/logo.png" alt="花帽子的博客" class="logo"> <span class="site-name can-hide">花帽子的博客</span></a> <div class="links"><div class="search-box"><input aria-label="Search" autocomplete="off" spellcheck="false" value=""> <!----></div> <nav class="nav-links can-hide"><div class="nav-item"><a href="/blog/" class="nav-link">
+  主页
+</a></div><div class="nav-item"><a href="/blog/vue/" class="nav-link router-link-active">
+  Vue
+</a></div><div class="nav-item"><a href="/blog/css/" class="nav-link">
+  CSS
+</a></div><div class="nav-item"><a href="/blog/typescript/" class="nav-link">
+  TS
+</a></div><div class="nav-item"><a href="/blog/optimization/" class="nav-link">
+  优化
+</a></div><div class="nav-item"><a href="/blog/mobile/" class="nav-link">
+  移动端
+</a></div><div class="nav-item"><div class="dropdown-wrapper"><button type="button" aria-label="GitHub" class="dropdown-title"><span class="title">GitHub</span> <span class="arrow down"></span></button> <button type="button" aria-label="GitHub" class="mobile-dropdown-title"><span class="title">GitHub</span> <span class="arrow right"></span></button> <ul class="nav-dropdown" style="display:none;"><li class="dropdown-item"><!----> <a href="https://github.com/jonny-wei" target="_blank" rel="noopener noreferrer" class="nav-link external">
+  GitHub地址
+  <span><svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg> <span class="sr-only">(opens new window)</span></span></a></li></ul></div></div> <!----></nav></div></header> <div class="sidebar-mask"></div> <aside class="sidebar"><nav class="nav-links"><div class="nav-item"><a href="/blog/" class="nav-link">
+  主页
+</a></div><div class="nav-item"><a href="/blog/vue/" class="nav-link router-link-active">
+  Vue
+</a></div><div class="nav-item"><a href="/blog/css/" class="nav-link">
+  CSS
+</a></div><div class="nav-item"><a href="/blog/typescript/" class="nav-link">
+  TS
+</a></div><div class="nav-item"><a href="/blog/optimization/" class="nav-link">
+  优化
+</a></div><div class="nav-item"><a href="/blog/mobile/" class="nav-link">
+  移动端
+</a></div><div class="nav-item"><div class="dropdown-wrapper"><button type="button" aria-label="GitHub" class="dropdown-title"><span class="title">GitHub</span> <span class="arrow down"></span></button> <button type="button" aria-label="GitHub" class="mobile-dropdown-title"><span class="title">GitHub</span> <span class="arrow right"></span></button> <ul class="nav-dropdown" style="display:none;"><li class="dropdown-item"><!----> <a href="https://github.com/jonny-wei" target="_blank" rel="noopener noreferrer" class="nav-link external">
+  GitHub地址
+  <span><svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg> <span class="sr-only">(opens new window)</span></span></a></li></ul></div></div> <!----></nav>  <ul class="sidebar-links"><li><section class="sidebar-group depth-0"><p class="sidebar-heading"><span>Vue秘籍</span> <!----></p> <ul class="sidebar-links sidebar-group-items"><li><a href="/blog/vue/vue/guide.html" class="sidebar-link">js 高级技巧</a></li><li><a href="/blog/vue/vue/vue-render.html" class="sidebar-link">vue渲染原理</a></li></ul></section></li><li><section class="sidebar-group depth-0"><p class="sidebar-heading"><span>Vue源码解析</span> <!----></p> <!----></section></li><li><section class="sidebar-group depth-0"><p class="sidebar-heading open"><span>VueRouter源码解析</span> <!----></p> <ul class="sidebar-links sidebar-group-items"><li><a href="/blog/vue/vue-router/abstract.html" class="sidebar-link">摘要</a></li><li><a href="/blog/vue/vue-router/warmUp.html" class="sidebar-link">准备工作</a></li><li><a href="/blog/vue/vue-router/plugin.html" aria-current="page" class="active sidebar-link">插件机制</a><ul class="sidebar-sub-headers"><li class="sidebar-sub-header"><a href="/blog/vue/vue-router/plugin.html#插件和组件的关系" class="sidebar-link">插件和组件的关系</a></li><li class="sidebar-sub-header"><a href="/blog/vue/vue-router/plugin.html#插件分类" class="sidebar-link">插件分类</a></li><li class="sidebar-sub-header"><a href="/blog/vue/vue-router/plugin.html#使用插件" class="sidebar-link">使用插件</a></li><li class="sidebar-sub-header"><a href="/blog/vue/vue-router/plugin.html#开发插件" class="sidebar-link">开发插件</a></li><li class="sidebar-sub-header"><a href="/blog/vue/vue-router/plugin.html#发布插件" class="sidebar-link">发布插件</a></li><li class="sidebar-sub-header"><a href="/blog/vue/vue-router/plugin.html#插件机制源码解析" class="sidebar-link">插件机制源码解析</a></li><li class="sidebar-sub-header"><a href="/blog/vue/vue-router/plugin.html#vue-router-插件实现" class="sidebar-link">vue-router 插件实现</a></li><li class="sidebar-sub-header"><a href="/blog/vue/vue-router/plugin.html#注解" class="sidebar-link">注解</a></li><li class="sidebar-sub-header"><a href="/blog/vue/vue-router/plugin.html#总结" class="sidebar-link">总结</a></li></ul></li><li><a href="/blog/vue/vue-router/initialization.html" class="sidebar-link">初始化与降级处理</a></li><li><a href="/blog/vue/vue-router/transitions.html" class="sidebar-link">路由过渡与视图渲染</a></li><li><a href="/blog/vue/vue-router/match.html" class="sidebar-link">路由匹配</a></li><li><a href="/blog/vue/vue-router/scroll.html" class="sidebar-link">滚动行为处理</a></li><li><a href="/blog/vue/vue-router/summary.html" class="sidebar-link">总结</a></li></ul></section></li><li><section class="sidebar-group depth-0"><p class="sidebar-heading"><span>Vuex源码解析</span> <!----></p> <ul class="sidebar-links sidebar-group-items"><li><a href="/blog/vue/vuex/abstract.html" class="sidebar-link">摘要</a></li><li><a href="/blog/vue/vuex/warmUp.html" class="sidebar-link">准备工作</a></li><li><a href="/blog/vue/vuex/initialization.html" class="sidebar-link">初始化与模块安装</a></li><li><a href="/blog/vue/vuex/state.html" class="sidebar-link">State 相关</a></li><li><a href="/blog/vue/vuex/getters.html" class="sidebar-link">Getters 相关</a></li><li><a href="/blog/vue/vuex/mutations.html" class="sidebar-link">Mutations 相关</a></li><li><a href="/blog/vue/vuex/actions.html" class="sidebar-link">Actions 相关</a></li><li><a href="/blog/vue/vuex/modules.html" class="sidebar-link">Modules 相关</a></li><li><a href="/blog/vue/vuex/others.html" class="sidebar-link">其他</a></li></ul></section></li><li><section class="sidebar-group depth-0"><p class="sidebar-heading"><span>Vue3新特性</span> <!----></p> <ul class="sidebar-links sidebar-group-items"><li><a href="/blog/vue/vue3.x/abstract.html" class="sidebar-link">摘要</a></li><li><a href="/blog/vue/vue3.x/reactivity.html" class="sidebar-link">响应式系统</a></li><li><a href="/blog/vue/vue3.x/features.html" class="sidebar-link">功能方面</a></li><li><a href="/blog/vue/vue3.x/performance.html" class="sidebar-link">性能方面</a></li></ul></section></li></ul> </aside> <main class="page"> <div class="theme-default-content content__default"><h1 id="插件机制"><a href="#插件机制" class="header-anchor">#</a> 插件机制</h1> <p>Vue 是一个渐进式 JavaScript 框架，它本身的核心是解决视图渲染的问题，其它的能力就通过插件的方式来解决。</p> <p>上文也说过，vue-router以插件机制和Vue.js的核心深度集成，那么先了解vue插件是有必要的。</p> <p>Vue有个全局性的API，就是<code>Vue.use(plugin)</code> 这个方法。我们看一下官方文档的解释：</p> <div class="language-text extra-class"><pre class="language-text"><code>Vue.use( plugin )
+ 
+参数：
+ {Object | Function} plugin
+ 
+用法：
+ 安装 Vue.js 插件。如果插件是一个对象，必须提供 install 方法。如果插件是一个函数，
+ 它会被作为 install 方法。install 方法调用时，会将 Vue 作为参数传入。
+ 当 install 方法被同一个插件多次调用，插件将只会被安装一次。
+</code></pre></div><h2 id="插件和组件的关系"><a href="#插件和组件的关系" class="header-anchor">#</a> 插件和组件的关系</h2> <p>插件就是按照一定的封装方式，暴露接口。让我们利用这些接口更快捷的实现功能。</p> <p>插件可以封装组件，组件可以暴露数据给插件。你可能会遇到这样的场景：在页面中使用组件，每次需要通过components注册组件，那些使用率低的组件可以用这种方式，
+但当我们用到像Loading、Notice，Alert等使用率较高的组件时，就可以将其开发成一个插件，在全局频繁使用。</p> <h2 id="插件分类"><a href="#插件分类" class="header-anchor">#</a> 插件分类</h2> <p>插件通常用来为 Vue 添加全局功能。插件的功能范围没有严格的限制，官方提供了5个方面</p> <ul><li>添加全局<code>方法</code>或者<code>属性</code></li> <li>添加全局资源：<code>指令/过滤器/过渡</code>等</li> <li>通过<code>全局混入</code>来添加一些组件选项（vue-router就是这种）</li> <li>添加 Vue <code>实例方法</code>，通过把它们添加到 <code>Vue.prototype</code> 上实现(this.$echart)</li> <li>一个库，提供自己的 API，同时提供上面提到的<code>一个或多个功能</code>。如 vue-router</li></ul> <h2 id="使用插件"><a href="#使用插件" class="header-anchor">#</a> 使用插件</h2> <p>通过全局方法<code>Vue.use(MyPlugin, { someOption: true })</code>使用插件。它需要在你调用 new Vue() 启动应用之前完成。</p> <p>Vue.use 会自动阻止多次注册相同插件，届时即使多次调用也只会注册一次该插件。</p> <div class="language-javascript extra-class"><pre class="language-javascript"><code><span class="token comment">// 调用 `MyPlugin.install(Vue)`</span>
+Vue<span class="token punctuation">.</span><span class="token function">use</span><span class="token punctuation">(</span>MyPlugin<span class="token punctuation">)</span>
+
+<span class="token keyword">new</span> <span class="token class-name">Vue</span><span class="token punctuation">(</span><span class="token punctuation">{</span>
+  <span class="token comment">// ...组件选项</span>
+<span class="token punctuation">}</span><span class="token punctuation">)</span>
+</code></pre></div><p>Vue.js 官方提供的一些插件 (例如 vue-router) 在检测到 Vue 是可访问的全局变量时会自动调用 Vue.use()。</p> <h2 id="开发插件"><a href="#开发插件" class="header-anchor">#</a> 开发插件</h2> <p>Vue.js 的插件应该<strong>暴露一个 install 方法</strong>。这个方法的第一个参数是<code>Vue 构造器</code>，第二个参数是一个可选的<code>选项对象</code>：</p> <div class="language-javascript extra-class"><pre class="language-javascript"><code>MyPlugin<span class="token punctuation">.</span><span class="token function-variable function">install</span> <span class="token operator">=</span> <span class="token keyword">function</span> <span class="token punctuation">(</span><span class="token parameter">Vue<span class="token punctuation">,</span> options</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+  <span class="token comment">// 1. 添加全局方法或属性(方面1)</span>
+  <span class="token comment">// 当该插件注册后只要存在Vue实例的地方,</span>
+  <span class="token comment">// 你都可以获取到Vue.$myName的值或使用myGlobalMethod()方法，</span>
+  <span class="token comment">// 因为其直接绑定在了Vue实例上。</span>
+  Vue<span class="token punctuation">.</span>$myName <span class="token operator">=</span> <span class="token string">'Jonny Wei'</span><span class="token punctuation">;</span>
+  Vue<span class="token punctuation">.</span><span class="token function-variable function">myGlobalMethod</span> <span class="token operator">=</span> <span class="token keyword">function</span> <span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token comment">// 逻辑...</span>
+  <span class="token punctuation">}</span>
+
+  <span class="token comment">// 2.添加全局资源：`指令/过滤器/过渡`等(方面2)</span>
+  <span class="token comment">// 下面代码我们通过Vue.directive()添加了一个全局指令v-focus，</span>
+  <span class="token comment">// 其主要包含了5种方法，其中inserted代表当绑定元素插入到 DOM 中执行，</span>
+  <span class="token comment">// 而el.focus()代表聚焦绑定的元素，</span>
+  <span class="token comment">// 这样如果我们在一个input输入框上绑定该指令就会自动进行focus聚焦。</span>
+   Vue<span class="token punctuation">.</span><span class="token function">directive</span><span class="token punctuation">(</span><span class="token string">'focus'</span><span class="token punctuation">,</span> <span class="token punctuation">{</span>
+              <span class="token function-variable function">bind</span><span class="token operator">:</span> <span class="token keyword">function</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span><span class="token punctuation">}</span><span class="token punctuation">,</span>
+              <span class="token comment">// 当绑定元素插入到 DOM 中。</span>
+              <span class="token function-variable function">inserted</span><span class="token operator">:</span> <span class="token keyword">function</span><span class="token punctuation">(</span><span class="token parameter">el<span class="token punctuation">,</span> binding<span class="token punctuation">,</span> vnode<span class="token punctuation">,</span> oldVnode</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+                  <span class="token comment">// 聚焦元素</span>
+                  el<span class="token punctuation">.</span><span class="token function">focus</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+              <span class="token punctuation">}</span><span class="token punctuation">,</span>
+              <span class="token function-variable function">update</span><span class="token operator">:</span> <span class="token keyword">function</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span><span class="token punctuation">}</span><span class="token punctuation">,</span>
+              <span class="token function-variable function">componentUpdated</span><span class="token operator">:</span> <span class="token keyword">function</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span><span class="token punctuation">}</span><span class="token punctuation">,</span>
+              <span class="token function-variable function">unbind</span><span class="token operator">:</span> <span class="token keyword">function</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span><span class="token punctuation">}</span>
+          <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+  <span class="token comment">// 3. 通过`全局混入`来添加一些组件选项(方面3)</span>
+  <span class="token comment">// 全局注册一个混入，其会影响注册之后创建的每个 Vue 实例，</span>
+  <span class="token comment">// 下面代码注册后会在每个组件实例中添加myFunction方法，</span>
+  <span class="token comment">// 在单文件组件中可以直接通过this.myFunction()调用。</span>
+  <span class="token comment">// 当然如果实例中存在同名方法，则mixin方法中创建的会被覆盖，</span>
+  <span class="token comment">// 同时mixin对象中的钩子将在组件自身钩子之前调用。</span>
+  Vue<span class="token punctuation">.</span><span class="token function">mixin</span><span class="token punctuation">(</span><span class="token punctuation">{</span>
+    methods<span class="token operator">:</span><span class="token punctuation">{</span>
+      <span class="token function-variable function">myFunction</span><span class="token operator">:</span> <span class="token keyword">function</span> <span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">{</span>
+          <span class="token comment">// 逻辑...</span>
+      <span class="token punctuation">}</span>  
+    <span class="token punctuation">}</span><span class="token punctuation">,</span>
+    <span class="token function-variable function">created</span><span class="token operator">:</span> <span class="token keyword">function</span> <span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+      <span class="token comment">// 逻辑...</span>
+    <span class="token punctuation">}</span><span class="token punctuation">,</span>
+    <span class="token operator">...</span>
+  <span class="token punctuation">}</span><span class="token punctuation">)</span>
+
+  <span class="token comment">// 4. 添加 Vue 实例方法，通过把它们添加到 Vue.prototype 上实现(方面4)</span>
+  <span class="token comment">// 添加实例方法是最常用的一种方法，</span>
+  <span class="token comment">// 其直接绑定在vue的原型链上，</span>
+  <span class="token comment">// 我们可以回想一下 JS 里的类的概念。实例方法可以在组件内部，</span>
+  <span class="token comment">// 通过this.$myMethod来调用。</span>
+  <span class="token class-name">Vue</span><span class="token punctuation">.</span>prototype<span class="token punctuation">.</span><span class="token function-variable function">$myMethod</span> <span class="token operator">=</span> <span class="token keyword">function</span> <span class="token punctuation">(</span><span class="token parameter">methodOptions</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token comment">// 逻辑...</span>
+  <span class="token punctuation">}</span>
+  
+  <span class="token comment">// 5.  一个库，提供自己的 API，同时提供上面提到的一个或多个功能。</span>
+     <span class="token comment">// 就是上面的多种组合</span>
+<span class="token punctuation">}</span>
+</code></pre></div><p>此外，上文说了插件和组件的关系，插件也可以封装成组件，供全局使用</p> <p>如果我们要在组件的基础上编写插件，我们可以使用Vue.extend(component)来进行，可以见下方loading插件实例。</p> <div class="language-vue extra-class"><pre class="language-vue"><code><span class="token comment">&lt;!-- loading.vue组件 --&gt;</span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>template</span><span class="token punctuation">&gt;</span></span>
+    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>div</span> <span class="token attr-name">class</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">&quot;</span>loading-box<span class="token punctuation">&quot;</span></span> <span class="token attr-name">v-show</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">&quot;</span>show<span class="token punctuation">&quot;</span></span><span class="token punctuation">&gt;</span></span>
+        <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>div</span> <span class="token attr-name">class</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">&quot;</span>loading-mask<span class="token punctuation">&quot;</span></span><span class="token punctuation">&gt;</span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>div</span><span class="token punctuation">&gt;</span></span>
+        <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>div</span> <span class="token attr-name">class</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">&quot;</span>loading-content<span class="token punctuation">&quot;</span></span><span class="token punctuation">&gt;</span></span>
+            <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>div</span> <span class="token attr-name">class</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">&quot;</span>animate<span class="token punctuation">&quot;</span></span><span class="token punctuation">&gt;</span></span>
+            <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>div</span><span class="token punctuation">&gt;</span></span>
+            <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>div</span> <span class="token attr-name">class</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">&quot;</span>text<span class="token punctuation">&quot;</span></span><span class="token punctuation">&gt;</span></span>{{text}}<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>div</span><span class="token punctuation">&gt;</span></span>
+        <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>div</span><span class="token punctuation">&gt;</span></span>
+    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>div</span><span class="token punctuation">&gt;</span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>template</span><span class="token punctuation">&gt;</span></span>
+
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>script</span><span class="token punctuation">&gt;</span></span><span class="token script"><span class="token language-javascript">
+<span class="token keyword">export</span> <span class="token keyword">default</span> <span class="token punctuation">{</span>
+    props<span class="token operator">:</span> <span class="token punctuation">{</span>
+        show<span class="token operator">:</span> Boolean<span class="token punctuation">,</span>
+        text<span class="token operator">:</span> <span class="token punctuation">{</span>
+          type<span class="token operator">:</span> String<span class="token punctuation">,</span>
+          <span class="token keyword">default</span><span class="token operator">:</span> <span class="token string">'正在加载中...'</span>
+        <span class="token punctuation">}</span><span class="token punctuation">,</span>
+    <span class="token punctuation">}</span>
+<span class="token punctuation">}</span>
+</span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>script</span><span class="token punctuation">&gt;</span></span>
+</code></pre></div><p>没有封装插件之前，我们只能通过import引入,并在components对象中注册才能在页面中使用。</p> <p>将其封装成一个插件：</p> <div class="language-javascript extra-class"><pre class="language-javascript"><code><span class="token comment">// loading.js</span>
+<span class="token keyword">import</span> LoadingComponent <span class="token keyword">from</span> <span class="token string">'../components/loading.vue'</span>
+
+<span class="token keyword">let</span> $vm
+
+<span class="token keyword">export</span> <span class="token keyword">default</span> <span class="token punctuation">{</span>
+    <span class="token function">install</span><span class="token punctuation">(</span><span class="token parameter">Vue<span class="token punctuation">,</span> options</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token operator">!</span>$vm<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+            <span class="token keyword">const</span> LoadingPlugin <span class="token operator">=</span> Vue<span class="token punctuation">.</span><span class="token function">extend</span><span class="token punctuation">(</span>LoadingComponent<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+            $vm <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">LoadingPlugin</span><span class="token punctuation">(</span><span class="token punctuation">{</span>
+                el<span class="token operator">:</span> document<span class="token punctuation">.</span><span class="token function">createElement</span><span class="token punctuation">(</span><span class="token string">'div'</span><span class="token punctuation">)</span>
+            <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+            document<span class="token punctuation">.</span>body<span class="token punctuation">.</span><span class="token function">appendChild</span><span class="token punctuation">(</span>$vm<span class="token punctuation">.</span>$el<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">}</span>
+
+        $vm<span class="token punctuation">.</span>show <span class="token operator">=</span> <span class="token boolean">false</span><span class="token punctuation">;</span>
+
+        <span class="token keyword">let</span> loading <span class="token operator">=</span> <span class="token punctuation">{</span>
+            <span class="token function">show</span><span class="token punctuation">(</span><span class="token parameter">text</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+                $vm<span class="token punctuation">.</span>show <span class="token operator">=</span> <span class="token boolean">true</span><span class="token punctuation">;</span>
+                $vm<span class="token punctuation">.</span>text <span class="token operator">=</span> text<span class="token punctuation">;</span>
+            <span class="token punctuation">}</span><span class="token punctuation">,</span>
+            <span class="token function">hide</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+                $vm<span class="token punctuation">.</span>show <span class="token operator">=</span> <span class="token boolean">false</span><span class="token punctuation">;</span>
+            <span class="token punctuation">}</span>
+        <span class="token punctuation">}</span><span class="token punctuation">;</span>
+
+        <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token operator">!</span>Vue<span class="token punctuation">.</span>$loading<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+            Vue<span class="token punctuation">.</span>$loading <span class="token operator">=</span> loading<span class="token punctuation">;</span>
+        <span class="token punctuation">}</span>
+
+        <span class="token comment">// Vue.prototype.$loading = Vue.$loading;</span>
+        Vue<span class="token punctuation">.</span><span class="token function">mixin</span><span class="token punctuation">(</span><span class="token punctuation">{</span>
+            <span class="token function">created</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+                <span class="token keyword">this</span><span class="token punctuation">.</span>$loading <span class="token operator">=</span> Vue<span class="token punctuation">.</span>$loading<span class="token punctuation">;</span>
+            <span class="token punctuation">}</span>
+        <span class="token punctuation">}</span><span class="token punctuation">)</span>
+    <span class="token punctuation">}</span>
+<span class="token punctuation">}</span>
+</code></pre></div><p>上面我们新建一个 loading.js 文件，<code>引入我们的 loading.vue 组件</code>，然后通过 Vue.extend() 方法<code>创建了一个构造器 LoadingPlugin</code> ，
+其次我们再通过 new LoadingPlugin() <code>创建了 $vm 实例</code>，并<code>挂载</code>到一个 div 元素上。最后我们需要通过 document.body.appendChild($vm.$el) 将其<code>插入到DOM节点</code>中。</p> <p>当我们创建了 $vm 实例后，我们可以访问该实例的属性和方法，比如通过 $vm.show 就可以改变 loading 组件的 show 值来控制其显示隐藏。</p> <p>最终我们通过 Vue.mixin 或者 Vue.prototype.$loading 来全局添加了 $loading 事件，其又包含了 show 和 hide 两个方法。
+我们可以直接在页面中使用 this.$loading.show() 来显示加载，使用 this.$loading.hide() 来关闭加载。</p> <h2 id="发布插件"><a href="#发布插件" class="header-anchor">#</a> 发布插件</h2> <p>开发的插件也可以发布到 npm 上供大家使用或在其他项目中直接安装插件使用。</p> <h4 id="发布准备"><a href="#发布准备" class="header-anchor">#</a> 发布准备</h4> <p>注册 npm 账号</p> <h4 id="发布命令"><a href="#发布命令" class="header-anchor">#</a> 发布命令</h4> <p>拥有账号后，你需要在控制台输入 npm login 命令来登录你的账号，并且输入邮箱地址。然后打开你的插件目录，允许 npm publish 发布。</p> <blockquote><p>npm login<br>
+cd 目录<br>
+npm publish</p></blockquote> <h4 id="发布后的目录结构"><a href="#发布后的目录结构" class="header-anchor">#</a> 发布后的目录结构</h4> <div class="language-text extra-class"><pre class="language-text"><code>├── lib // 插件源码
+│   ├── components // 组件目录
+│   │   └── loading.vue // 组件
+│   └── index.js  // 插件入口文件
+├── index.js // 入口文件
+└── package.json  // 包管理文件
+</code></pre></div><div class="custom-block warning"><p class="custom-block-title">承上启下</p> <p>以上，是vue插件的应用基础，包括插件的使用、开发和发布。</p> <p>下文，从vue源码层面的解析vue插件机制。</p></div> <h2 id="插件机制源码解析"><a href="#插件机制源码解析" class="header-anchor">#</a> 插件机制源码解析</h2> <p>Vue.use(MyPlugin, { someOption: true }); 这个方法是所有插件入侵 vue 的起点。
+Vue 提供了 Vue.use 的全局 API 来注册插件，所以我们先来分析一下它的实现原理：</p> <div class="language-javascript extra-class"><pre class="language-javascript"><code><span class="token comment">/* vue/src/core/global-api/use.js */</span>
+<span class="token comment">/* 初始化use */</span>
+<span class="token keyword">import</span> <span class="token punctuation">{</span> toArray <span class="token punctuation">}</span> <span class="token keyword">from</span> <span class="token string">'../util/index'</span>
+
+<span class="token keyword">export</span> <span class="token keyword">function</span> <span class="token function">initUse</span> <span class="token punctuation">(</span><span class="token parameter">Vue<span class="token operator">:</span> GlobalAPI</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+  Vue<span class="token punctuation">.</span><span class="token function-variable function">use</span> <span class="token operator">=</span> <span class="token keyword">function</span> <span class="token punctuation">(</span><span class="token parameter">plugin<span class="token operator">:</span> Function <span class="token operator">|</span> Object</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token comment">/* 维护了一个 _installedPlugins 数组，它存储所有注册过的 plugin */</span>  
+    <span class="token keyword">const</span> installedPlugins <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token keyword">this</span><span class="token punctuation">.</span>_installedPlugins <span class="token operator">||</span> <span class="token punctuation">(</span><span class="token keyword">this</span><span class="token punctuation">.</span>_installedPlugins <span class="token operator">=</span> <span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+    <span class="token keyword">if</span> <span class="token punctuation">(</span>installedPlugins<span class="token punctuation">.</span><span class="token function">indexOf</span><span class="token punctuation">(</span>plugin<span class="token punctuation">)</span> <span class="token operator">&gt;</span> <span class="token operator">-</span><span class="token number">1</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+      <span class="token keyword">return</span> <span class="token keyword">this</span>
+    <span class="token punctuation">}</span>
+
+    <span class="token comment">// additional parameters 获取插件的配置参数</span>
+    <span class="token keyword">const</span> args <span class="token operator">=</span> <span class="token function">toArray</span><span class="token punctuation">(</span>arguments<span class="token punctuation">,</span> <span class="token number">1</span><span class="token punctuation">)</span>
+    args<span class="token punctuation">.</span><span class="token function">unshift</span><span class="token punctuation">(</span><span class="token keyword">this</span><span class="token punctuation">)</span>
+    <span class="token comment">/**
+    * 判断 plugin 有没有定义 install 方法，如果有的话则调用该方法，
+    * 并且该方法执行的第一个参数是 Vue 
+    */</span>
+    <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token keyword">typeof</span> plugin<span class="token punctuation">.</span>install <span class="token operator">===</span> <span class="token string">'function'</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+      plugin<span class="token punctuation">.</span><span class="token function">install</span><span class="token punctuation">.</span><span class="token function">apply</span><span class="token punctuation">(</span>plugin<span class="token punctuation">,</span> args<span class="token punctuation">)</span>  <span class="token comment">// install执行插件安装 调用的是插件的install方法</span>
+    <span class="token punctuation">}</span> <span class="token keyword">else</span> <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token keyword">typeof</span> plugin <span class="token operator">===</span> <span class="token string">'function'</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+      <span class="token function">plugin</span><span class="token punctuation">.</span><span class="token function">apply</span><span class="token punctuation">(</span><span class="token keyword">null</span><span class="token punctuation">,</span> args<span class="token punctuation">)</span> <span class="token comment">// 插件本身就是一个函数。则直接调用该函数</span>
+    <span class="token punctuation">}</span>
+    installedPlugins<span class="token punctuation">.</span><span class="token function">push</span><span class="token punctuation">(</span>plugin<span class="token punctuation">)</span> <span class="token comment">// 最后把 plugin 存储到 installedPlugins 中</span>
+    <span class="token keyword">return</span> <span class="token keyword">this</span>
+  <span class="token punctuation">}</span>
+<span class="token punctuation">}</span>
+</code></pre></div><p>可以看到 Vue 提供的插件注册机制很简单，每个插件都需要实现一个静态的 install 方法，当我们执行 Vue.use 注册插件的时候，
+就会执行这个 install 方法，并且在这个 install 方法的第一个参数我们可以拿到 Vue 对象，
+这样的好处就是作为插件的编写方不需要再额外去 import Vue 了。</p> <p>插件入侵的起点是调用插件自身的 install 函数，那么不同的插件入侵的机制有些时候不一样，不一样就体现在上文说到过的<strong>插件的开发</strong>中的 install 方法。</p> <p>当全局使用插件中的(指令/过滤器/方法等) api 时，vue 会把这些 api 放在相应的属性数组里。形如：</p> <div class="language-javascript extra-class"><pre class="language-javascript"><code>Vue<span class="token punctuation">.</span>options <span class="token operator">=</span> <span class="token punctuation">{</span>
+    components<span class="token operator">:</span> <span class="token punctuation">{</span><span class="token punctuation">}</span><span class="token punctuation">,</span>
+    directives<span class="token operator">:</span> <span class="token punctuation">{</span><span class="token punctuation">}</span><span class="token punctuation">,</span>
+    filters<span class="token operator">:</span> <span class="token punctuation">{</span><span class="token punctuation">}</span><span class="token punctuation">,</span>
+    _base<span class="token operator">:</span> Vue
+<span class="token punctuation">}</span>
+</code></pre></div><p>options 挂在 vue 实例上，vue 初始化时会调用 init 方法时，会执行：</p> <div class="language-javascript extra-class"><pre class="language-javascript"><code> vm<span class="token punctuation">.</span>$options <span class="token operator">=</span> <span class="token function">mergeOptions</span><span class="token punctuation">(</span>
+     <span class="token function">resolveConstructorOptions</span><span class="token punctuation">(</span>vm<span class="token punctuation">.</span>constructor<span class="token punctuation">)</span><span class="token punctuation">,</span><span class="token comment">//策略合并核心函数(重点)。</span>
+     options <span class="token operator">||</span> <span class="token punctuation">{</span><span class="token punctuation">}</span><span class="token punctuation">,</span>
+     vm
+  <span class="token punctuation">)</span><span class="token punctuation">;</span>
+</code></pre></div><p>vue 在创建实例时，会把 vue.options 中的属性提取出来，并和传入的 <code>options 做合并</code>(使用合并策略)。
+vue 的每个配置项都有自己的合并策略。mergeOptions 会根据合并的类目去<code>选择对应的合并规则</code>。这里的 component.directive.filter 根据合并规则。
+Vue 对象上的全局的这些属性会被放在实例的 <code>__proto__</code> 上。</p> <p>如果是全局的指令过滤器时，vue 统一把它<code>放在根构造方法</code>上。根实例初始化时，通过合并策略合并到 $options 中。
+而子组件稍微绕了一下，但最终也是放在 $options 的原型上。这样只要是全局的组件/指令/过滤器，每个子组件都可以继承使用，达到了插件的效果。</p> <div class="custom-block warning"><p class="custom-block-title">承上启下</p> <p>以上，从vue源码层面认识了插件的机制，这将是下文讲解的基础。</p> <p>下文，将解析vue-router插件的实现。</p></div> <h2 id="vue-router-插件实现"><a href="#vue-router-插件实现" class="header-anchor">#</a> vue-router 插件实现</h2> <p>首先进入入口文件index.js，下面代码是提炼的骨架：</p> <div class="language-javascript extra-class"><pre class="language-javascript"><code><span class="token comment">/* src/index.js */</span>
+
+<span class="token keyword">import</span> <span class="token punctuation">{</span> install <span class="token punctuation">}</span> <span class="token keyword">from</span> <span class="token string">'./install'</span>
+<span class="token comment">/* more */</span>
+
+<span class="token keyword">export</span> <span class="token keyword">default</span> <span class="token keyword">class</span> <span class="token class-name">VueRouter</span> <span class="token punctuation">{</span><span class="token comment">/*...*/</span><span class="token punctuation">}</span>
+
+VueRouter<span class="token punctuation">.</span>install <span class="token operator">=</span> install
+VueRouter<span class="token punctuation">.</span>version <span class="token operator">=</span> <span class="token string">'__VERSION__'</span>
+
+<span class="token keyword">if</span> <span class="token punctuation">(</span>inBrowser <span class="token operator">&amp;&amp;</span> window<span class="token punctuation">.</span>Vue<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+  window<span class="token punctuation">.</span>Vue<span class="token punctuation">.</span><span class="token function">use</span><span class="token punctuation">(</span>VueRouter<span class="token punctuation">)</span>
+<span class="token punctuation">}</span>
+</code></pre></div><p>可以看到，入口文件中定义了 VueRouter 类，也实现了 install 的静态方法：VueRouter.install = install，而 install 定义在 src/install.js 中。</p> <div class="custom-block tip"><p class="custom-block-title">好习惯</p> <p>好的阅读代码的方式是先看整个代码结构和提炼骨架</p></div> <p>那么，vue-router 的插件实现就在 install.js 文件中，下面具体看看：</p> <p>首先提炼出代码骨架：</p> <div class="language-javascript extra-class"><pre class="language-javascript"><code><span class="token keyword">import</span> View <span class="token keyword">from</span> <span class="token string">'./components/view'</span>
+<span class="token keyword">import</span> Link <span class="token keyword">from</span> <span class="token string">'./components/link'</span>
+
+<span class="token keyword">export</span> <span class="token keyword">function</span> <span class="token function">install</span> <span class="token punctuation">(</span><span class="token parameter">Vue</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    
+  <span class="token comment">// 封装了一个全局混入</span>
+  Vue<span class="token punctuation">.</span><span class="token function">mixin</span><span class="token punctuation">(</span><span class="token punctuation">{</span>
+    <span class="token function">beforeCreate</span> <span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span><span class="token comment">/*...*/</span><span class="token punctuation">}</span><span class="token punctuation">,</span>
+    <span class="token function">destroyed</span> <span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span><span class="token comment">/*...*/</span><span class="token punctuation">}</span>
+  <span class="token punctuation">}</span><span class="token punctuation">)</span>
+  
+  <span class="token comment">// 定义了两个挂载在原型上的变量</span>
+  Object<span class="token punctuation">.</span><span class="token function">defineProperty</span><span class="token punctuation">(</span><span class="token class-name">Vue</span><span class="token punctuation">.</span>prototype<span class="token punctuation">,</span> <span class="token string">'$router'</span><span class="token punctuation">,</span> <span class="token punctuation">{</span><span class="token comment">/*...*/</span><span class="token punctuation">}</span><span class="token punctuation">)</span>
+  Object<span class="token punctuation">.</span><span class="token function">defineProperty</span><span class="token punctuation">(</span><span class="token class-name">Vue</span><span class="token punctuation">.</span>prototype<span class="token punctuation">,</span> <span class="token string">'$route'</span><span class="token punctuation">,</span> <span class="token punctuation">{</span><span class="token comment">/*...*/</span><span class="token punctuation">}</span><span class="token punctuation">)</span>
+  
+  <span class="token comment">// 注册了两个组件</span>
+  Vue<span class="token punctuation">.</span><span class="token function">component</span><span class="token punctuation">(</span><span class="token string">'RouterView'</span><span class="token punctuation">,</span> View<span class="token punctuation">)</span>
+  Vue<span class="token punctuation">.</span><span class="token function">component</span><span class="token punctuation">(</span><span class="token string">'RouterLink'</span><span class="token punctuation">,</span> Link<span class="token punctuation">)</span>
+<span class="token punctuation">}</span>
+</code></pre></div><p>你会发现，这就是摘要中提到的。vue-router 一句话总结：<strong>封装了一个<code>全局混入</code>，定义了两个挂载在<code>原型</code>上的<code>变量</code>，注册了两个<code>组件</code>。</strong></p> <p>下面具体解析：</p> <div class="language-javascript extra-class"><pre class="language-javascript"><code><span class="token keyword">import</span> View <span class="token keyword">from</span> <span class="token string">'./components/view'</span>
+<span class="token keyword">import</span> Link <span class="token keyword">from</span> <span class="token string">'./components/link'</span>
+
+<span class="token keyword">export</span> <span class="token keyword">let</span> _Vue
+
+<span class="token comment">/* 暴露install方法 安装路由*/</span>
+<span class="token keyword">export</span> <span class="token keyword">function</span> <span class="token function">install</span> <span class="token punctuation">(</span><span class="token parameter">Vue</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+  <span class="token comment">/**
+  * (路由安装）判断是否已安装过
+  * 当install.installed为true并且存在Vue实例_Vue 代表已安装 直接return 否则继续执行下面的代码
+  */</span>
+  <span class="token keyword">if</span> <span class="token punctuation">(</span>install<span class="token punctuation">.</span>installed <span class="token operator">&amp;&amp;</span> _Vue <span class="token operator">===</span> Vue<span class="token punctuation">)</span> <span class="token keyword">return</span>
+  install<span class="token punctuation">.</span>installed <span class="token operator">=</span> <span class="token boolean">true</span>
+
+ <span class="token comment">/* 保存Vue实例 */</span>
+  _Vue <span class="token operator">=</span> Vue
+
+ <span class="token comment">/* 判断变量是否已定义 */</span>
+  <span class="token keyword">const</span> <span class="token function-variable function">isDef</span> <span class="token operator">=</span> <span class="token parameter">v</span> <span class="token operator">=&gt;</span> v <span class="token operator">!==</span> <span class="token keyword">undefined</span>
+
+  <span class="token comment">/* 注册router实例 */</span>
+  <span class="token comment">/* 当组件被初始化后进入 beforeCreate 钩子时，才会有组件实例，这时候才会执行 registerInstance */</span>
+  <span class="token keyword">const</span> <span class="token function-variable function">registerInstance</span> <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token parameter">vm<span class="token punctuation">,</span> callVal</span><span class="token punctuation">)</span> <span class="token operator">=&gt;</span> <span class="token punctuation">{</span>
+    <span class="token comment">/**
+    * i为 router-view 组件占位符 vnode
+    * 这里会执行 registerRouteInstance，将当前组件实例赋值给匹配到的路由记录
+    *（用于beforeRouteEnter的回调获取vm实例）
+    */</span>
+    <span class="token keyword">let</span> i <span class="token operator">=</span> vm<span class="token punctuation">.</span>$options<span class="token punctuation">.</span>_parentVnode
+    <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token function">isDef</span><span class="token punctuation">(</span>i<span class="token punctuation">)</span> <span class="token operator">&amp;&amp;</span> <span class="token function">isDef</span><span class="token punctuation">(</span>i <span class="token operator">=</span> i<span class="token punctuation">.</span>data<span class="token punctuation">)</span> <span class="token operator">&amp;&amp;</span> <span class="token function">isDef</span><span class="token punctuation">(</span>i <span class="token operator">=</span> i<span class="token punctuation">.</span>registerRouteInstance<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+      <span class="token function">i</span><span class="token punctuation">(</span>vm<span class="token punctuation">,</span> callVal<span class="token punctuation">)</span>
+    <span class="token punctuation">}</span>
+  <span class="token punctuation">}</span>
+
+  <span class="token comment">/* 定义一个全局混入，混入Vue实例 */</span>
+  Vue<span class="token punctuation">.</span><span class="token function">mixin</span><span class="token punctuation">(</span><span class="token punctuation">{</span>
+    <span class="token comment">/**
+    * 在beforeCreate钩子中初始化当前路由的信息 
+    *  vue-router流程: 
+    *    触发路由跳转 =&gt; 执行beforeCreate钩子的init =&gt; transitionTo =&gt;  
+    *    执行准备离开相关的路由钩子(后置守卫) =&gt;
+    *    接受异步组件并解析 =&gt; 执行准备进入的路由的钩子(前置守卫) =&gt; 
+    *    更新视图（触发完组件的所有生命周期）=&gt; 触发beforeRouterEnter的回调
+    */</span>
+    <span class="token function">beforeCreate</span> <span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+      <span class="token comment">/* Vue.options中是否存在根实例router 存在router时进行路由初始化操作 
+       否则则直接从父组件_routerRoot中获取 */</span>
+      <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token function">isDef</span><span class="token punctuation">(</span><span class="token keyword">this</span><span class="token punctuation">.</span>$options<span class="token punctuation">.</span>router<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        <span class="token comment">/* 将根实例赋值给_routerRoot 保存根实例vm */</span>
+        <span class="token keyword">this</span><span class="token punctuation">.</span>_routerRoot <span class="token operator">=</span> <span class="token keyword">this</span>
+        <span class="token comment">/* 给根实例添加_router属性等于router对象 保存router */</span>
+        <span class="token keyword">this</span><span class="token punctuation">.</span>_router <span class="token operator">=</span> <span class="token keyword">this</span><span class="token punctuation">.</span>$options<span class="token punctuation">.</span>router
+        <span class="token comment">/* VueRouter对象的init方法 执行init方法初始化路由 参数：根实例 */</span>
+        <span class="token keyword">this</span><span class="token punctuation">.</span>_router<span class="token punctuation">.</span><span class="token function">init</span><span class="token punctuation">(</span><span class="token keyword">this</span><span class="token punctuation">)</span>
+        <span class="token comment">/**
+        * Vue内部方法defineProperty响应式
+        * 组件实例的$route属性(根实例的_router属性)定义为响应式，每次路由确认导航时会触发setter，
+        * 将根实例重新渲染，每次路由切换都会执行回调修改_router(src/index.js:124)
+        */</span>
+        Vue<span class="token punctuation">.</span>util<span class="token punctuation">.</span><span class="token function">defineReactive</span><span class="token punctuation">(</span><span class="token keyword">this</span><span class="token punctuation">,</span> <span class="token string">'_route'</span><span class="token punctuation">,</span> <span class="token keyword">this</span><span class="token punctuation">.</span>_router<span class="token punctuation">.</span>history<span class="token punctuation">.</span>current<span class="token punctuation">)</span>
+      <span class="token punctuation">}</span> <span class="token keyword">else</span> <span class="token punctuation">{</span>
+        <span class="token comment">/**
+        * 非根组件则直接从父组件_routerRoot中获取
+        * (因为是树形结构所以所有的组件的_routerRoot都等于根实例)
+        */</span>
+        <span class="token keyword">this</span><span class="token punctuation">.</span>_routerRoot <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token keyword">this</span><span class="token punctuation">.</span>$parent <span class="token operator">&amp;&amp;</span> <span class="token keyword">this</span><span class="token punctuation">.</span>$parent<span class="token punctuation">.</span>_routerRoot<span class="token punctuation">)</span> <span class="token operator">||</span> <span class="token keyword">this</span>
+      <span class="token punctuation">}</span>
+      <span class="token comment">/* 通过registerRouteInstance方法注册router实例 */</span>
+      <span class="token function">registerInstance</span><span class="token punctuation">(</span><span class="token keyword">this</span><span class="token punctuation">,</span> <span class="token keyword">this</span><span class="token punctuation">)</span>
+    <span class="token punctuation">}</span><span class="token punctuation">,</span>
+    <span class="token function">destroyed</span> <span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+      <span class="token function">registerInstance</span><span class="token punctuation">(</span><span class="token keyword">this</span><span class="token punctuation">)</span>
+    <span class="token punctuation">}</span>
+  <span class="token punctuation">}</span><span class="token punctuation">)</span>
+  
+  <span class="token comment">/**
+  * 定义$router指向根实例的router对象
+  * 在Vue的prototype上面绑定$router，这样可以在任意Vue对象中使用this.$router访问，
+  * 同时经过Object.defineProperty，访问this.$router即访问this._routerRoot._router
+  */</span>
+  Object<span class="token punctuation">.</span><span class="token function">defineProperty</span><span class="token punctuation">(</span><span class="token class-name">Vue</span><span class="token punctuation">.</span>prototype<span class="token punctuation">,</span> <span class="token string">'$router'</span><span class="token punctuation">,</span> <span class="token punctuation">{</span>
+    <span class="token function">get</span> <span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span> <span class="token keyword">return</span> <span class="token keyword">this</span><span class="token punctuation">.</span>_routerRoot<span class="token punctuation">.</span>_router <span class="token punctuation">}</span>
+  <span class="token punctuation">}</span><span class="token punctuation">)</span>
+
+  <span class="token comment">/**
+  * 定义$router指向当前的路由
+  * 指向根实例的 _route 属性，当 router-view 被生成时，会触发 $route 的 getter 函数
+  * 同时会给 _route 收集到当前的渲染 watcher，访问this.$route即访问this._routerRoot._route
+  */</span>
+  Object<span class="token punctuation">.</span><span class="token function">defineProperty</span><span class="token punctuation">(</span><span class="token class-name">Vue</span><span class="token punctuation">.</span>prototype<span class="token punctuation">,</span> <span class="token string">'$route'</span><span class="token punctuation">,</span> <span class="token punctuation">{</span>
+    <span class="token function">get</span> <span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span> <span class="token keyword">return</span> <span class="token keyword">this</span><span class="token punctuation">.</span>_routerRoot<span class="token punctuation">.</span>_route <span class="token punctuation">}</span>
+  <span class="token punctuation">}</span><span class="token punctuation">)</span>
+
+  <span class="token comment">/* 注册touter-view以及router-link组件 */</span>
+  Vue<span class="token punctuation">.</span><span class="token function">component</span><span class="token punctuation">(</span><span class="token string">'RouterView'</span><span class="token punctuation">,</span> View<span class="token punctuation">)</span>
+  Vue<span class="token punctuation">.</span><span class="token function">component</span><span class="token punctuation">(</span><span class="token string">'RouterLink'</span><span class="token punctuation">,</span> Link<span class="token punctuation">)</span>
+
+ <span class="token comment">/* 该对象保存了两个option合并的规则 */</span>
+  <span class="token keyword">const</span> strats <span class="token operator">=</span> Vue<span class="token punctuation">.</span>config<span class="token punctuation">.</span>optionMergeStrategies
+  <span class="token comment">// use the same hook merging strategy for route hooks</span>
+  strats<span class="token punctuation">.</span>beforeRouteEnter <span class="token operator">=</span> strats<span class="token punctuation">.</span>beforeRouteLeave <span class="token operator">=</span> strats<span class="token punctuation">.</span>beforeRouteUpdate <span class="token operator">=</span> strats<span class="token punctuation">.</span>created
+<span class="token punctuation">}</span>
+</code></pre></div><div class="custom-block tip"><p class="custom-block-title">提示</p> <p>这里通过 Object.defineProperty 定义 get 来实现 ， 而不使用 Vue.prototype.$router = this._routerRoot._router。 是为了让其只读，不可修改
+注册全局组件</p></div> <h2 id="注解"><a href="#注解" class="header-anchor">#</a> 注解</h2> <p>当执行 Vue.use(VueRouter) 的时候，实际上是在执行 install 函数，为了确保 install 逻辑只执行一次，用了 installed 做已安装的标志位。
+另外用一个全局的 _Vue 来接收参数 Vue，因为作为 Vue 的插件对 Vue 对象是有依赖的，但又不能去单独去 import Vue，
+因为那样会增加包体积，所以就通过这种方式拿到 Vue 对象。</p> <p>利用 Vue.mixin 去把 beforeCreate 和 destroyed 钩子函数注入到每一个组件中。</p> <div class="language-javascript extra-class"><pre class="language-javascript"><code><span class="token keyword">export</span> <span class="token keyword">function</span> <span class="token function">initMixin</span> <span class="token punctuation">(</span><span class="token parameter">Vue<span class="token operator">:</span> GlobalAPI</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+  Vue<span class="token punctuation">.</span><span class="token function-variable function">mixin</span> <span class="token operator">=</span> <span class="token keyword">function</span> <span class="token punctuation">(</span><span class="token parameter">mixin<span class="token operator">:</span> Object</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token keyword">this</span><span class="token punctuation">.</span>options <span class="token operator">=</span> <span class="token function">mergeOptions</span><span class="token punctuation">(</span><span class="token keyword">this</span><span class="token punctuation">.</span>options<span class="token punctuation">,</span> mixin<span class="token punctuation">)</span>
+    <span class="token keyword">return</span> <span class="token keyword">this</span>
+  <span class="token punctuation">}</span>
+<span class="token punctuation">}</span>
+</code></pre></div><p>把要混入的对象通过<code>mergeOptions</code>合并到 Vue 的 options 中，由于每个组件的构造函数都会在 extend <code>构造阶段合并 Vue.options 到自身的 options 中</code>，
+所以也就相当于每个组件都定义了 mixin 定义的选项。</p> <p>回到 install 方法，先看混入的 <code>beforeCreate</code>钩子函数，对于 Vue 根实例而言，执行该钩子函数时定义了<code>this._routerRoot</code> 表示它自身；
+<code>this._router</code> 表示 VueRouter 的实例 router，它是在 new Vue 的时候传入的。</p> <p>另外执行了 <code>this._router.init()</code>方法初始化 router，这个逻辑之后介绍，
+然后用 <code>defineReactive</code> 方法把 this._route 变成<code>响应式对象</code>，这个作用我们之后会介绍。</p> <p>而对于子组件而言，由于组件是树状结构，在遍历组件树的过程中，它们在执行该钩子函数的时候 this._routerRoot
+始终指向的离它最近的传入了 router 对象作为配置而实例化的父实例。</p> <p>对于 beforeCreate 和 destroyed 钩子函数，它们都会执行 registerInstance 方法，这个方法的作用我们也是之后会介绍。</p> <p>接着给 Vue 原型上定义了 $router 和 $route 两个属性的 get 方法，这就是为什么我们可以在组件实例上可以访问 this.$router 以及 this.$route，它们的作用之后介绍。</p> <p>接着又通过 Vue.component 方法定义了全局的 <code>&lt;router-link&gt;</code> 和 <code>&lt;router-view&gt;</code> 两个个组件，这也是为什么我们在写模板的时候可以使用这两个标签，它们的作用也是之后介绍。</p> <p>最后定义了路由中的钩子函数的合并策略，和普通的钩子函数一样。</p> <h2 id="总结"><a href="#总结" class="header-anchor">#</a> 总结</h2> <p>那么到此为止，我们分析了 Vue-Router 的安装过程，Vue 编写插件的时候通常要提供静态的 install 方法，
+我们通过 Vue.use(VueRouter) 时候，就是在执行 install 方法。
+VueRouter 的 install 方法会给每一个组件注入 beforeCreate 和 destoryed 钩子函数，
+在 beforeCreate 做一些私有属性定义和路由初始化工作。</p> <p>下一节我们就来分析一下 VueRouter 对象的实现和它的初始化工作。</p></div> <footer class="page-edit"><!----> <div class="last-updated"><span class="prefix">最近更新:</span> <span class="time">11/11/2020, 9:37:26 AM</span></div></footer> <div class="page-nav"><p class="inner"><span class="prev">
+      ←
+      <a href="/blog/vue/vue-router/warmUp.html" class="prev">
+        准备工作
+      </a></span> <span class="next"><a href="/blog/vue/vue-router/initialization.html">
+        初始化与降级处理
+      </a>
+      →
+    </span></p></div> </main></div><div class="global-ui"><!----><!----><!----><!----></div></div>
+    <script src="/blog/assets/js/app.566cf3e9.js" defer></script><script src="/blog/assets/js/2.4f9efc98.js" defer></script><script src="/blog/assets/js/26.996765cf.js" defer></script><script src="/blog/assets/js/3.07d27621.js" defer></script>
+  </body>
+</html>
