@@ -25,32 +25,78 @@ html {
 }
 
 .right-anchor {
-    max-width 12.5rem
+    max-width: 12.5rem;
+
     ::-webkit-scrollbar {
         display: none;
     }
 }
 
-.theme-default-content{
+.theme-default-content {
     ::-webkit-scrollbar {
         display: block;
     }
+
     margin: 0 !important;
-    padding: 2rem 14rem 2rem 6rem!important;
+    padding: 2rem 14rem 2rem 6rem !important;
 }
 
-.page-edit,.page-nav{
-     padding: 2rem 14rem 2rem 6rem!important;
+.page-edit, .page-nav {
+    padding: 2rem 14rem 2rem 6rem !important;
 }
 
 @media screen and (max-width: 1200px) {
-    .theme-default-content{
+    .theme-default-content {
         ::-webkit-scrollbar {
             display: block;
         }
+
         margin: 0 !important;
-        padding: 2rem 6rem 2rem 6rem!important;
+        padding: 2rem 2.5rem !important;
     }
+
+    .page-edit, .page-nav {
+        padding: 2rem 2.5rem !important;
+    }
+
+    .right-anchor {
+        display: none !important;
+    }
+}
+
+@media screen and (max-width: $MQNarrow) {
+    .theme-default-content {
+        ::-webkit-scrollbar {
+            display: block;
+        }
+
+        margin: 0 !important;
+        padding: 2rem !important;
+    }
+
+    .page-edit, .page-nav {
+        padding: 2rem !important;
+    }
+
+    .right-anchor {
+        display: none !important;
+    }
+}
+
+@media screen and (max-width: $MQMobileNarrow) {
+    .theme-default-content {
+        ::-webkit-scrollbar {
+            display: block;
+        }
+
+        margin: 0 !important;
+        padding: 1.5rem !important;
+    }
+
+    .page-edit, .page-nav {
+        padding: 1.5rem !important;
+    }
+
     .right-anchor {
         display: none !important;
     }

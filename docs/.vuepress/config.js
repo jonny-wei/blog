@@ -74,6 +74,16 @@ const sidebar = {
       ]
     },
   ],
+  javascript: [
+    {
+      title: 'JavaScript高级程序设计',
+      collapsable: false,
+      children: [
+        // '/javascript/book/chapter1',
+        // '/javascript/book/chapter2'
+      ]
+    },
+  ],
   typescript: [
     {
       title: 'TypeScript基础',
@@ -149,7 +159,7 @@ module.exports = {
     ['meta', { name: 'theme-color', content: '#3eaf7c' }],
     ['meta', { name: 'apple-mobile-web-app-capable', content: 'yes' }],
     ['meta', { name: 'apple-mobile-web-app-status-bar-style', content: 'black' }],
-    ['link',{rel: 'apple-touch-icon',href: '/images/icons/apple-icon-152x152.png'}],
+    ['link', {rel: 'apple-touch-icon',href: '/images/icons/apple-icon-152x152.png'}],
     ['meta', { name: 'msapplication-TileImage', content: '/icons/ms-icon-144x144.png' }],
     ['meta', { name: 'msapplication-TileColor', content: '#000000' }]
   ],
@@ -162,8 +172,18 @@ module.exports = {
     smoothScroll: true,
     nav: [
       {text: '主页', link: '/'},
-      {text: 'Vue', link: '/vue/'},
-      {text: 'CSS', link: '/css/'},
+      {text: 'Vue', link: '/vue/vue/vue-render'},
+      {text: 'CSS', link: '/css/basis/abstract'},
+      {
+        text: 'JS',
+        ariaLabel: 'JS系列菜单',
+        items: [
+          {
+            text: 'JavaScript红宝书',
+            link: '/javascript/book/chapter1'
+          },
+        ]
+      },
       {text: 'TS', link: '/typescript/'},
       {text: '优化', link: '/optimization/'},
       {text: '移动端', link: '/mobile/'},
@@ -177,6 +197,7 @@ module.exports = {
     sidebar: {
         '/vue/': sidebar.vue,
         '/css/': sidebar.css,
+        '/javascript/': sidebar.javascript,
         '/typescript/': sidebar.typescript,
         '/optimization/': sidebar.optimization,
         '/mobile/': sidebar.mobile

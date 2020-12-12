@@ -7,7 +7,7 @@
     "docs:dev": "vuepress dev docs",
     "docs:build": "vuepress build docs",
     "deploy": "bash deploy.sh",
-    "deploy:build": "vuepress build docs && gh-pages -d docs/.vuepress/dist -b build -r https://github.com/jonny-wei/blog.git"
+    "deploy:build": "vuepress build docs && gh-pages -d docs/.vuepress/dist -b build -r https://github.com.cnpmjs.org/jonny-wei/blog.git"
   },
   "repository": {
     "type": "git",
