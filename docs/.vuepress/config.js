@@ -5,15 +5,17 @@ const sidebar = {
       collapsable: false,
       sidebarDepth: 2,
       children: [
-        'vue/guide',
-        'vue/vue-render',
+        '/vue/'
       ]
     },
     {
       title: 'Vue源码解析',
       collapsable: false,
       sidebarDepth: 2,
-      children: []
+      children: [
+        'vue/github',
+        'vue/vue-render',
+      ]
     },
     {
       title: 'VueRouter源码解析',
@@ -48,6 +50,7 @@ const sidebar = {
     },
     {
       title: 'Vue3新特性',
+      sidebarDepth: 2,
       collapsable: false,
       children: [
         'vue3.x/abstract',
@@ -61,6 +64,7 @@ const sidebar = {
     {
       title: 'CSS基础',
       collapsable: false,
+      sidebarDepth: 2,
       children: [
         'basis/abstract',
         'basis/layout',
@@ -69,6 +73,7 @@ const sidebar = {
     {
       title: 'CSS进阶',
       collapsable: false,
+      sidebarDepth: 2,
       children: [
         'advanced/abstract',
       ]
@@ -76,17 +81,18 @@ const sidebar = {
   ],
   javascript: [
     {
-      title: 'JavaScript高级程序设计',
+      title: 'JavaScript高级',
+      sidebarDepth: 2,
       collapsable: false,
       children: [
-        // '/javascript/book/chapter1',
-        // '/javascript/book/chapter2'
+        'advanced',
       ]
     },
   ],
   typescript: [
     {
       title: 'TypeScript基础',
+      sidebarDepth: 2,
       collapsable: false,
       children: [
         'basis/abstract',
@@ -94,6 +100,7 @@ const sidebar = {
     },
     {
       title: 'TypeScript进阶',
+      sidebarDepth: 2,
       collapsable: false,
       children: [
         'advanced/abstract',
@@ -104,6 +111,7 @@ const sidebar = {
     {
       title: 'Webpack',
       collapsable: false,
+      sidebarDepth: 2,
       children: [
         'webpack/abstract',
         'webpack/configuration',
@@ -112,6 +120,7 @@ const sidebar = {
     },
     {
       title: '性能优化',
+      sidebarDepth: 2,
       collapsable: false,
       children: []
     },
@@ -172,18 +181,9 @@ module.exports = {
     smoothScroll: true,
     nav: [
       {text: '主页', link: '/'},
-      {text: 'Vue', link: '/vue/vue/vue-render'},
-      {text: 'CSS', link: '/css/basis/abstract'},
-      {
-        text: 'JS',
-        ariaLabel: 'JS系列菜单',
-        items: [
-          {
-            text: 'JavaScript红宝书',
-            link: '/javascript/book/chapter1'
-          },
-        ]
-      },
+      {text: 'Vue', link: '/vue/'},
+      {text: 'CSS', link: '/css/'},
+      {text: 'JS', link: '/javascript/'},
       {text: 'TS', link: '/typescript/'},
       {text: '优化', link: '/optimization/'},
       {text: '移动端', link: '/mobile/'},

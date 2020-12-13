@@ -16,11 +16,6 @@ function isArray() {
     return Object.prototype.toString.call(value) === '[object Array]';
 }
 ```
-<img :src="$withBase('/images/0001.png')" alt="0001">
-
-
-![0001图片](/blog/images/0001.png)
-
 
 ### Badge <Badge text="beta" type="warn"/> <Badge text="0.10.1+" type="error"/> <Badge text="默认主题"/>
 
