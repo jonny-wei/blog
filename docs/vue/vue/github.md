@@ -1,4 +1,4 @@
-# Vue 源码阅读 <Badge text="Github开源"/>
+# Vue 源码学习
 
 <p align="center"><a href="https://vuejs.org" target="_blank" rel="noopener noreferrer"><img width="200" src="https://vuejs.org/images/logo.png" alt="Vue logo"></a></p>
 
@@ -16,4 +16,5 @@
 
 <h4 align="center" style="color: #2c3e50;font-weight: lighter;">a tiny vue.js for learning</h4>
 
-<a style="display: flex;justify-content: center;font-size: 1.2rem;text-decoration:underline;margin-top:2rem" href="https://github.com/jonny-wei/tiny-vue">Github</a>
+<p style="display: flex; justify-content: center;"><a style="font-size: 1.2rem;text-decoration:underline;margin-top:2rem" href="https://github.com/jonny-wei/tiny-vue" target="_blank">Github</a></p>
+

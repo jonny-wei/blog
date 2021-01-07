@@ -85,6 +85,8 @@ const sidebar = {
       sidebarDepth: 2,
       collapsable: false,
       children: [
+        'DOM',
+        'sushi-js',
         'advanced',
       ]
     },
@@ -177,7 +179,7 @@ module.exports = {
   themeConfig: {
     logo: '/logo.png',
     sidebarDepth: 2,
-    lastUpdated: '最近更新',
+    // lastUpdated: '最近更新',
     smoothScroll: true,
     nav: [
       {text: '主页', link: '/'},

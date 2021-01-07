@@ -1,4 +1,7 @@
 # vue渲染原理
+
+[渲染器](http://hcysun.me/vue-design/zh/)
+
 组件的本质：组件的本质是一个函数。在模板引擎年代，给什么样的数据，就渲染对应的 html 内容（模板 + 数据 = html）；
 在如今的前端框架年代，给什么样的数据，就渲染什么样的 Virtual DOM （模板 + 数据 = Virtual DOM）。
 
