@@ -86,6 +86,7 @@ const sidebar = {
       collapsable: false,
       children: [
         'DOM',
+        'cross-domain',
         'sushi-js',
         'advanced',
       ]
