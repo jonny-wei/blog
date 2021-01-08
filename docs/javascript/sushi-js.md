@@ -1,6 +1,6 @@
 # 寿司 JavaScript :sushi: 
 
-<p align="center"><a href="https://vuejs.org" target="_blank" rel="noopener noreferrer"><img  src="./../.vuepress/public/images/javascript/sushijs-cover.png" alt="Vue logo"></a></p>
+<p align="center"><a href="https://vuejs.org" target="_blank" rel="noopener noreferrer"><img  src="/blog/images/javascript/sushijs-cover.png" alt="Vue logo"></a></p>
 
 
 <h2 align="center" style="margin: 0;padding-top: 4.6rem;border-bottom:none">Sushi JavaScript</h2>
