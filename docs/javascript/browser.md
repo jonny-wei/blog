@@ -130,6 +130,12 @@ Etag 和 Last-Modified 非常相似，都是用来判断一个参数，从而决
 分布式系统尽量关闭掉 ETag(每台机器生成的 ETag 都会不一样)。
 :::
 
+::: tip 对比
+- 在精准度上，ETag优于Last-Modified。优于 ETag 是按照内容给资源上标识，因此能准确感知资源的变化。而 Last-Modified 就不一样了，它在一些特殊的情况并不能准确感知资源变化，主要有两种情况:
+    - 编辑了资源文件，但是文件内容并没有更改，这样也会造成缓存失效。
+    - Last-Modified 能够感知的单位时间是秒，如果文件在 1 秒内改变了多次，那么这时候的 Last-Modified 并没有体现出修改了。
+- 在性能上，Last-Modified优于ETag，也很简单理解，Last-Modified仅仅只是记录一个时间点，而 Etag需要根据文件的具体内容生成哈希值。
+:::
 ### 浏览器缓存流程图
 
 ![浏览器缓存流程](/blog/images/javascript/浏览器缓存流程.png)
@@ -144,6 +150,8 @@ Etag 和 Last-Modified 非常相似，都是用来判断一个参数，从而决
 - push cache
 
 #### service worker
+
+Service Worker 借鉴了 Web Worker的 思路，即让 JS 运行在主线程之外，由于它脱离了浏览器的窗体，因此无法直接访问DOM。虽然如此，但它仍然能帮助我们完成很多有用的功能，比如离线缓存、消息推送和网络代理等功能。其中的离线缓存就是 Service Worker Cache。Service Worker 同时也是 PWA 的重要实现机制。
 
 Service Worker 是运行在浏览器背后的独立线程，一般可以用来实现缓存功能。使用 Service Worker的话，传输协议必须为 HTTPS。因为 Service Worker 中涉及到请求拦截，所以必须使用 HTTPS 协议来保障安全。
 
