@@ -87,6 +87,8 @@ const sidebar = {
       children: [
         'DOM',
         'cross-domain',
+        'http',
+        'browser',
         'sushi-js',
         'advanced',
       ]
