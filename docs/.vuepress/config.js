@@ -86,11 +86,20 @@ const sidebar = {
       collapsable: false,
       children: [
         'DOM',
-        'cross-domain',
         'http',
-        'browser',
         'sushi-js',
         'advanced',
+      ]
+    },
+    {
+      title: '浏览器',
+      collapsable: false,
+      sidebarDepth: 2,
+      children: [
+        'browser/web-storage',
+        'browser/browser-cache',
+        'browser/browser-render',
+        'browser/cross-domain',
       ]
     },
   ],

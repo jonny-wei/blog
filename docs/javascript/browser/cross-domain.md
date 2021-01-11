@@ -1,9 +1,9 @@
 # 跨域
 
-### 什么是同源
+## 什么是同源
 页面的协议，域名和端口都相同，则属于同一源，否则就是非同源
 
-### 什么是同源策略(SOP：Same-Origin Policy)
+## 什么是同源策略(SOP：Same-Origin Policy)
 同源策略是对浏览器的安全保护机制。
 
 同源策略是浏览器的行为，是为了保护本地数据不被JavaScript代码获取回来的数据污染，因此拦截的是客户端发出请求后响应回来的数据。即请求发送了，服务器响应了，但是无法被浏览器接收。
@@ -12,12 +12,12 @@
 
 缺少了同源策略，浏览器很容易受到XSS、CSFR等攻击
 
-### 什么是同源策略限制(不同源的3类交互分类)
+## 什么是同源策略限制(不同源的3类交互分类)
 - 允许跨域写操作（Cross-origin writes）。例如：链接，重定向，表单提交，特定少数的 `http请求` 需要添加 `preflight`。
 - 允许跨域资源嵌入（Cross-origin embedding），例如：img，script等 标签
 - 不允许跨域读操作（Cross-origin reads），但可以通过内嵌资源来巧妙的进行读取访问。
 
-### 浏览器从哪几方面做同源策略限制
+## 浏览器从哪几方面做同源策略限制
 - Cookie、LocalStorage 和 IndexDB 同源策略 
 
 > 禁止读取存储在不同源下的 Cookie，LocalStorage 和 IndexDB。
@@ -32,15 +32,15 @@
 > 浏览器中，script，img、link 等标签都可以加载跨域资源，而不受同源限制，但浏览器限制了 JavaScript 的权限使其不能读、写加载的内容。
 > 因为script标签引入的文不能够被客户端的 js 获取到, 不会影响到原页面的安全，所以 script 不受同源限制。
 
-### 什么是跨域
+## 什么是跨域
 非同源请求，均是跨域。只要协议、域名、端口号其中任意一者不同，均属跨域。
 
 须知：跨域请求是浏览器根据同源策略对请求的限制，但服务器仍然能收到客户端请求，服务器之间的通信不存在跨域问题。(跨域是浏览器行为)
 
-### 为什么出现跨域问题(跨域产生的条件)
+## 为什么出现跨域问题(跨域产生的条件)
 由于浏览器同源策略的限制，浏览器会拒绝跨域请求（确切的说是拒绝跨域读操作）。
 
-### 如何解决跨域(9种跨域解决方案)
+## 如何解决跨域(9种跨域解决方案)
 - document.domain + iframe跨域
 - location.hash + iframe跨域
 - window.name + iframe跨域
@@ -51,7 +51,7 @@
 - nginx代理跨域
 - nodejs中间件代理跨域
 
-#### (一)跨域解决原理一document.domain + iframe跨域
+### (一)跨域解决原理一document.domain + iframe跨域
 此方案仅限主域相同，子域不同的跨域应用场景。
 
 实现原理：
@@ -78,7 +78,7 @@
 ```
 
 
-#### (二)跨域解决原理二location.hash + iframe跨域
+### (二)跨域解决原理二location.hash + iframe跨域
 实现原理：
 
 a欲与b跨域相互通信，通过中间页c来实现。 三个页面，不同域之间利用iframe的location.hash传值，相同域之间直接js访问来通信。a与b不同域只能通过hash值单向通信，b与c也不同域也只能单向通信，但c与a同域，所以c可通过parent.parent访问a页面所有对象。
@@ -128,7 +128,7 @@ parent.parent.location.hash = self.location.hash.substring(1);
 
 ``` 
 
-#### (三)跨域解决原理三window.name + iframe跨域
+### (三)跨域解决原理三window.name + iframe跨域
 window对象有个name属性，该属性有个特征：即在一个窗口(window)的生命周期内,窗口载入的所有的页面都共享一个window.name，
 每个页面对window.name都有读写的权限，window.name是持久存在一个窗口载入过的所有页面中的，并不会因新页面的载入而进行重置。
 window.name属性的独特之处在于：name值在不同的页面（甚至不同域名）加载后依旧存在，并且可以支持非常长的 name 值（2MB）。
@@ -139,7 +139,7 @@ window.name属性的独特之处在于：name值在不同的页面（甚至不�
 
 location.hash + iframe跨域和window.name + iframe跨域都是通过中间代理页实现。
 
-#### (四)跨域解决原理四postMessage跨域
+### (四)跨域解决原理四postMessage跨域
 postMessage是HTML5 XMLHttpRequest Level 2中的API，且是为数不多可以跨域操作的window属性之一，它可用于解决以下方面的问题：
 - 页面和其打开的新窗口的数据传递
 - 多窗口之间消息传递
@@ -153,7 +153,7 @@ postMessage(data,origin)方法接受两个参数
 - data： html5规范支持任意基本类型或可复制的对象，但部分浏览器只支持字符串，所以传参时最好用JSON.stringify()序列化。
 - origin： 协议+主机+端口号，也可以设置为"*"，表示可以传递给任意窗口，如果要指定和当前窗口同源的话设置为"/"。
 
-#### (五)跨域解决原理五JSONP跨域
+### (五)跨域解决原理五JSONP跨域
 因为通过script标签引入的js是不受同源策略的限制的。所以我们可以通过script标签引入一个js或者是一个其他后缀形式（如php，jsp等）的文件，此文件引入后，触发回调，返回一个js函数的调用。基于此原理，我们可以通过动态创建script，再请求一个带参网址实现跨域通信。
 
 - 优点：兼容性好
@@ -190,7 +190,7 @@ this.$http.jsonp('http://www.domain2.com:8080/login', {
 })
 ```
 
-#### (六)跨域解决原理六CORS跨域(跨域资源共享)
+### (六)跨域解决原理六CORS跨域(跨域资源共享)
 CORS（跨域资源共享Cross-origin resource sharing） 是W3C 推荐的一种新的官方方案，能使服务器支持 XMLHttpRequest 的跨域请求。
 
 它允许浏览器向跨源服务器，发出XMLHttpRequest请求，从而克服了AJAX只能同源使用的限制。CORS 实现起来非常方便，只需要增加一些 HTTP 头，让服务器能声明允许的访问来源。
@@ -204,7 +204,7 @@ CORS请求分两类：
 
 简单请求（simple request）和非简单请求（not-so-simple request）。
 
-##### (1) 简单请求需满足以下条件，否则都是非简单请求：
+#### (1) 简单请求需满足以下条件，否则都是非简单请求：
 - 请求方法是以下三种方法之一：
   - HEAD
   - GET
@@ -216,7 +216,7 @@ CORS请求分两类：
   - Last-Event-ID
   - Content-Type：只限于三个值 application/x-www-form-urlencoded、multipart/form-data、text/plain
 
-##### (2) 非简单请求：
+#### (2) 非简单请求：
 
 服务器有特殊要求的请求，比如请求方法是 PUT 或 DELETE，或者 Content-Type 字段的类型是 application/json。
 非简单请求的CORS请求，会在正式通信之前，增加一次HTTP查询请求，称为"预检"请求（preflight）。
@@ -240,7 +240,7 @@ CORS优点：支持所有类型的HTTP请求。使用CORS，开发者可以使�
 
 CORS缺点：低版本IE不支持(小于IE10)
 
-#### (七)跨域解决原理七webSocket跨域
+### (七)跨域解决原理七webSocket跨域
 WebSocket protocol是HTML5一种新的协议。它实现了浏览器与服务器全双工通信，同时允许跨域通讯，是server push技术的一种很好的实现。
 
 我们所指的跨域是浏览器与服务器基于http通信时，浏览器同源策略的限制。
@@ -250,7 +250,7 @@ WebSocket protocol是HTML5一种新的协议。它实现了浏览器与服务器
 全双工通信，客户端和服务端均可主动推送消息。
 实时性和灵活性高。
 
-#### (八)跨域解决原理八Nginx跨域
+### (八)跨域解决原理八Nginx跨域
 跨域原理：同源策略是浏览器的安全策略，不是HTTP协议的一部分。
 
 服务器端调用HTTP接口只是使用HTTP协议，不会执行JS脚本，不需要同源策略，也就不存在跨越问题。
@@ -259,6 +259,6 @@ WebSocket protocol是HTML5一种新的协议。它实现了浏览器与服务器
 
 实现思路：通过nginx配置一个代理服务器（域名与domain1相同，端口不同）做跳板机，反向代理访问domain2接口，并且可以顺便修改cookie中domain信息，方便当前域cookie写入，实现跨域登录。
 
-#### (九)跨域解决原理九Node跨域
+### (九)跨域解决原理九Node跨域
 原理和Nginx一样，通过代理服务器。node中间件实现跨域代理，是通过启一个代理服务器，实现数据的转发，
 也可以通过设 cookieDomainRewrite 参数修改响应头中cookie中域名，实现当前域的cookie写入，方便接口登录认证。
