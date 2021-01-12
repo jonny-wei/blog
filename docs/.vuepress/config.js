@@ -86,20 +86,22 @@ const sidebar = {
       collapsable: false,
       children: [
         'DOM',
-        'http',
         'sushi-js',
         'advanced',
       ]
     },
     {
-      title: '浏览器',
+      title: '浏览器与网络',
       collapsable: false,
       sidebarDepth: 2,
       children: [
+        'browser/http-message',
+        'browser/http-status',
         'browser/web-storage',
         'browser/browser-cache',
         'browser/browser-render',
         'browser/cross-domain',
+        'browser/network-security',
       ]
     },
   ],

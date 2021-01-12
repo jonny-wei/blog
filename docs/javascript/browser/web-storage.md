@@ -28,3 +28,83 @@ h5之前，存储主要用cookies，缺点：
 - 操作缺陷。Cookie的原生api不友好，需要自行封装
 
 ### 参数
+|参数|说明|
+|:---|:---|
+|key|cookie key|
+|value|cookie value|
+|expires|过期时间。一旦过期浏览器自动删除cookie。删除：可以设置一个过去的时间；如果不设置过期时间，则cookie有效期是会话期间。|
+|path|路径。在指定路径的时候，凡是来自同一服务器，URL里有相同路径的所有WEB页面都可以共享cookies。|
+|domain|主机名，是指同一个域下的不同主机，例如：www.baidu.com和map.baidu.com就是两个不同的主机名。默认情况下，一个主机中创建的cookie在另一个主机下是不能被访问的，但可以通过domain参数来实现对其的控制：document.cookie = "name=value;domain=.baidu.com" 这样，所有*.baidu.com的主机都可以访问该cookie。|
+|secure|当secure属性设置为true时，cookie只有在https协议下才能上传到服务器，而在http协议下是没法上传的，所以也不会被窃听。|
+
+## webStorage
+
+HTML5 提供了两种在客户端存储数据的新方法：localStorage 和 sessionStorage，挂载在 window 对象下。
+webStorage 是本地存储，数据不是由服务器请求传递的。从而它可以存储大量的数据，而不影响网站的性能。
+
+### 目的
+Web Storage的目的是为了克服由cookie带来的一些限制，当数据需要被严格控制在客户端上时，无须持续地将数据发回服务器。比如客户端需要保存的一些用户行为或数据，或从接口获取的一些短期内不会更新的数据，都可以利用Web Storage来存储。
+
+### localStorage
+以键值对(Key-Value)的方式存储，永久存储，永不失效，除非手动删除。IE8+支持，每个域名限制5M
+打开同域的新页面也能访问得到。可以存储数组、数字、对象等可以被序列化为字符串的内容
+
+```js
+window.localStorage.username = 'hehe'                   // 设置
+window.localStorage.setItem('username', 'hehe')         // 设置
+window.localStorage.getItem('username')                 // 读取
+window.localStorage.removeItem('username')              // 删除
+window.localStorage.key(1)                              // 读取索引为1的值
+window.localStorage.clear() 
+```
+
+### sessionStorage
+sessionStorage 在关闭页面后即被清空，而 localStorage 则会一直保存。很多时候数据只需要在用户浏览一组页面期间使用，关闭窗口后数据就可以丢弃了，这种情况使用 sessionStorage 就比较方便。
+注意，刷新页面 sessionStorage 不会清除，但是打开同域新页面访问不到。
+
+```js
+window.sessionStorage.username = 'hehe'                   // 设置
+window.sessionStorage.setItem('username', 'hehe')         // 设置
+window.sessionStorage.getItem('username')                 // 读取
+window.sessionStorage.removeItem('username')              // 删除
+window.sessionStorage.key(1)                              // 读取索引为1的值
+window.sessionStorage.clear()       
+```
+
+## indexedDB
+
+indexedDB就是一个非关系型数据库，它不需要你去写一些特定的sql语句来对数据库进行操作，因为它是nosql的，数据形式使用的是json。IndexedDB很适合存储大量数据，它的API是异步调用的。
+
+### 特点
+- IndexedDB是一种低级API，用于客户端存储大量结构化数据。该 API 使用索引来实现对该数据的高性能搜索。
+- 为应用创建离线版本。
+
+### 操作方式
+1. 打开数据库并且开启一个事务。
+2. 创建一个 object store。
+3. 构建一个请求来执行一些数据库操作，像增加或提取数据等。
+4. 通过监听正确类型的 DOM 事件以等待操作完成。
+5. 在操作结果上进行一些操作（可以在 request 对象中找到）
+
+### 基础 API
+- 建立打开indexdb：window.indexedDB.open("testDB")
+- 关闭indexdb：indexdb.close()；
+- 删除indexdb：window.indexedDB.deleteDatabase(indexdb)。
+
+::: tip 注意
+- 键值对存储。内部采用对象仓库存放数据，在这个对象仓库中数据采用键值对的方式来存储。
+- 异步操作。数据库的读写属于 I/O 操作, 浏览器中对异步 I/O 提供了支持。
+- 受同源策略限制，即无法访问跨域的数据库。
+:::
+
+## 存储方式对比
+
+||cookie|localStorage|sessionStorage|IndexedDB|Web SQL|
+|:---|:---|:---|:---|:---|:---|
+|规范|HTTP规范|HTML5规范|HTML5规范|HTML5规范|已被W3C规范废弃，但浏览器广泛支持|
+|挂载对象|DOM|BOM|BOM|BOM|BOM|BOM|
+|传输|cookie数据始终在同源的http请求中携带（即使不需要）仅在本地保存，不会传输|仅在本地保存，不会传输|仅在本地保存，不会传输|仅在本地保存，不会传输|
+|存储大小|4k|5M左右，各浏览器的存储空间有差异|5M左右，各浏览器的存储空间有差异
+|有效期|在设置的cookie过期时间之前一直有效|始终有效，窗口或浏览器关闭也一直保存|仅在当前浏览器窗口关闭前有效|始终有效，窗口或浏览器关闭也一直保存|始终有效，窗口或浏览器关闭也一直保存|
+|作用域|所有同源窗口中都是共享的|所有同源窗口中都是共享的|不在不同的浏览器页面中共享，即使是同一个页面|所有同源窗口中都是共享的|所有同源窗口中都是共享的|
+|易用性|原生接口不友好，需要自己封装|Web Storage 提供api 接口，易用|Web Storage 提供api 接口，易用|提供了api 接口，易用|提供了api 接口，易用|
