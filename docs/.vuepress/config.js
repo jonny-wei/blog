@@ -93,15 +93,18 @@ const sidebar = {
     {
       title: '浏览器与网络',
       collapsable: false,
-      sidebarDepth: 2,
+      sidebarDepth: 1,
       children: [
+        'browser/http-history',
         'browser/http-message',
         'browser/http-status',
+        'browser/http-methods',
         'browser/web-storage',
         'browser/browser-cache',
         'browser/browser-render',
         'browser/cross-domain',
-        'browser/network-security',
+        'browser/web-security',
+        'browser/web-attack'
       ]
     },
   ],
