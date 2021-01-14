@@ -158,6 +158,12 @@ document.body.offsetHeight/offsetWidth
     - 缺点：ie6-7 不支持伪元素：after，使用 zoom:1 触发 hasLayout
     - 推荐使用
 
-### 参考资料
+## 参考资料
+
 [CSS十九问](https://juejin.cn/post/6880111680153059341#heading-11)
+
 [你未必知道的49个CSS知识点](https://juejin.cn/post/6844903902123393032#heading-0)
+
+[CSS知识点及技巧整理](https://juejin.cn/post/6844903567707357197)
+
+[css3新特性](https://juejin.cn/post/6844903518520901639)

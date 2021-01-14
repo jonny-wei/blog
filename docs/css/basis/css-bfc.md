@@ -44,5 +44,8 @@
 
 ## 参考资料
 
+[学习 BFC (Block Formatting Context)](https://juejin.cn/post/6844903495108132877)
+
 [BFC知识点详解](https://juejin.cn/post/6854573219785998349#heading-1)
+
 [CSS中重要的BFC](https://juejin.cn/post/6844903641485148173#heading-3)
