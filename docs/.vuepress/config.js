@@ -64,18 +64,20 @@ const sidebar = {
     {
       title: 'CSS基础',
       collapsable: false,
-      sidebarDepth: 2,
+      sidebarDepth: 1,
       children: [
-        'basis/abstract',
-        'basis/layout',
+        'basis/css-box',
+        'basis/css-bfc',
+        'basis/css-layout',
+        'basis/css-isuess',
       ]
     },
     {
       title: 'CSS进阶',
       collapsable: false,
-      sidebarDepth: 2,
+      sidebarDepth: 1,
       children: [
-        'advanced/abstract',
+        'advanced/animation',
       ]
     },
   ],
@@ -95,11 +97,15 @@ const sidebar = {
       collapsable: false,
       sidebarDepth: 1,
       children: [
+        'browser/browser-start',
         'browser/http-history',
+        'browser/network-OSI',
+        'browser/network-tcp',
         'browser/http-message',
         'browser/http-status',
         'browser/http-methods',
         'browser/web-storage',
+        'browser/DNS',
         'browser/browser-cache',
         'browser/browser-render',
         'browser/cross-domain',
