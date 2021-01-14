@@ -177,6 +177,20 @@ const sidebar = {
       collapsable: false,
       children: []
     },
+  ],
+  talk: [
+    {
+      title: '微前端',
+      collapsable: false,
+      sidebarDepth: 2,
+      children: []
+    },
+    {
+      title: 'BFF',
+      collapsable: false,
+      sidebarDepth: 2,
+      children: []
+    },
   ]
 };
 
@@ -212,6 +226,7 @@ module.exports = {
       {text: 'TS', link: '/typescript/'},
       {text: '优化', link: '/optimization/'},
       {text: '移动端', link: '/mobile/'},
+      {text: '胡侃', link: '/talk/'},
       {
         text: 'GitHub',
         items: [
@@ -225,7 +240,8 @@ module.exports = {
         '/javascript/': sidebar.javascript,
         '/typescript/': sidebar.typescript,
         '/optimization/': sidebar.optimization,
-        '/mobile/': sidebar.mobile
+        '/mobile/': sidebar.mobile,
+        '/talk/': sidebar.talk
       }
   },
   markdown: {},
