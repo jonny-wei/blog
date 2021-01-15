@@ -159,6 +159,30 @@ const sidebar = {
       collapsable: false,
       children: []
     },
+    {
+      title: '错误定位',
+      sidebarDepth: 2,
+      collapsable: false,
+      children: []
+    },
+    {
+      title: '文件处理',
+      sidebarDepth: 2,
+      collapsable: false,
+      children: []
+    },
+    {
+      title: '图片处理',
+      sidebarDepth: 2,
+      collapsable: false,
+      children: []
+    },
+    {
+      title: '换肤',
+      sidebarDepth: 2,
+      collapsable: false,
+      children: []
+    },
   ],
   mobile: [
     {

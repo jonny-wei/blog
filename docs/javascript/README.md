@@ -11,3 +11,5 @@
 
 #### 参考文献
 [现代 JavaScript 教程](https://zh.javascript.info/)
+
+[一个合格的中级前端工程师需要掌握的 28 个 JavaScript 技巧](https://juejin.cn/post/6844903856489365518#heading-16)
