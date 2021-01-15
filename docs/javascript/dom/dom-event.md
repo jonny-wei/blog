@@ -1,27 +1,25 @@
-# DOM
+# DOM 事件模型(事件流)
 
-## DOM事件模型(事件流)
-
-### 事件流
+## 事件流
 DOM的结构是一个树形，每当HTML元素产生事件时，该事件就会在树的根节点和元素节点之间传播，所有经过的节点都会收到该事件，将这种事件传递的过程称为事件流。
 
-### DOM事件模型
+## DOM事件模型
 DOM事件的模型（事件机制）就是事件捕获和事件冒泡。
 
 ![DOM事件的模型](/blog/images/javascript/DOM事件模型.png)
 
-### 事件流3阶段
+## 事件流3阶段
 - 捕获阶段
 - 目标阶段
 - 冒泡阶段
 
-### 事件绑定
+## 事件绑定
 DOM的事件模型（事件机制）主要反映在事件的注册和监听。注册事件回调的方式主要有以下3种：
 - DOM0级(on+type)。通过DOM元素属性， 只支持事件冒泡，缺点是每个事件元素只能被设置一个事件回调。
 - DOM2级(addEventListener)。通过addEventListener为元素绑定事件回调。IE6-8不兼容这个方法，在低版本的IE中需要使用attachEvent。
 - 通过HTML属性。不推荐，这种方式不能将内容和行为很好地分开，使得HTML变大并减少了可读性。
 
-### addEventListener 的第三个参数
+## addEventListener 的第三个参数
 element.addEventListener(event, function, useCapture)
 |参数|描述|
 | :---- | :---- |
@@ -29,11 +27,11 @@ element.addEventListener(event, function, useCapture)
 |function|必须。指定要事件触发时执行的函数。<br>当事件对象会作为第一个参数传入函数。 事件对象的类型取决于特定的事件。例如， "click" 事件属于 MouseEvent(鼠标事件) 对象。      |
 |useCapture|true - 事件捕获 <br> false - 事件冒泡      |
 
-### 阻止事件冒泡
+## 阻止事件冒泡
 - 给子级加 `event.stopPropagation()`
 - 在事件处理函数中返回 false
   
-### 阻止默认事件
+## 阻止默认事件
 - `event.preventDefault()`
 - return false  
 
@@ -43,7 +41,11 @@ DOM3 级新增事件 `stopImmediatePropagation()` 方法来阻止事件捕获，
 由于浏览器兼容性问题，事件捕获很少使用，经常使用事件冒泡。
 :::
 
-### 事件代理(事件委托)
+::: tip 如何让事件先冒泡后捕获
+在 DOM 标准事件模型中，是先捕获后冒泡。但是如果要实现先冒泡后捕获的效果，对于同一个事件，监听捕获和冒泡，分别对应相应的处理函数，监听到捕获事件，先暂缓执行，直到冒泡事件被捕获后再执行捕获之间。
+:::
+
+## 事件代理(事件委托)
 利用事件冒泡机制把本该在元素自身响应的事件交给任意一个上级元素去处理，这种行为称之为事件委托或者事件代理。
 
 事件代理的优点
@@ -55,11 +57,11 @@ DOM3 级新增事件 `stopImmediatePropagation()` 方法来阻止事件捕获，
 利用冒泡的原理，将事件加到父级身上，触发执行效果，这样只在内存中开辟一块空间，既节省内存资源又减少 DOM 操作，提高性能。
 此外还可以动态绑定事件，比如，列表新增元素或删除就不用进行重新绑定了。
 
-### 应用
+## 应用
 - 多个同级元素同一种事件绑定
 - 监听不存在的元素
 
-### 封装事件委托函数
+## 封装事件委托函数
 ```javascript
 function on(eventType,elDelegate,selector,fn){
     if(!(elDelegate instanceof Element) && (typeof elDelegate === 'string')){
@@ -89,7 +91,7 @@ on('click','div','#btn1',fn)
  * (3)e.target是在页面中被用户操作的元素，e.currentTarget是程序员监听的元素。
  * /
 ```
-### Vue 事件修饰符
+## Vue 事件修饰符
 - .stop 阻止单击事件继续传播
 - .prevent 提交事件不再重载页面
 - .capture 添加事件监听器时使用事件捕获模式，一种自上而下的处理方式

@@ -121,3 +121,5 @@ Cookie 的 SameSite 属性用来限制第三方 Cookie，从而减少安全风�
 - CSRF：是利用网站 A 本身的漏洞，去请求网站 A 的 api 。XSS：是向网站 A 注入 JS代码，然后执行 JS 里的代码，篡改网站 A 的内容。
 ## 参考资料
 [浏览器攻击](https://www.yuque.com/suihangadam/liulanqi/rqnbs7)
+
+[前端基础篇之HTTP协议](https://juejin.cn/post/6844903844216832007#heading-23)

@@ -87,9 +87,8 @@ const sidebar = {
       sidebarDepth: 2,
       collapsable: false,
       children: [
-        'DOM',
-        'sushi-js',
-        'advanced',
+        '',
+        // 'advanced',
       ]
     },
     {
@@ -101,6 +100,8 @@ const sidebar = {
         'browser/http-history',
         'browser/network-OSI',
         'browser/network-tcp',
+        'browser/network-SSL',
+        'browser/network-websocket',
         'browser/http-message',
         'browser/http-status',
         'browser/http-methods',
@@ -110,7 +111,16 @@ const sidebar = {
         'browser/browser-render',
         'browser/cross-domain',
         'browser/web-security',
-        'browser/web-attack'
+        'browser/web-attack',
+        'browser/reference'
+      ]
+    },
+    {
+      title: 'DOM',
+      sidebarDepth: 2,
+      collapsable: false,
+      children: [
+        'dom/dom-event',
       ]
     },
   ],
@@ -212,6 +222,7 @@ module.exports = {
     ['meta', { name: 'msapplication-TileColor', content: '#000000' }]
   ],
   dest: 'docs/.vuepress/dist',
+  smoothScroll: true,
   port: 9999,
   themeConfig: {
     logo: '/logo.png',
