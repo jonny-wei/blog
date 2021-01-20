@@ -214,6 +214,12 @@ const sidebar = {
   ],
   talk: [
     {
+      title: '工作流',
+      collapsable: false,
+      sidebarDepth: 2,
+      children: []
+    },
+    {
       title: '微前端',
       collapsable: false,
       sidebarDepth: 2,
