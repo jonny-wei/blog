@@ -100,7 +100,6 @@ const sidebar = {
         'browser/http-history',
         'browser/network-OSI',
         'browser/network-tcp',
-        'browser/network-SSL',
         'browser/network-websocket',
         'browser/http-message',
         'browser/http-status',
