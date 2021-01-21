@@ -112,6 +112,7 @@ const sidebar = {
         'browser/cross-domain',
         'browser/web-security',
         'browser/web-attack',
+        'browser/js-gc',
         'browser/reference'
       ]
     },
@@ -214,23 +215,15 @@ const sidebar = {
   ],
   talk: [
     {
-      title: '工作流',
+      title: '胡侃',
       collapsable: false,
       sidebarDepth: 2,
-      children: []
-    },
-    {
-      title: '微前端',
-      collapsable: false,
-      sidebarDepth: 2,
-      children: []
-    },
-    {
-      title: 'BFF',
-      collapsable: false,
-      sidebarDepth: 2,
-      children: []
-    },
+      children: [
+        '',
+        'micro-frontend',
+        'BFF'
+      ]
+    }
   ]
 };
 
@@ -285,7 +278,9 @@ module.exports = {
         '/talk/': sidebar.talk
       }
   },
-  markdown: {},
+  markdown: {
+    lineNumbers: true
+  },
   plugins: [
     ['@vuepress/back-to-top',true],
     ['@vuepress/medium-zoom',true],

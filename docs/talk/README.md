@@ -1,9 +1,15 @@
-# 胡侃
+# 工作流
 
-也不都是废话
+## Flowable
 
-[前端微服务化解决方案](https://alili.tech/archive/ea599f7c/)
+[Flowable从入门到入土](https://juejin.cn/post/6844904098723004423)
 
-[每日优鲜供应链前端团队微前端改造](https://juejin.cn/post/6844903943873675271#heading-0)
+[Flowable学习笔记](https://juejin.cn/post/6844904158231789582#heading-9)
 
-[闲庭信步聊前端 - 见微知著微前端](https://juejin.cn/post/6911873800669757447)
+## BPMN
+
+[全网最详bpmn.js教材目录](https://juejin.cn/post/6844904017567416328)
+
+## 应用
+
+[盘古](http://help.pangubpm.com/)
