@@ -21,10 +21,10 @@
 ### 种类
 一共有8种,从200到207
 - 200 OK
-- 201 Created
-- 202 Accepted
+- 201 Created 新资源被创建
+- 202 Accepted 已接受处理请求但尚未完成（异步处理）
 - 203 Non-Authoritative Information
-- 204 No Content
+- 204 No Content 无内容，资源有空表示
 - 205 Reset Content
 - 206 Partial Content
 - 207 Multi-Status
@@ -45,9 +45,9 @@
 ### 种类
 
 - 300 Multiple Choices
-- 301 Moved Permanently
-- 302 Found
-- 303 See Other
+- 301 Moved Permanently 资源的URI已被更新
+- 302 Move Temporarily
+- 303 See Other 重定向另一个 URI，如，负载均衡
 - 304 Not Modified
 - 305 Use Proxy
 - 306 Switch Proxy
