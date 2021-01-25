@@ -9,7 +9,3 @@
 
 <p style="display: flex; justify-content: center;"><a style="font-size: 1.2rem;text-decoration:underline;margin-top:2rem" href="https://github.com/jonny-wei/sushi-js" target="_blank">Github</a></p>
 
-#### 参考文献
-[现代 JavaScript 教程](https://zh.javascript.info/)
-
-[一个合格的中级前端工程师需要掌握的 28 个 JavaScript 技巧](https://juejin.cn/post/6844903856489365518#heading-16)

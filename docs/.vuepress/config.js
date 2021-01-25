@@ -84,11 +84,21 @@ const sidebar = {
   javascript: [
     {
       title: 'JavaScript高级',
-      sidebarDepth: 2,
+      sidebarDepth: 1,
       collapsable: false,
       children: [
         '',
         // 'advanced',
+        'depth/prototype',
+        'depth/scope',
+        'depth/ECS',
+        'depth/VO',
+        'depth/scope-chain',
+        'depth/this',
+        'depth/closure',
+        'depth/arguments',
+        'depth/var',
+        'depth/reference'
       ]
     },
     {
