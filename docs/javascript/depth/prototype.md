@@ -44,9 +44,9 @@ prototype 是函数才有的属性，这个属性指向一个对象，该对象�
 ![原型/构造函数/实例之间的关系](/blog/images/javascript/prototype1.png)
 
 ```js
-Person === Person.prototype.constructor
-person.__proto__ === Person.prototype === new Person() 
-Object.getPrototypeOf(person) === Person.prototype
+Person <===> Person.prototype.constructor
+person.__proto__ <===> Person.prototype <===> new Person() 
+Object.getPrototypeOf(person) <===> Person.prototype
 ```
 
 ## 原型链
@@ -60,7 +60,7 @@ Object.getPrototypeOf(person) === Person.prototype
  * person 上没有 constructor 属性，所以就通过 person.__proto__ 去原型对象中找，
  * 刚好 Person.prototype 这个原型对象中有 constructor
 */
-person.constructor === Person.prototype.constructor === Persion 
+person.constructor <===> Person.prototype.constructor <===> Persion 
 ```
 
 
@@ -85,7 +85,7 @@ typeof Function.prototype  === typeof Function // true
 Function.prototype instanceof Function // false
 ```
 
-永远把引用类型看成一个地址，Function 在任何引擎执行代码之前已经在内存中了。只不过一个对象标识符 (Function) 的两个属性标识符 (`prototype`, `__proto__`) 引用了同一个地址而已。之所以这样设置，作者前面已经说了，为了保持一致性。毕竟，Function 自身就是一个函数。就是先有的 Function，然后实现上把原型指向了Function.prototype，但是我们不能倒过来推测因为 `Function.__proto__ === Function.prototype`，所以 Function 调用了自己生成了自己。而 `Function.__proto__` 和 `Function.prototype` 因为功能和普通函数不同，并且自身又是函数对象，所以才恰好的指向了相同的对象。
+永远把引用类型看成一个地址，Function 在任何引擎执行代码之前已经在内存中了。只不过一个对象标识符 (Function) 的两个属性标识符 (`prototype`, `__proto__`) 引用了同一个地址而已。之所以这样设置，作者前面已经说了，为了保持一致性。毕竟 Function 自身就是一个函数。就是先有的 Function，然后实现上把原型指向了 Function.prototype，但是我们不能倒过来推测因为 `Function.__proto__ === Function.prototype`，所以 Function 调用了自己生成了自己。而 `Function.__proto__` 和 `Function.prototype` 因为功能和普通函数不同，并且自身又是函数对象，所以才恰好的指向了相同的对象。
 
 先有 `Object.prototype`（原型链顶端），`Function.prototype` 继承 `Object.prototype` 而产生，最后，Function 和 Object 和其它构造函数继承 `Function.prototype` 而产生。具体见下图：
 
