@@ -98,6 +98,9 @@ const sidebar = {
         'depth/closure',
         'depth/arguments',
         'depth/var',
+        'depth/arrow-function',
+        'depth/async-plan',
+        'depth/async-achieve',
         'depth/reference'
       ]
     },
