@@ -101,6 +101,8 @@ const sidebar = {
         'depth/arrow-function',
         'depth/async-plan',
         'depth/async-achieve',
+        'depth/event-loop',
+        'depth/decorator',
         'depth/reference'
       ]
     },
