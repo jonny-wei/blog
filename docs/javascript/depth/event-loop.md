@@ -89,3 +89,16 @@ setTimeout/Promise 等我们称之为任务源。而进入任务队列的是他�
 
 总的结论就是，执行宏任务，然后执行该宏任务产生的微任务，若微任务在执行过程中产生了新的微任务，则继续执行微任务，微任务执行完毕后，再回到宏任务中进行下一轮循环。
 
+::: warning 参考文献
+[深入理解JS的事件循环](https://mp.weixin.qq.com/s/4BLQQK8cTec_fQrklf2Qbg)
+
+[事件循环机制的那些事](https://mp.weixin.qq.com/s/PBX_YHw0-f3bbSDH5ZbbJQ)
+
+[JavaScript 事件循环详解(翻译)](https://mp.weixin.qq.com/s/DQdVxdHq36lGNhB3JEh_kw)
+
+[深入解析Node.js事件循环工作机制](https://mp.weixin.qq.com/s/qWzxfbrD2LnaI_90Gqm9pw)
+
+[说说事件循环机制(满分答案来了)](https://mp.weixin.qq.com/s/QgfE5Km1xiEkQqADMLmj-Q)
+
+[图解Event Loop](https://juejin.cn/post/6844904004745592846)
+:::
