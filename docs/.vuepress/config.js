@@ -161,7 +161,7 @@ const sidebar = {
     {
       title: 'Webpack',
       collapsable: false,
-      sidebarDepth: 2,
+      sidebarDepth: 1,
       children: [
         'webpack/abstract',
         'webpack/configuration',
@@ -190,7 +190,9 @@ const sidebar = {
       title: '图片处理',
       sidebarDepth: 2,
       collapsable: false,
-      children: []
+      children: [
+        'images/reference'
+      ]
     },
     {
       title: '换肤',

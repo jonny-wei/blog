@@ -101,4 +101,6 @@ setTimeout/Promise 等我们称之为任务源。而进入任务队列的是他�
 [说说事件循环机制(满分答案来了)](https://mp.weixin.qq.com/s/QgfE5Km1xiEkQqADMLmj-Q)
 
 [图解Event Loop](https://juejin.cn/post/6844904004745592846)
+
+[彻底弄懂 JavaScript 执行机制](https://juejin.cn/post/6844903512845860872)
 :::
