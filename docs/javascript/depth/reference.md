@@ -27,3 +27,13 @@
 [快速掌握es6+新特性及es6核心语法盘点](https://juejin.cn/post/6844903957853126663#heading-35)
 
 [1.5万字概括ES6全部特性(已更新ES2020)](https://juejin.cn/post/6844903959283367950)
+
+[灵活运用JS开发技巧](https://juejin.cn/post/6844903838449664013#heading-29)
+
+### JavaScript基本包装类型
+
+[JavaScript基本包装类型](https://juejin.cn/post/6923049481361424397)
+
+### 数组 reduce 高级用法
+
+[25个你不得不知道的数组reduce高级用法](https://juejin.cn/post/6844904063729926152)

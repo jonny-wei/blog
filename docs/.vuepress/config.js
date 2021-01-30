@@ -3,9 +3,10 @@ const sidebar = {
     {
       title: 'Vue秘籍',
       collapsable: false,
-      sidebarDepth: 2,
+      sidebarDepth: 1,
       children: [
-        '/vue/'
+        '',
+        'interview/vue-communication'
       ]
     },
     {
@@ -102,6 +103,7 @@ const sidebar = {
         'depth/async-plan',
         'depth/async-achieve',
         'depth/event-loop',
+        'depth/proxy-reflect',
         'depth/decorator',
         'depth/reference'
       ]
