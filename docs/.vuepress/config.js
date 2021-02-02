@@ -103,7 +103,9 @@ const sidebar = {
         'depth/async-plan',
         'depth/async-achieve',
         'depth/event-loop',
+        'depth/set-map',
         'depth/proxy-reflect',
+        'depth/module',
         'depth/decorator',
         'depth/reference'
       ]
@@ -235,11 +237,12 @@ const sidebar = {
     {
       title: '胡侃',
       collapsable: false,
-      sidebarDepth: 2,
+      sidebarDepth: 1,
       children: [
         '',
         'micro-frontend',
-        'BFF'
+        'BFF',
+        'friendship-link'
       ]
     }
   ]
