@@ -27,6 +27,10 @@
 
 [Webpack Guidebook](https://tsejx.github.io/webpack-guidebook/)
 
+## 算法
+
+[JavaScript-Algorithms](https://github.com/sisterAn/JavaScript-Algorithms)
+
 ## 面试
 
 [木易杨前端进阶](https://muyiy.cn/)
