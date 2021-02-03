@@ -83,6 +83,42 @@ JavaScript 引擎发起的任务称为微观任务
 
 setTimeout/Promise 等我们称之为任务源。而进入任务队列的是他们指定的具体执行任务。来自不同任务源的任务会进入到不同的任务队列。其中 setTimeout 与 setInterval 是同源的。
 
+## 从底层看 setTimeout 实现
+
+到现在已经知道了，JS 世界是由事件循环和任务队列来驱动的。
+
+setTimeout 大家都很熟悉，它是一个定时器，用来指定某个函数在多少毫秒后执行。那浏览器是怎么实现 setTimeout 的呢？
+
+要搞清楚浏览器是怎么实现 setTimeout 就先要弄明白下面几个问题：
+
+- setTimeout 任务存到哪了？
+- setTimeout 到时间后怎么触发？
+- 取消 setTimeout 是如何实现的？
+
+### setTimeout 任务存到哪了
+
+首先要清楚，任务队列不止有一个，Chrome 还维护着一个**延迟任务队列**，这个队列维护了需要延迟执行的任务，所以当你通过 Javascript 调用 setTimeout 时，渲染进程会将该定时器的回调任务添加到延迟任务队列中。
+
+回调任务的信息包含：
+
+- 回调函数
+- 当前发起时间
+- 延迟执行时间
+
+![setTimeout存储](/blog/images/javascript/setTimeout存储.png)
+
+### setTimeout 到时间后怎么触发
+
+当主线程执行完任务队列中的一个任务之后，主线程会对延迟任务队列中的任务，通过当前发起时间和延迟执行时间计算出已经到期的任务，然后依次的执行这些到期的任务，等到期的任务全部执行完后，主线程就进入到下一次循环中。
+
+![setTimeout触发](/blog/images/javascript/setTimeout触发.png)
+
+::: tip setTimeout 是如何实现的：
+- setTimeout存储到延迟任务队列中
+- 当主线程执行完任务队列中的一个任务后，计算延迟任务队列中到期到任务，并执行所有到期任务
+- 执行完所有到期任务后，让出主线程，进行下一次事件循环
+:::
+
 ## 事件循环顺序
 
 事件循环的顺序，决定了 JavaScript 代码的执行顺序。它从 script (整体代码) 开始第一次循环。之后全局上下文进入函数调用栈。直到调用栈清空(只剩全局)，然后执行所有的 micro-task。当所有可执行的 micro-task 执行完毕之后。循环再次从 macro-task 开始，找到其中一个任务队列执行完毕，然后再执行所有的 micro-task，这样一直循环下去。其中每一个任务的执行，无论是 macro-task 还是 micro-task，都是借助函数调用栈来完成。

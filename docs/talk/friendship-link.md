@@ -23,6 +23,8 @@
 
 [ Vue3 源码解析](https://vue3js.cn/start/)
 
+[了不起的Vue3](https://juejin.cn/post/6898120355781705736#heading-4)
+
 ## webpack
 
 [Webpack Guidebook](https://tsejx.github.io/webpack-guidebook/)
@@ -38,6 +40,8 @@
 [前端知识每日3+1](http://www.h-camel.com/index.html)
 
 [前端面试](https://lgwebdream.github.io/FE-Interview/)
+
+[Front-End-Interview-Notebook](https://github.com/CavsZhouyou/Front-End-Interview-Notebook)
 
 [react-article-bucket](https://github.com/liangklfangl/react-article-bucket)
 

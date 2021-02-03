@@ -949,7 +949,7 @@ async function asyncTask() {
 ::: warning 参考文献
 [Promises/A+](https://promisesaplus.com/)
 
-[30分钟，带你实现一个符合规范的 Promise])(https://segmentfault.com/a/1190000022561448)
+[30分钟，带你实现一个符合规范的 Promise](https://segmentfault.com/a/1190000022561448)
 
 [手写Promise全家桶+Generator+async/await](https://juejin.cn/post/6907673648216145928#heading-11)
 

@@ -116,5 +116,7 @@ router.beforeEach((to, from, next) => {
 
 [使用mono-repo实现跨项目组件共享](https://mp.weixin.qq.com/s/-A3Yg2TX4fCkkx9vXgREFA)
 
+[项目级 monorepo 策略最佳实践](https://juejin.cn/post/6924854598268108807#heading-2)
+
 [qiankun 官网常见问题](https://qiankun.umijs.org/zh/faq)
 :::

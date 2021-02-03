@@ -37,3 +37,7 @@
 ### 数组 reduce 高级用法
 
 [25个你不得不知道的数组reduce高级用法](https://juejin.cn/post/6844904063729926152)
+
+### JS执行机制与事件循环
+
+[这一次，彻底弄懂 JavaScript 执行机制](https://juejin.cn/post/6844903512845860872)
