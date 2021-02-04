@@ -97,7 +97,7 @@ Map 的键实际上是跟内存地址绑定的，只要内存地址不一样，�
 
 - Map.prototype.keys()：返回键名的遍历器。
 - Map.prototype.values()：返回键值的遍历器。
-- Map.prototype.entries()：返回所有成员的遍历器。等同于 `for (let [key, value] of map) {}`
+- Map.prototype.entries()：返回所有成员的遍历器。等同于 `for (let [key, value] of map.entries()) {}`
 - Map.prototype.forEach()：遍历 Map 的所有成员。
 
 

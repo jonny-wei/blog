@@ -49,6 +49,8 @@
 
 [掘金面试](https://juejin.cn/tag/%E9%9D%A2%E8%AF%95?sort=hottest)
 
+[Jehoshaphat Tse博主](https://github.com/tsejx)
+
 [前端森林](https://juejin.cn/user/3737995267297838/posts)
 
 [秋风的笔记](https://qiufeng.blue)

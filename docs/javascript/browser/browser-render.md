@@ -108,11 +108,11 @@
   
   主要是负责插件的运行，因插件易崩溃，所以需要通过插件进程来隔离，以保证插件进程崩溃不会对浏览器和页面造成影响。
 
-## 浏览器渲染线程
+## 浏览器渲染进程
 
-![浏览器渲染线程](/blog/images/javascript/浏览器渲染线程.png)
+![浏览器渲染进程](/blog/images/javascript/浏览器渲染线程.png)
 
-渲染进程是多线程，主要包含以下 6 个进程：
+渲染进程是多线程，主要包含以下 6 个线程：
 
 - GUI 渲染线程
   
@@ -321,10 +321,10 @@ GPU 操作是运行在 GPU 进程中，如果栅格化操作使用了 GPU，那�
 
 ### 浏览器渲染完整流程 <Badge text="总 结" />
 
-<img src="/blog/images/javascript/浏览器渲染流程2.png" width="70%" alt="浏览器渲染流程2" style="margin-top: 4rem">
+<img src="/blog/images/javascript/浏览器渲染流程2.png" width="70%" alt="浏览器渲染流程2" style="margin-top: 4rem" />
 
 ::: tip 渲染阻塞
-当遇到一个`<script>` DOM构建会暂停，知道脚本执行完毕，继续构建DOM树，如果JS依赖CSS样式，而它还没有被下载和构建，浏览器就会延迟脚本的执行，直到脚本所依赖的CSS 规则树被构建，所以：CSS会阻塞JS的执行，JS会阻塞后面DOM的解析。为此应避免：CSS资源需排在JS资源前面，JS应该放在HTML底部`</body>`前，另外可使用defer，async改变阻塞方式
+当遇到一个`<script>` DOM构建会暂停，直到脚本执行完毕，继续构建DOM树，如果JS依赖CSS样式，而它还没有被下载和构建，浏览器就会延迟脚本的执行，直到脚本所依赖的CSS 规则树被构建，所以：CSS会阻塞JS的执行，但不会阻塞JS的解析，JS会阻塞后面DOM的解析。为此应避免：CSS资源需排在JS资源前面，JS应该放在HTML底部`</body>`前，另外可使用defer，async改变阻塞方式
 :::
 
 ![浏览器渲染流程](/blog/images/javascript/浏览器渲染流程.png)
@@ -519,7 +519,7 @@ JS单线程，但实际上参与工作的线程共4个：一个主线程，其�
 
 - HTTP异步请求线程
 
-  通过XMLHttpRequest连接后，通过浏览器新开一个线程，监控readyState状态改变，状态变更时，将回调函数推荐书简队列，等JS引擎执行。
+  通过XMLHttpRequest连接后，通过浏览器新开一个线程，监控readyState状态改变，状态变更时，将回调函数推进事件队列，等JS引擎执行。
 
 
 ### 参考资料
