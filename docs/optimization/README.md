@@ -35,3 +35,5 @@
 [Webpack优化总会让你不得不爱](https://juejin.cn/post/6844904079320154126#heading-2)
 
 [揭秘 Vue.js 九个性能优化技巧](https://juejin.cn/post/6922641008106668045#heading-6)
+
+[美团网页首帧优化实践](https://juejin.cn/post/6844903715262955533)

@@ -1,8 +1,14 @@
 # 浏览器攻击
 
-常见的浏览器攻击分为两种：
+常见的浏览器攻击有以下几种：
 - XSS（跨站脚本攻击）
-- CSRF（跨站请求伪造）。
+- CSRF（跨站请求伪造）
+- 点击劫持
+- 中间人攻击
+- SQL注入攻击
+- 文件上传漏洞
+
+下面重点讲解前两种，后几种参考文献：
 
 ![web安全](/blog/images/javascript/web安全.png)
 
@@ -16,9 +22,9 @@ XSS 全称是 Cross Site Scripting，为了与 “CSS” 区分开来，故简�
 
 - 存储型 XSS 攻击
 
- - 首先黑客利用站点漏洞将一段恶意 JavaScript 代码提交到网站的数据库中；
- - 然后用户向网站请求包含了恶意 JavaScript 脚本的页面；
- - 当用户浏览该页面的时候，恶意脚本就会执行
+   - 首先黑客利用站点漏洞将一段恶意 JavaScript 代码提交到网站的数据库中；
+   - 然后用户向网站请求包含了恶意 JavaScript 脚本的页面；
+   - 当用户浏览该页面的时候，恶意脚本就会执行
 
 - 反射型 XSS 攻击
 
@@ -120,6 +126,12 @@ Cookie 的 SameSite 属性用来限制第三方 Cookie，从而减少安全风�
 
 - CSRF：是利用网站 A 本身的漏洞，去请求网站 A 的 api 。XSS：是向网站 A 注入 JS代码，然后执行 JS 里的代码，篡改网站 A 的内容。
 ## 参考资料
+[前端安全系列（一）：如何防止XSS攻击？](https://segmentfault.com/a/1190000016551188)
+
+[前端安全系列之二：如何防止CSRF攻击？](https://segmentfault.com/a/1190000016659945)
+
 [浏览器攻击](https://www.yuque.com/suihangadam/liulanqi/rqnbs7)
 
 [前端基础篇之HTTP协议](https://juejin.cn/post/6844903844216832007#heading-23)
+
+[聊一聊WEB前端安全那些事儿](https://segmentfault.com/a/1190000006672214)

@@ -30,7 +30,7 @@
 
 > 禁止不同源的 AJAX 请求，主要用来防止 CSRF 攻击。
 > 浏览器中，script，img、link 等标签都可以加载跨域资源，而不受同源限制，但浏览器限制了 JavaScript 的权限使其不能读、写加载的内容。
-> 因为script标签引入的文不能够被客户端的 js 获取到, 不会影响到原页面的安全，所以 script 不受同源限制。
+> 因为script标签引入的文件不能够被客户端的 js 获取到, 不会影响到原页面的安全，所以 script 不受同源限制。
 
 ## 什么是跨域
 非同源请求，均是跨域。只要协议、域名、端口号其中任意一者不同，均属跨域。
@@ -41,7 +41,7 @@
 - XMLHttpRequest 或 Fetch 发起的跨源 HTTP 请求。
 - Web 字体 (CSS 中通过 @font-face 使用跨源字体资源)。
 - WebGL 贴图。
-- 使用d rawImage 将 images/video 绘制到 canvas。
+- 使用 drawImage 将 images/video 绘制到 canvas。
 - 此外有样式表，脚本等。
 ## 为什么出现跨域问题(跨域产生的条件)
 由于浏览器同源策略的限制，浏览器会拒绝跨域请求（确切的说是拒绝跨域读操作）。

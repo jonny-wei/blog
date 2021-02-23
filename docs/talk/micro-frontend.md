@@ -119,4 +119,6 @@ router.beforeEach((to, from, next) => {
 [项目级 monorepo 策略最佳实践](https://juejin.cn/post/6924854598268108807#heading-2)
 
 [qiankun 官网常见问题](https://qiankun.umijs.org/zh/faq)
+
+[微前端在美团外卖的实践](https://juejin.cn/post/6844904073972432903#heading-5)
 :::
