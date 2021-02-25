@@ -89,7 +89,6 @@ const sidebar = {
       collapsable: false,
       children: [
         '',
-        // 'advanced',
         'depth/prototype',
         'depth/scope',
         'depth/ECS',
@@ -167,6 +166,7 @@ const sidebar = {
       collapsable: false,
       sidebarDepth: 1,
       children: [
+        '',
         'webpack/abstract',
         'webpack/configuration',
         'webpack/application'
@@ -174,9 +174,14 @@ const sidebar = {
     },
     {
       title: '性能优化',
-      sidebarDepth: 2,
+      sidebarDepth: 1,
       collapsable: false,
-      children: []
+      children: [
+        'performance/network',
+        'performance/webpack',
+        'performance/code',
+        'performance/analysis'
+      ]
     },
     {
       title: '错误定位',
