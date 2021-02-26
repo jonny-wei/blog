@@ -2,6 +2,8 @@
 
 [浏览器](https://www.yuque.com/suihangadam/liulanqi)
 
+[完全理解 HTTPS 如何做到传输安全](https://github.com/fi3ework/blog/issues/17)
+
 [看完这篇HTTP，跟面试官扯皮就没问题了](https://juejin.cn/post/6844903599303032845)
 
 [分分钟让你理解HTTPS](https://juejin.cn/post/6844903599303032845)

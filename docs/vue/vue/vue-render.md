@@ -1,4 +1,4 @@
-# vue渲染原理
+# Vue 渲染原理
 
 [渲染器](http://hcysun.me/vue-design/zh/)
 

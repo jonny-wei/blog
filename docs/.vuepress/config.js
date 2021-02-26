@@ -179,6 +179,7 @@ const sidebar = {
       children: [
         'performance/network',
         'performance/webpack',
+        'performance/render',
         'performance/code',
         'performance/analysis'
       ]
