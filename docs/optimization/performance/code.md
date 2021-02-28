@@ -418,6 +418,8 @@ vue 和 react 都是采用 diff 算法来对比新旧虚拟节点，从而更新
 
 **key 是 vue 中 VNode 的唯一标识，通过 key 我们的 diff 操作会更准确，更快速拿到 oldVnode 中对应的 vnode 节点**。
 
+节点内容相同，只是位置顺序不同时，应通过移动元素位置更新，而非移除和新建，需要新旧节点保持映射关系以便旧 VNode 中找到可复用的节点，所以要给节点加唯一的标识 key，以便尽可能的复用 DOM。利用 key 标识新旧节点映射关系可以知道节点是否复用。遍历新 VNode 中每个节点，并去旧 VNode 中寻找是否有相同的 key。
+
 [key的作用](https://github.com/Advanced-Frontend/Daily-Interview-Question/issues/1)
 
 v-for 比 v-if 优先级高，如果每一次都需要遍历整个数组，将会影响速度，尤其是当之需要渲染很小一部分的时候，必要情况下应该替换成 computed 属性。
@@ -457,6 +459,22 @@ beforeDestroy() {
 - 更多的服务器负载：在 Node.js 中渲染完整的应用程序，显然会比仅仅提供静态文件的 server 更加大量占用CPU 资源，因此如果你预料在高流量环境下使用，请准备相应的服务器负载，并明智地采用缓存策略。
 
 如果你的 Vue 项目只需改善少数营销页面（例如  /， /about， /contact 等）的 SEO，那么你可能需要预渲染，在构建时 (build time) 简单地生成针对特定路由的静态 HTML 文件。优点是设置预渲染更简单，并可以将你的前端作为一个完全静态的站点，具体你可以使用 prerender-spa-plugin 就可以轻松地添加预渲染 。
+
+## Vuex 刷新保持状态
+
+使用 vuex 做状态管理时，当用户刷新页面，vuex 里的状态会全部丢失，为了刷新前后保持原有状态，可以在 created 构造函数中添加以下方法：
+
+```js
+created(){
+   console.log('页面执行刷新时，保存Vuex的状态到LocalStorage')
+    //在页面加载时读取localStorage里的状态信息
+    localStorage.getItem("store") && this.$store.replaceState(Object.assign(this.$store.state,JSON.parse(localStorage.getItem("store"))));
+    
+    //在页面刷新时将vuex里的信息保存到localStorage里
+    window.addEventListener("beforeunload",()=>{
+        localStorage.setItem("store",JSON.stringify(this.$store.state))
+    })
+```
 
 
 ::: warning 参考文献

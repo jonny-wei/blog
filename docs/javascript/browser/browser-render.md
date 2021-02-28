@@ -477,6 +477,8 @@ async 与 defer 属性对于 inline-script 都是无效的
   - 多个 async-script 的执行顺序是不确定的，谁先加载完谁执行。值得注意的是，向 document 动态添加 script 标签时，async 属性默认是 true。
   - 使用 document.createElement("script") 创建的 script 默认是异步的。所以，通过动态添加 script 标签引入 JavaScript 文件默认是不会阻塞页面的。
 
+[图解 script 标签中的 async 和 defer 属性](https://juejin.cn/post/6894629999215640583)
+
 ### 优化渲染性能
 
 - 优化JS的执行效率

@@ -37,3 +37,5 @@
 [揭秘 Vue.js 九个性能优化技巧](https://juejin.cn/post/6922641008106668045#heading-6)
 
 [美团网页首帧优化实践](https://juejin.cn/post/6844903715262955533)
+
+[拯救你的年底KPI：前端性能优化](https://juejin.cn/post/6911472693405548557)

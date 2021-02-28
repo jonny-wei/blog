@@ -186,9 +186,12 @@ const sidebar = {
     },
     {
       title: '错误定位',
-      sidebarDepth: 2,
+      sidebarDepth: 1,
       collapsable: false,
-      children: []
+      children: [
+        'error/capture',
+        'error/monitor'
+      ]
     },
     {
       title: '文件处理',
