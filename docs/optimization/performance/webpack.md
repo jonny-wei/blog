@@ -278,4 +278,6 @@ import 'moment/locale/zh-cn';
 [Vue 项目性能优化 — 实践指南](https://juejin.cn/post/6922641008106668045#heading-0)
 
 [项目不知道如何做性能优化？不妨试一下代码分割(代码分割原理)](https://juejin.cn/post/6844904101134729229)
+
+[网站性能优化实战——从12.67s到1.06s的故事](https://juejin.cn/post/6844903655330562062#heading-3)
 :::
