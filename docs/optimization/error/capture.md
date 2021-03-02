@@ -230,5 +230,7 @@ Vue.config.errorHandler = (err, vm, info) => {
 [前端异常的捕获与处理](https://juejin.cn/post/6932620551827488775#heading-9)
 
 [前端监控知识点](https://github.com/rico-c/Front-End-Monitoring/blob/master/BasicKnowledge.md)
+
+[收集错误信息及堆栈-前端监控之数据收集篇](https://juejin.cn/post/6844903925821210638#heading-15)
 :::
 
