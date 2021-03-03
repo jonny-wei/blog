@@ -244,13 +244,14 @@ const sidebar = {
   ],
   talk: [
     {
-      title: '胡侃',
+      title: '项目',
       collapsable: false,
       sidebarDepth: 1,
       children: [
         '',
         'micro-frontend',
         'BFF',
+        'auth',
         'friendship-link'
       ]
     }
@@ -290,7 +291,7 @@ module.exports = {
       {text: 'TS', link: '/typescript/'},
       {text: '优化', link: '/optimization/'},
       {text: '移动端', link: '/mobile/'},
-      {text: '胡侃', link: '/talk/'},
+      {text: '项目', link: '/talk/'},
       {
         text: 'GitHub',
         items: [

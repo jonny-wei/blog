@@ -264,4 +264,7 @@ Last-Modified、If-Modified-Since 使用的都是服务器提供的时间，所�
 
     Service Worker 是运行在浏览器背后的独立线程，一般可以用来实现缓存功能。使用 Service Worker的话，传输协议必须为 HTTPS。因为 Service Worker 中涉及到请求拦截，所以必须使用 HTTPS 协议来保障安全。
 
+::: warning 参考文献
+[关于 CDN 内容分发网络](https://tsejx.github.io/blog/about-content-delivery-network/)
+:::
 
