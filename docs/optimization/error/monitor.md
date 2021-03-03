@@ -1,8 +1,6 @@
 # 前端异常监控系统
 
-## 错误上报
-
-两种主流上报方式：
+错误上报两种主流上报方式：
 
 - 通过 Ajax 发送数据
   
@@ -14,6 +12,8 @@
 
 
 ::: warning 参考文献
+[Source Map 详解](https://www.ruanyifeng.com/blog/2013/01/javascript_source_map.html)
+
 [超详细！搭建一个前端错误监控系统](https://zhuanlan.zhihu.com/p/51446011)
 
 [线上bug追踪之Sentry初步尝试](https://juejin.cn/post/6844903916887343117)
