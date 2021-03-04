@@ -8,6 +8,8 @@
 
 [微前端：未来前端开发的新趋势](https://github.com/xitu/gold-miner/blob/master/TODO1/micro-frontends-1.md)
 
+[微前端技术在商羚商户端的实战 - 京东](https://jelly.jd.com/article/603c5a026d84e3013e8846f6)
+
 微前端架构具备以下几个核心价值：
 
 - 技术栈无关。主框架不限制接入应用的技术栈，微应用具备完全自主权
