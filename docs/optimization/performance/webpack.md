@@ -10,7 +10,31 @@
 
 发生 FOUC 是因为浏览器需要一段时间才能加载 JavaScript，并且到那时才会应用样式。将 CSS 分离到自己的文件可以让浏览器单独管理它，并将 css 的加载放在 js 加载前(即通常将 js 的引入放在 `<body>` 尾部)，从而避免了这个问题。
 
-**mini-css-extract-plugin** 分离样式，生成单独的 css 样式文件。它可以将多个 CSS 文件聚合为一个。出于这个原因，它配备了一个 loader 来专门处理这个过程。然后，插件会获取 loader 抽取的结果并发出单独的文件。由于这个过程会产生比较大的开销，所以，MiniCssExtractPlugin 只会作用于编译阶段，它不适用于热模块更换（HMR）。鉴于这个插件只是在生产环境中使用，所以也不是什么大的问题。
+**mini-css-extract-plugin** 分离样式，生成单独的 css 样式文件。它可以将多个 CSS 文件聚合为一个。出于这个原因，它配备了一个 loader(MiniCssExtractPlugin.loader) 来专门处理这个过程。然后，插件会获取 loader 抽取的结果并发出单独的文件。由于这个过程会产生比较大的开销，所以，MiniCssExtractPlugin 只会作用于编译阶段，它不适用于热模块更换（HMR）。鉴于这个插件只是在生产环境中使用，所以也不是什么大的问题。
+
+::: tip 注意
+
+- style-loader 用于将 css 通过 `<style>` 标签插入到 `<head>` 中，违背了 **mini-css-extract-plugin** 分离样式，所以 style-loader 不能与 MiniCssExtractPlugin 同时使用。需要使用 MiniCssExtractPlugin.loader 替代 style-loader 。
+
+- css-loader 用于加载 `.css` 文件，并且转换成 commonjs 对象。
+
+:::
+
+::: tip 文件指纹策略补充
+- js 文件使用 `[name]_[chunkhash:8].js`
+- css 文件使用 `[name]_[contenthash:8].css`
+- 图片 文件使用 `[name]_[hash:8].[ext]`
+:::
+
+## 静态资源内联
+
+```html
+<head>
+    ${ require('raw-loader!./meta.html')}
+    <title>Document</title>
+    <script>${ require('raw-loader!babel-loader!../../node_modules/lib-flexible/flexible.js')}</script>
+</head>
+```
 
 ## 图片内联与压缩
 
@@ -26,13 +50,34 @@
 - 使用字体图标（iconfont）。不论是压缩后的图片，还是雪碧图，终归还是图片，只要是图片，就还是会占用大量网络传输资源。字体图标是往HTML里插入字符和CSS样式而已，和图片请求比起来资源占用完全不在一个数量级。icomoon这个网站也为我们提供了将 SVG 图片自动转化成 CSS 样式的功能。
 - 使用 WebP 格式的图片。谷歌公司开发的一种旨在加快图片加载速度的图片格式。图片压缩体积大约只有JPEG的2/3，并能节省大量的服务器带宽资源和数据空间。Facebook、Ebay等知名网站已经开始测试并使用WebP格式。
 
-## 压缩混淆净化 JS/CSS
+## 压缩混淆净化 HTML/JS/CSS
 
-webpack4 只要在生产模式下， 代码就会自动压缩。
+### 压缩 HTML
+
+使用 HtmlWebpackPlugin 插入引用，根据模版生成 HTML，压缩 HTML。
+
+- filename：表示输出的文件名
+- template：模版文件
+- removeComments：移除 HTML 中的注释
+- collapseWhitespace：删除空白符与换行符
+- inlineSource：插入到 HTML 的 CSS、JS 文件要内联，即不是以 link、script 形式引入
+- inject：是否能注入内容到输出的页面
+- chunks：指定插入某些模块
+- hash：每次会在插入的文件后面加上 hash，用于处理缓存
+- 其他：favicon、meta、title 页面内使用 `<%= htmlWebpackPlugin.options.title %>` 即可
+
+### 压缩净化 CSS
+
+- css-loader?minimize。css-loader 内置了 cssnano，只需要使用 css-loader?minimize 就可以开启 cssnano 压缩。
+- PurifyCSSPlugin。需要配置 extract-text-webpack-plugin 使用，它主要的作用是可以去除没有用到的 CSS 代码，类似 JS 的 TreeShaking。
+- MiniCssExtractPlugin 用于提取 CSS。
+- OptimizeCssAssetsWebpackPlugin 用于压缩 CSS。
 
 ### 压缩净化 JavaScript
 
-- Webpack 内置 UglifyJS 插件
+webpack4 只要在生产模式下，JS 代码就会自动压缩。
+
+- Webpack 内置 UglifyJS(UglifyjsWebpackPlugin) 插件
 - ParallelUglifyPlugin
 - TerserWebpackPlugin(webpack4 替代推荐)
 
@@ -45,24 +90,155 @@ webpack4 只要在生产模式下， 代码就会自动压缩。
 - 降低页面渲染时间
 - 防止反向编译工程的可能性
 
-### 压缩净化 CSS
-
-- css-loader?minimize。css-loader 内置了 cssnano，只需要使用 css-loader?minimize 就可以开启 cssnano 压缩。
-- PurifyCSSPlugin。需要配置 extract-text-webpack-plugin 使用，它主要的作用是可以去除没有用到的 CSS 代码，类似 JS 的 TreeShaking。
-
-Webpack 4.0 以后，官方推荐使用 mini-css-extract-plugin 插件来打包 CSS 文件。
 
 ### 使用 TreeShaking
 
+webpack4 生产环境默认开启。
+
 TreeShaking 可以去除无用代码，它依赖于 ES6 的 import、export 的模块化语法，最先在 Rollup 中出现，Webpack2.0 开始引入使用。适合用于 lodash、utils.js 等工具类较分散的文件。
+
+#### DCE (Elimination)
+
+- 代码不会被执行到，不可达
+- 代码执行的结果不会被用到
+- 代码只会影响死变量(只写不读)
+
+#### TreeShaking 原理
+
+- 利用 ES6 模块化语法
+  - 只能作为模块顶层的语句出现
+  - import 的模块只能时字符串常量(不能动态)
+  - import binding 时 immutable 的(不能修改)
+- uglify 阶段删除无用的代码
+
 
 它正常工作的前提是代码必须采用 ES6 的模块化语法，因为 ES6 模块化语法是静态的（在导入、导出语句中的路径必须是静态字符串，且不能放入其他代码块中）。
 
 在项目中使用大量第三方库时，我们会发现 TreeShaking 似乎不生效了，原因是大部分 NPM 中的代码都采用了 CommonJS 语法，这导致 TreeShaking 无法正常工作而降级处理。但幸运的是，有些库考虑到了这一点，这些库在发布到 NPM 上时会同时提供两份代码，一份采用 CommonJS 模块化语法，一份采用 ES6 模块化语法。
 
+
+以下是压缩 HTML/CSS/JS，分离CSS，文件指纹策略，移动端 rem + lib-flexible 适配方案 简单示例：
+
+```js
+module.exports = {
+    entry: {
+        index: './src/index.js',
+    },
+    output: {
+        path: path.join(__dirname, 'dist'),
+        filename: '[name]_[chunkhash:8].js'
+    },
+    mode: 'production',
+    module: {
+        rules: [
+            {
+                test: /.js$/,
+                use: 'babel-loader'
+            },
+            {
+                test: /.css$/,
+                use: [
+                    MiniCssExtractPlugin.loader,
+                    'css-loader'
+                ]
+            },
+            {
+                test: /.less$/,
+                use: [
+                    MiniCssExtractPlugin.loader,
+                    'css-loader',
+                    'less-loader',
+                    {
+                        loader: 'postcss-loader',
+                        options: {
+                            plugins: () => [
+                                require('autoprefixer')({
+                                    browsers: ['last 2 version', '>1%', 'ios 7']
+                                })
+                            ]
+                        }
+                    },
+                     {
+                        loader: 'px2rem-loader',
+                        options: {
+                            remUnit: 75,
+                            remPrecision: 8
+                        }
+                    }
+                ]
+            },
+            {
+                test: /.(png|jpg|gif|jpeg)$/,
+                use: [
+                    {
+                        loader: 'file-loader',
+                        options: {
+                            name: 'images/[name]_[hash:8].[ext]'
+                        }
+                    }
+                ]
+            },
+            {
+                test: /.(woff|woff2|eot|ttf|otf)$/,
+                use: [
+                    {
+                        loader: 'file-loader',
+                        options: {
+                            name: '[name]_[hash:8][ext]'
+                        }
+                    }
+                ]
+            }
+        ]
+    },
+    plugins: [
+        new MiniCssExtractPlugin({
+            filename: '[name]_[contenthash:8].css'
+        }),
+        new OptimizeCSSAssetsPlugin({
+            assetNameRegExp: /\.css$/g,
+            /**
+             * cssnano 是一个 PostCSS 插件，可以添加到你的构建流程中，
+             * 用于确保最终生成的 用于生产环境的 CSS 样式表文件尽可能的小。
+             * 
+             * cssnano 基于 PostCSS 来处理 CSS 代码。因为很多 现代化的 CSS 工具都是基于 PostCSS 开发的，
+             * 因此你可以把这些工具组合起来 并生成一棵单一的抽象语法树（AST）。
+             * 这就意味着总的处理时间 减少了，因为 CSS 不再需要进行多次解析了
+             */
+            cssProcessor: require('cssnano'),
+            cssProcessorPluginOptions: {
+              // 预设
+              preset: ['default', {
+                  discardComments: {
+                    removeAll: true,
+                  },
+                  normalizeUnicode: false
+                }]
+              },
+              canPrint: true
+        }),
+        new HtmlWebpackPlugin({
+            template: path.join(__dirname, 'src/index.html'),
+            filename: 'index.html',
+            chunks: ['index'],
+            inject: true,
+            minify: {
+                html5: true,
+                collapseWhitespace: true,
+                preserveLineBreaks: false,
+                minifyCSS: true,
+                minifyJS: true,
+                removeComments: false
+            }
+        }),
+        new CleanWebpackPlugin(),
+    ]
+};
+```
+
 ## 代码分割
 
-代码分割以按需加载、提取公共代码。
+代码分割以按需加载、分离基础库，提取公共代码。
 
 单页应用的一个问题在于使用一个页面承载复杂的功能，要加载的文件体积很大，不进行优化的话会导致首屏加载时间过长，影响用户体验。做按需加载可以解决这个问题。具体方法如下：
 
@@ -96,6 +272,84 @@ Webpack 提供了提取公共代码的分包插件，根据版本不同使用不
 - **Bundle**：形式上是块的集合，意义是代表一个可以运行的整体
 :::
 
+- 使用 html-webpack-externals-plugin 基础库分离，通过 CDN 引入，不打入 bundle 中。
+- 使用 SplitChunksPlugin 不仅可以分离基础包，还可以提取公共带代码(推荐)。
+- 使用 DLLPlugin 预编译资源模块分离基础包(内置插件，更好的分包)
+- 使用 hard-source-webpack-plugin 是 DLL 的更好替代者
+
+- async 异步引入的库进行分离(默认)
+- inital 同步引入的库进行分离
+- all 所用引入的库进行分离(推荐)
+
+```js
+plugins: [
+  new HtmlWebpackPlugin({
+      inlineSource: '.css$',
+      template: path.join(__dirname, `src/${pageName}/index.html`),
+      filename: `${pageName}.html`,
+      chunks: ['vendors', pageName], // 'vendors' 分离的基础包 chunks
+      inject: true,
+        minify: {
+          html5: true,
+          collapseWhitespace: true,
+          preserveLineBreaks: false,
+          minifyCSS: true,
+          minifyJS: true,
+          removeComments: false
+      }
+  })
+  new HtmlWebpackExternalsPlugin({
+    externals: [
+      {
+        module: 'react',
+        entry: 'https://11.url.cn/now/lib/16.2.0/react.min.js',
+        global: 'React',
+      },
+      {
+        module: 'react-dom',
+        entry: 'https://11.url.cn/now/lib/16.2.0/react-dom.min.js',
+        global: 'ReactDOM',
+      },
+    ]
+  }),
+  optimization: {
+    splitChunks: {
+      minSize: 0,
+      cacheGroups: {
+        vendors: {
+          test: /(react|react-dom)/,
+          name: 'vendors', // 需要在 HtmlWebpackPlugin 的 chunks 中加入
+          chunks: 'all'
+        },
+        commons: {
+          name: 'chunk-commons',
+          minChunks: 2,
+          chunks: 'all'
+        }
+      }
+    }
+  }
+]
+```
+引入基础包脚本：
+
+```html
+<body>
+    <div id="root"><!--HTML_PLACEHOLDER--></div>
+    <script type="text/javascript" src="https://11.url.cn/now/lib/16.2.0/react.min.js"></script>
+    <script type="text/javascript" src="https://11.url.cn/now/lib/16.2.0/react-dom.min.js"></script>
+    <!--INITIAL_DATA_PLACEHOLDER-->
+</body>
+```
+
+- 使用 html-webpack-externals-plugin 基础库分离，通过 CDN 引入，不打入 bundle 中。
+- 使用 SplitChunksPlugin 不仅可以分离基础包，还可以提取公共带代码(推荐)。
+- 使用 DLLPlugin 预编译资源模块分离基础包(内置插件，更好的分包)
+- 使用 hard-source-webpack-plugin 是 DLL 的更好替代者
+
+使用 HtmlWebpackExternalsPlugin 的方式分离基础包的缺点是一个基础库必须指定一个 CDN，当分离的基础包或业务包多时，会产生很多 `<script>` 插入 html 中；使用 SplitChunksPlugin 分离基础包的缺点是每次会对基础包进行分析。
+
+
 ## 代码拆分
 
 对于大的 Web 应用来讲，将所有的代码都放在一个文件中显然是不够有效的，特别是当你的某些代码块是在某些特殊的时候才会被使用到。Webpack 有一个功能就是将你的代码库分割成 Chunks（语块），当代码运行到需要它们的时候再进行加载。
@@ -110,9 +364,30 @@ Webpack 中以两种主要方式完成代码拆分：
 - CommonJS：require.ensure
 - ES6：动态 import（目前还没有原生支持，需要 Babel 转换）
 
-最终目标是得到一个 按需加载的分割点。分割内部也可以再次分割，您可以根据分割构建整个应用程序。这样做的好处是，应用程序的初始有效负载会更小。
+最终目标是得到一个按需加载的分割点。分割内部也可以再次分割，您可以根据分割构建整个应用程序。这样做的好处是，应用程序的初始有效负载会更小。
 
 Babel 本身不支持动态 import 语法，它需要 @babel/plugin-syntax-dynamic-import 配合才能工作。
+
+```js
+// .babelrc
+{
+    "presets": [
+        [
+            "@babel/preset-env"
+        ],
+        "@babel/preset-react"
+    ],
+    "plugins": [
+        "@babel/plugin-syntax-dynamic-import"
+    ]
+}
+
+// 使用如点击按钮懒加载test，通过 webpackJsonp 方法发起一个 jsonp 请求懒加载脚本
+
+loadComponent(){
+  import('./test.js').then(()={})
+}
+```
 
 ## 动态 polyfill
 
@@ -200,15 +475,15 @@ if ('serviceWorker' in navigator) {
 
 多进程/多实例构建的方案比较知名的有以下三种：
 
-- thread-loader
 - parallel-webpack
-- HappyPack(推荐)
+- HappyPack(webpack3使用较多，不怎么维护了)
+- thread-loader(webpack4 用于替换 HappyPack)
 
-### 使用 HappyPack 多进程/多线程构建
+### 使用 HappyPack 多进程/多实例构建
 
 在 Webpack 构建过程中，实际上耗费时间大多数用在 loader 解析转换以及代码的压缩中，HappyPack 可利用多线程对文件进行打包（默认 CPU 核数 - 1），对多核 CPU 利用率更高。
 
-HappyPack 可以将任务分解给多个子进程，最后将结果发给主进程。JS 是单线程模型，只能通过这种多进程的方式提高性能。
+HappyPack 可以通过 HappyPackPool 线程池将任务分解给多个子进程，最后将结果发给主进程。JS 是单线程模型，只能通过这种多进程的方式提高性能。
 
 HappyPack  就能让 Webpack 做到这点，它把任务分解给 多个子进程 去并发的执行，子进程处理完后再把结果发送给主进程。
 
@@ -218,12 +493,67 @@ HappyPack 的处理思路是开启多进程 Loader 转换，将原有的 Webpack
 由于 HappyPack 对 file-loader、url-loader 支持的不友好，所以不建议对这些 loader 使用。
 :::
 
-### 使用 TerserWebpackPlugin 多进程/多线程压缩
+### 使用 thread-loader 多进程/多实例构建
 
-`terser-webpack-plugin` 是一个使用 terser 压缩 JS 的 Webpack 插件。开启 parallel 参数，使用多进程并行运行来提高构建速度。默认并发运行数：`os.cpus().length - 1`。并行化可以显著提高构建速度，因此强烈建议使用。
+原理：每次 webpack 解析一个模块，thread-loader 会将它及它的依赖分配给 worker 线程中
 
+
+使用 thread-loader 或 HappyPack 多进程/多实例构建简单 DEMO：
+
+```js
+module.exports = {
+    entry: entry,
+    output: {
+        path: path.join(__dirname, 'dist'),
+        filename: '[name]_[chunkhash:8].js'
+    },
+    mode: 'production',
+    module: {
+        rules: [
+            {
+                test: /.js$/,
+                include: path.resolve('src'),
+                use: [
+                    {
+                         loader: 'thread-loader',
+                         options: {
+                             workers: 3
+                         }
+                     },
+                    'cache-loader',
+                    'babel-loader',
+                    'happypack/loader'
+                    'eslint-loader'
+                ]
+            },
+        ],
+        plugins: [
+          new HappyPack({
+            // 3) re-add the loaders you replaced above in #1:
+            loaders: [ 'babel-loader?cacheDirectory=true' ]
+        }),
+        ]
+    }
+```
+
+### 使用 TerserWebpackPlugin 多进程/多线程并行压缩
+
+`terser-webpack-plugin` 是一个使用 terser 压缩 JS 的 Webpack 插件。开启 parallel 参数，使用多进程并行运行来提高构建速度。默认并发运行数：`os.cpus().length - 1`。并行化可以显著提高构建速度，因此强烈建议使用。TerserWebpackPlugin 支持 ES6 语法的压缩，UglifyjsWebpackPlugin 不支持。
+
+```js
+optimization: {
+    minimizer: [
+        new TerserPlugin({
+            parallel: true,
+            cache: true
+        })
+    ]
+},
+```
 
 ## 减少基础模块编译次数
+
+使用 DllPlugin 预编译资源模块分离基础包(内置插件，更好的分离)，将 react，react-dom，redux，react-redux 基础包和业务包打包成一个文件。使用 DllPlugin 进行分包，使用 DllReferencePlugin 对 mainifest.json 引用。
 
 DllPlugin 动态链接库插件，其原理是把网页依赖的基础模块抽离出来打包到 dll 文件中，当需要导入的模块存在于某个 dll 中时，这个模块不再被打包，而是去 dll 中获取。
 
@@ -236,6 +566,34 @@ DllPlugin 动态链接库插件，其原理是把网页依赖的基础模块抽�
 - DllPlugin - 用于打包出一个个单独的动态链接库文件
 - DllReferencePlugin - 用于在主要的配置文件中引入 DllPlugin 插件打包好的动态链接库文件
 
+```js
+// webpack.dll.js
+module.exports = {
+    entry: {
+        library: [
+            'react',
+            'react-dom'
+        ]
+    },
+    output: {
+        filename: '[name]_[chunkhash].dll.js',
+        path: path.join(__dirname, 'build/library'),
+        library: '[name]'
+    },
+    plugins: [
+        new webpack.DllPlugin({
+            name: '[name]_[hash]',
+            path: path.join(__dirname, 'build/library/[name].json') // mainfest.json 的位置
+        })
+    ]
+};
+
+// webpack.prod.js
+new webpack.DllReferencePlugin({
+    manifest: require('./build/library/library.json')
+}),
+```
+
 在 Webpack4 中，`hard-source-webpack-plugin` 是 DLL 的更好替代者。hard-source-webpack-plugin 是 Webpack 的插件，为模块提供中间缓存步骤。为了查看结果，您需要使用此插件运行 Webpack 两次：第一次构建将花费正常的时间。第二次构建将显着加快（大概提升 90%的构建速度）。
 
 ## 优化 SourceMap
@@ -243,6 +601,50 @@ DllPlugin 动态链接库插件，其原理是把网页依赖的基础模块抽�
 开发环境推荐： cheap-module-eval-source-map
 
 生产环境推荐： cheap-module-source-map
+
+一般开发环境开启，线上环境关闭，线上排查问题时可将 sourcemap 上传错误监控系统。
+
+- eval：使用 eval 包裹模块代码，包裹最后有 sourcemap 信息
+- source map：产生 `.map` 文件
+- cheap：不包含列信息
+- inline：将 `.map` 作为 DataURL 嵌入，不单独生成 `.map` 文件
+- module：包含 loader 的 sourcemap
+
+(inline-)(cheap-)(module-)(eval-)source-map 按序组合
+
+## 使用 Prepack 提前求值
+
+Prepack 是一个部分求值器，编译代码时提前将计算结果放到编译后的代码中，而不是在代码运行时才去求值。升代码运行时效率。通过在便一阶段预先执行源码来得到执行结果，再直接将运行结果输出以提升性能。但是现在 Prepack 还不够成熟，**用于线上环境还为时过早**。
+
+```js
+const PrepackWebpackPlugin = require('prepack-webpack-plugin').default;
+module.exports = {
+  plugins: [new PrepackWebpackPlugin()],
+};
+```
+
+## 使用 Scope Hoisting
+
+webpack4 生产环境默认开启 ModuleConcatenationPlugin。
+
+现象：
+- 构建后代码存在大量的函数闭包包裹代码，导致体积增大，模块越多越明显。
+- 运行代码时创建的函数作用域变多，内存开销大
+
+译作“作用域提升”，是在 Webpack3 中推出的功能，它分析模块间的依赖关系，尽可能将被打散的模块合并到一个函数中，但不能造成代码冗余，所以只有被引用一次的模块才能被合并。由于需要分析模块间的依赖关系，所以源码 **必须是采用了ES6 模块化的**，否则 Webpack 会降级处理不采用 Scope Hoisting。将所有模块的代码按照引用顺序放在一个函数作用域里，然后适当的重命名一些变量以防止变量名冲突。
+
+```js
+const ModuleConcatenationPlugin = require('webpack/lib/optimize/ModuleConcatenationPlugin');
+module.exports = {
+    //...
+    plugins:[
+        new ModuleConcatenationPlugin();
+    ],
+    resolve:{
+        mainFields:['jsnext:main','browser','main']
+    }
+}
+```
 
 ## 语言包优化
 
@@ -270,6 +672,65 @@ plugins: [
 import moment from 'moment';
 // 手动引入
 import 'moment/locale/zh-cn';
+```
+
+## 多页面打包优化
+
+- 页面间解耦
+- 更友好 SEO
+
+利用 glob 动态获取 entry 和设置 html-webpack-plugin 数量
+
+```js
+// 设置多页应用
+const setMPA = () => {
+    const entry = {};
+    const htmlWebpackPlugins = [];
+    const entryFiles = glob.sync(path.join(__dirname, './src/*/index.js'));
+
+    Object.keys(entryFiles).map((index) => {
+            const entryFile = entryFiles[index];
+
+            const match = entryFile.match(/src\/(.*)\/index\.js/);
+            const pageName = match && match[1];
+
+            entry[pageName] = entryFile;
+            htmlWebpackPlugins.push(
+                new HtmlWebpackPlugin({
+                    inlineSource: '.css$',
+                    template: path.join(__dirname, `src/${pageName}/index.html`),
+                    filename: `${pageName}.html`,
+                    chunks: ['vendors', pageName], // 'vendors' 分离的基础包 chunks
+                    inject: true,
+                    minify: {
+                        html5: true,
+                        collapseWhitespace: true,
+                        preserveLineBreaks: false,
+                        minifyCSS: true,
+                        minifyJS: true,
+                        removeComments: false
+                    }
+                })
+            );
+        });
+
+    return {
+        entry,
+        htmlWebpackPlugins
+    }
+}
+
+const { entry, htmlWebpackPlugins } = setMPA();
+
+module.exports = {
+    entry: entry,
+    output: {
+        path: path.join(__dirname, 'dist'),
+        filename: '[name]_[chunkhash:8].js'
+    },
+    mode: 'production',
+    plugins: [].concat(htmlWebpackPlugins)
+}
 ```
 
 ::: warning 参考文献

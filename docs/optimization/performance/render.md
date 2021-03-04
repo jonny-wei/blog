@@ -172,6 +172,23 @@ dynamicScript.onload = function(){...}
 
 使用 preload 来提升资源加载的优先级。 preload 最大的作用就是将下载与执行分离，并且将下载的优先级提到了一个很高的地步，再由我们去控制资源执行的位置。
 
+PreloadWebpackPlugin 用于预加载资源。 匹配其他页面可能用到的资源进行预先加载，从而达到无 loading，用户无感知的跳转。
+
+```js
+// 1. 配置置于 HtmlWebpackPlugin 之后
+// 2. Webpack4之后，请使用最新版 npm install --save-dev preload-webpack-plugin@next
+new PreloadWebpackPlugin({
+    rel: 'prefetch',
+    as: 'script',
+    // as(entry){
+    //   if(/\.css$/.test(entry)) return 'style';
+    //   return 'script'
+    // }
+    include: 'asyncChunks',
+    // fileBlacklist: ["index.css"]
+    fileBlackList: [/\index.css|index.js|vendors.js]/,/\.whatever/]
+})
+```
 #### 加速样式表下载
 
 样式表是阻塞页面呈现的（注意是呈现，不是解析），正常通过 link 加载的外部样式表要等下载，构建 CSSOM 树才会让页面呈现完成，但是 preload 能够让样式表的下载和呈现分离。
