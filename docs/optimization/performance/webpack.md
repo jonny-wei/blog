@@ -50,6 +50,44 @@
 - 使用字体图标（iconfont）。不论是压缩后的图片，还是雪碧图，终归还是图片，只要是图片，就还是会占用大量网络传输资源。字体图标是往HTML里插入字符和CSS样式而已，和图片请求比起来资源占用完全不在一个数量级。icomoon这个网站也为我们提供了将 SVG 图片自动转化成 CSS 样式的功能。
 - 使用 WebP 格式的图片。谷歌公司开发的一种旨在加快图片加载速度的图片格式。图片压缩体积大约只有JPEG的2/3，并能节省大量的服务器带宽资源和数据空间。Facebook、Ebay等知名网站已经开始测试并使用WebP格式。
 
+```js
+{
+    test: /.(png|jpg|gif|jpeg)$/,
+    use: [
+        {
+            loader: 'file-loader',
+            options: {
+                name: '[name]_[hash:8].[ext]'
+            }
+        },
+        {
+            loader: 'image-webpack-loader',
+            options: {
+                mozjpeg: {
+                    progressive: true,
+                    quality: 65
+                },
+                // optipng.enabled: false will disable optipng
+                optipng: {
+                    enabled: false,
+                },
+                pngquant: {
+                    quality: '65-90',
+                    speed: 4
+                },
+                gifsicle: {
+                    interlaced: false,
+                },
+                // the webp option will enable WEBP
+                webp: {
+                    quality: 75
+                }
+            }
+        }
+    ]
+}
+```
+
 ## 压缩混淆净化 HTML/JS/CSS
 
 ### 压缩 HTML
@@ -69,7 +107,7 @@
 ### 压缩净化 CSS
 
 - css-loader?minimize。css-loader 内置了 cssnano，只需要使用 css-loader?minimize 就可以开启 cssnano 压缩。
-- PurifyCSSPlugin。需要配置 extract-text-webpack-plugin 使用，它主要的作用是可以去除没有用到的 CSS 代码，类似 JS 的 TreeShaking。
+- PurifyCSSPlugin。需要配置 extract-text-webpack-plugin 使用，它主要的作用是可以去除没有用到的 CSS 代码，类似 JS 的 TreeShaking。PurifyCSSPlugin 已停止维护，使用 PurgecssPlugin 替代，配合 MiniCssExtractPlugin 使用。
 - MiniCssExtractPlugin 用于提取 CSS。
 - OptimizeCssAssetsWebpackPlugin 用于压缩 CSS。
 
@@ -120,6 +158,10 @@ TreeShaking 可以去除无用代码，它依赖于 ES6 的 import、export 的�
 以下是压缩 HTML/CSS/JS，分离CSS，文件指纹策略，移动端 rem + lib-flexible 适配方案 简单示例：
 
 ```js
+const PATHS = {
+    src: path.join(__dirname, 'src')
+};
+
 module.exports = {
     entry: {
         index: './src/index.js',
@@ -195,6 +237,9 @@ module.exports = {
         new MiniCssExtractPlugin({
             filename: '[name]_[contenthash:8].css'
         }),
+        new PurgecssPlugin({
+            paths: glob.sync(`${PATHS.src}/**/*`,  { nodir: true }), // 需要绝对路径
+        })
         new OptimizeCSSAssetsPlugin({
             assetNameRegExp: /\.css$/g,
             /**
@@ -232,6 +277,7 @@ module.exports = {
             }
         }),
         new CleanWebpackPlugin(),
+        new HardSourceWebpackPlugin()
     ]
 };
 ```
@@ -391,9 +437,9 @@ loadComponent(){
 
 ## 动态 polyfill
 
-动态按需加载 polyfill。
+babel-ployfill 打包体积 88.49K，如果每个页面都要做兼容，都要 ployfill，体积就会变大。所以动态按需加载 polyfill。
 
-动态 Polyfill 是根据不同浏览器的特性，载入需要的特性补丁。Polyfill.io 通过尝试使用 polyfill 重新创建缺少的功能，可以轻松地支持不同的浏览器，并且可以大幅度地减少构建体积。
+使用 Ployfill Service 。动态 Polyfill 是根据不同浏览器的特性，载入需要的特性补丁。Polyfill.io 通过尝试使用 polyfill 重新创建缺少的功能，可以轻松地支持不同的浏览器，并且可以大幅度地减少构建体积。Polyfill.io 通过分析请求头信息中的 UserAgent 实现自动加载浏览器所需的 polyfill。
 
 使用方法，直接引入代码即可使用默认配置的 Polyfill：
 
@@ -404,7 +450,7 @@ loadComponent(){
 
 <script src="https://polyfill.alicdn.com/polyfill.min.js?features=Promise%2CArray.prototype.includes"></script>
 ```
-Polyfill.io 通过分析请求头信息中的 UserAgent 实现自动加载浏览器所需的 polyfill。
+
 
 ## 激进合并
 
@@ -451,17 +497,17 @@ if ('serviceWorker' in navigator) {
 
 ## 缩小文件搜索范围
 
-- 优化 resolve.modules 配置。指定第三方模块存放的绝对路径，避免层层查找，减少搜索步骤，减少模块搜索层级。
-- 优化 resolve.mainFields 配置。尽量少的值可以减少入口文件的搜索步骤。
-- 优化 resolve.extensions 配置。指定定需要 Webpack 解析的文件类型，指定文件扩展名能加快寻找速度
-- 合理使用 alias：当我们代码出现 import 时，Webpack 会采用向上递归搜索的方式去 node_modules 目录下找。为了减少搜索范围我们可以直接告诉 Webpack 去哪个路径下查找。让 Webpack 直接使用第三方模块的压缩版本，不再对库进行解析。缺点是会无法使用 Tree-Shaking 优化输出的打包文件，所以一般对 React 这种整体性比较强的使用比较好，而像 lodash 这样的工具库还是建议使用 Tree-Shaking 去除多余代码，还可以使用别名方便引用文件。
-- noParse：该属性告诉 Webpack 不用解析某些包。让 Webpack 排除对非模块化库文件的解析。如 jQuery、ChartJS 一些没有采用模块化标准的库，另外如果是用 resovle.alias 配置了 react.min.js，则也应该排除解析，因为 react.min.js 已是经过构建，并且可直接运行在浏览器的、非模块化的文件。被忽略掉的文件里不应该包含 import、 require、 define 等模块化语句，不 然会导致在构建出的代码中包含无法在浏览器环境下执行的模块化语句。
-- 使用 IgnorePlugin 的 Webpack 的内置插件，忽略第三方包指定目录。
-- 充分利用 loader 的 include 和 exclude。使用 include 配置项指明要转换的文件目录，使用 exclude 排除不必解析的文件目录
+- **优化 resolve.modules 配置**。指定第三方模块存放的绝对路径，避免层层查找，减少搜索步骤，减少模块搜索层级。
+- **优化 resolve.mainFields 配置**。尽量少的值可以减少入口文件的搜索步骤。
+- **优化 resolve.extensions 配置**。指定定需要 Webpack 解析的文件类型，指定文件扩展名能加快寻找速度
+- **合理使用 alias**：当我们代码出现 import 时，Webpack 会采用向上递归搜索的方式去 node_modules 目录下找。为了减少搜索范围我们可以直接告诉 Webpack 去哪个路径下查找。让 Webpack 直接使用第三方模块的压缩版本，不再对库进行解析。缺点是会无法使用 Tree-Shaking 优化输出的打包文件，所以一般对 React 这种整体性比较强的使用比较好，而像 lodash 这样的工具库还是建议使用 Tree-Shaking 去除多余代码，还可以使用别名方便引用文件。
+- **noParse**：该属性告诉 Webpack 不用解析某些包。让 Webpack 排除对非模块化库文件的解析。如 jQuery、ChartJS 一些没有采用模块化标准的库，另外如果是用 resovle.alias 配置了 react.min.js，则也应该排除解析，因为 react.min.js 已是经过构建，并且可直接运行在浏览器的、非模块化的文件。被忽略掉的文件里不应该包含 import、 require、 define 等模块化语句，不 然会导致在构建出的代码中包含无法在浏览器环境下执行的模块化语句。
+- **使用 IgnorePlugin 的 Webpack 的内置插件**，忽略第三方包指定目录。
+- **充分利用 loader 的 include 和 exclude**。使用 include 配置项指明要转换的文件目录，使用 exclude 排除不必解析的文件目录
 
 ## 构建缓存策略
 
-提升二次构建速度。缓存思路：
+提升二次构建速度。node-module 中 .cache 文件下有缓存记录。缓存思路：
 
 - babel-loader 开启缓存
 - terser-webpack-plugin 开启缓存

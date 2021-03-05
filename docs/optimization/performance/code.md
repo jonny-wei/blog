@@ -483,4 +483,6 @@ created(){
 [我是如何将网页性能提升5倍的 — 构建优化篇](https://juejin.cn/post/6910893471339708429#heading-4)
 
 [Vue 项目性能优化 — 实践指南](https://juejin.cn/post/6844903913410314247#heading-11)
+
+[javaScript 性能优化](https://juejin.cn/post/6926899302455312391)
 :::
