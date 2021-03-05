@@ -4,6 +4,10 @@
 
 [关于移动端适配，你必须要知道的](https://juejin.cn/post/6844903845617729549)
 
+[移动端适配 - 基础知识篇](https://juejin.cn/post/6844904112270622728)
+
+[移动端适配-实践篇](https://juejin.cn/post/6844904112274817031)
+
 [flexible.js 原理解析](https://juejin.cn/post/6923060568437817351)
 
 [详解移动端1px 问题](https://juejin.cn/post/6916034386320179207)

@@ -160,4 +160,6 @@ foo()
 [V8垃圾回收？看这篇就够了！](https://www.cnblogs.com/xiaoyuxy/p/12258874.html)
 
 [JS垃圾回收机制](https://juejin.cn/post/6932276699283324936)
+
+[高性能 JavaScript 引擎 V8 - 垃圾回收](https://juejin.cn/post/6934638688563363853)
 :::

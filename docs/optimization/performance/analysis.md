@@ -17,3 +17,7 @@ module.exports = smp.wrap({})
 ## 体积分析
 
 使用 webpack-bundle-analyzer-plugin 分析打包体积大小。
+
+## 性能指标
+
+[前端性能优化指南[7]--Web 性能指标](https://juejin.cn/post/6844904153869713416)

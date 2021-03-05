@@ -1,15 +1,6 @@
 const sidebar = {
   vue: [
     {
-      title: 'Vue秘籍',
-      collapsable: false,
-      sidebarDepth: 1,
-      children: [
-        '',
-        'interview/vue-communication'
-      ]
-    },
-    {
       title: 'Vue源码解析',
       collapsable: false,
       sidebarDepth: 2,
@@ -58,6 +49,16 @@ const sidebar = {
         'vue3.x/reactivity',
         'vue3.x/features',
         'vue3.x/performance',
+      ]
+    },
+    {
+      title: 'Vue秘籍',
+      collapsable: false,
+      sidebarDepth: 1,
+      children: [
+        '',
+        'interview/vue-communication',
+        'vue/vue-test'
       ]
     }
   ],

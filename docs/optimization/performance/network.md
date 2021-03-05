@@ -266,5 +266,7 @@ Last-Modified、If-Modified-Since 使用的都是服务器提供的时间，所�
 
 ::: warning 参考文献
 [关于 CDN 内容分发网络](https://tsejx.github.io/blog/about-content-delivery-network/)
+
+[前端性能优化指南[8]--页面呈现过程之网络加载篇](https://juejin.cn/post/6930890886616350734#heading-39)
 :::
 
