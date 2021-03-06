@@ -33,27 +33,27 @@
 
 [JavaScript-Algorithms](https://github.com/sisterAn/JavaScript-Algorithms)
 
-## 面试
+## 浏览器
 
-[木易杨前端进阶](https://muyiy.cn/)
-
-[前端知识每日3+1](http://www.h-camel.com/index.html)
-
-[前端面试](https://lgwebdream.github.io/FE-Interview/)
-
-[Front-End-Interview-Notebook](https://github.com/CavsZhouyou/Front-End-Interview-Notebook)
-
-[react-article-bucket](https://github.com/liangklfangl/react-article-bucket)
+[浏览器工作原理与实践](https://blog.poetries.top/browser-working-principle/)
 
 ## 主页
 
 [掘金面试](https://juejin.cn/tag/%E9%9D%A2%E8%AF%95?sort=hottest)
+
+[JowayYoung](https://juejin.cn/user/2330620350432110)
+
+[神三元](https://juejin.cn/user/430664257382462)
+
+[童欧巴](https://juejin.cn/user/3491704662669469)
 
 [Jehoshaphat Tse博主](https://github.com/tsejx)
 
 [前端森林](https://juejin.cn/user/3737995267297838/posts)
 
 [秋风的笔记](https://qiufeng.blue)
+
+[TaoPoppy](https://www.taopoppy.cn/)
 
 ## 宝藏
 
@@ -76,3 +76,15 @@
 [Cross Platform Guidebook](https://tsejx.github.io/cross-platform-guidebook/)：跨平台开发知识图谱 - HybridApp、ReactNative、小程序、Flutter、Electron
 
 [Data Structure and Algorithms Guidebook](https://tsejx.github.io/data-structure-and-algorithms-guidebook/)：数据结构与算法知识图谱 - 数据结构 | 算法 | 编程实现
+
+## 面试
+
+[木易杨前端进阶](https://muyiy.cn/)
+
+[前端知识每日3+1](http://www.h-camel.com/index.html)
+
+[前端面试](https://lgwebdream.github.io/FE-Interview/)
+
+[Front-End-Interview-Notebook](https://github.com/CavsZhouyou/Front-End-Interview-Notebook)
+
+[react-article-bucket](https://github.com/liangklfangl/react-article-bucket)

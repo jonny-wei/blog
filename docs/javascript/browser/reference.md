@@ -1,5 +1,7 @@
 # 参考文献
 
+[浏览器工作原理与实践](https://blog.poetries.top/browser-working-principle/)
+
 [浏览器](https://www.yuque.com/suihangadam/liulanqi)
 
 [完全理解 HTTPS 如何做到传输安全](https://github.com/fi3ework/blog/issues/17)

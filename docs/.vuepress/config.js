@@ -1,12 +1,25 @@
 const sidebar = {
   vue: [
     {
+      title: 'Vue秘籍',
+      collapsable: false,
+      sidebarDepth: 1,
+      children: [
+        '',
+        'interview/vue-communication',
+        'interview/vue-test'
+      ]
+    },
+    {
       title: 'Vue源码解析',
       collapsable: false,
-      sidebarDepth: 2,
+      sidebarDepth: 1,
       children: [
         'vue/github',
         'vue/vue-render',
+        'vue/vue-init',
+        'vue/vue-observer',
+        'vue/vue-router'
       ]
     },
     {
@@ -49,16 +62,6 @@ const sidebar = {
         'vue3.x/reactivity',
         'vue3.x/features',
         'vue3.x/performance',
-      ]
-    },
-    {
-      title: 'Vue秘籍',
-      collapsable: false,
-      sidebarDepth: 1,
-      children: [
-        '',
-        'interview/vue-communication',
-        'vue/vue-test'
       ]
     }
   ],
@@ -158,6 +161,32 @@ const sidebar = {
       collapsable: false,
       children: [
         'advanced/abstract',
+      ]
+    },
+  ],
+  node: [
+    {
+      title: '基础与实战',
+      sidebarDepth: 2,
+      collapsable: false,
+      children: [
+        '',
+      ]
+    },
+    {
+      title: '性能调优',
+      sidebarDepth: 2,
+      collapsable: false,
+      children: [
+        
+      ]
+    },
+    {
+      title: '框架与工程化',
+      sidebarDepth: 2,
+      collapsable: false,
+      children: [
+        
       ]
     },
   ],
@@ -290,6 +319,7 @@ module.exports = {
       {text: 'CSS', link: '/css/'},
       {text: 'JS', link: '/javascript/'},
       {text: 'TS', link: '/typescript/'},
+      {text: 'Node', link: '/node/'},
       {text: '优化', link: '/optimization/'},
       {text: '移动端', link: '/mobile/'},
       {text: '项目', link: '/talk/'},
@@ -305,6 +335,7 @@ module.exports = {
         '/css/': sidebar.css,
         '/javascript/': sidebar.javascript,
         '/typescript/': sidebar.typescript,
+        '/node/': sidebar.node,
         '/optimization/': sidebar.optimization,
         '/mobile/': sidebar.mobile,
         '/talk/': sidebar.talk

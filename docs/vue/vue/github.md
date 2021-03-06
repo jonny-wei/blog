@@ -1,4 +1,4 @@
-# Vue 源码学习
+# 源码学习
 
 <p align="center"><a href="https://vuejs.org" target="_blank" rel="noopener noreferrer"><img width="200" src="https://vuejs.org/images/logo.png" alt="Vue logo"></a></p>
 
