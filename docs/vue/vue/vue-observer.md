@@ -12,8 +12,6 @@
 - 收集视图依赖了哪些数据(依赖收集)
 - 数据变化时，自动通知更新视图(发布订阅模式)
 
-![vue响应式原理2](/blog/images/vue/vue响应式原理2.png)
-
 **基于以上思想 Vue2 的响应式系统实现步骤如下**：
 
 - 实现一个监听器 Observer，用来劫持并监听所有属性，如果属性发生变化，就通知订阅者(Watcher)；
@@ -342,7 +340,7 @@ Watcher 先把自己设置到全局唯一的指定位置（window.target），�
 
 Dep.target 表示当前正在计算的 Watcher，它是全局唯一的，因为在同一时间只能有一个 Watcher 被计算。
 
-![vue响应式原理3](/blog/images/vue/vue响应式原理3.png)
+![vue响应式原理2](/blog/images/vue/vue响应式原理2.png)
 
 ### 小结
 
