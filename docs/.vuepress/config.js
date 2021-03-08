@@ -19,7 +19,9 @@ const sidebar = {
         'vue/vue-render',
         'vue/vue-init',
         'vue/vue-observer',
-        'vue/vue-router'
+        'vue/vue-diff',
+        'vue/vue-router',
+        'vue/vue-vuex',
       ]
     },
     {
