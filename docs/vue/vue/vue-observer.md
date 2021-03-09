@@ -222,6 +222,10 @@ function copyAugment(target: Object, src: Object, keys: Array<string>): void {
 }
 ```
 
+::: tip 补充
+从 2.6 起，v-for 也可以在实现了可迭代协议的值上使用，包括原生的 Map 和 Set。不过应该注意的是 Vue 2.x 目前并不支持可响应的 Map 和 Set 值，所以无法自动探测变更。v-for 的优先级比 v-if 更高。
+:::
+
 ### 小结
 
 **数据侦测的目的是**监测数据何时发生了变化，从而收集或更新依赖。为侦测数据的变化，使数据变得“可观测”，JavaScript 有两种办法：`使用 Object.defineProperty 数据劫持(vue2)` 和 `ES6 的 Proxy 数据代理(vue3)`。在 Vue2 中，是基于 `Object.defineProperty` 实现数据劫持。由于局限于 Object.defineProperty 是对象原型上的方法，并且是对象属性层面上的数据劫持，不是对象层面的数据代理。所以 Vue2 侦测数据的变化分为 Object 型的数据和 Array 型数据两种不同的侦测方式。对于 Object 类型的数据，**Vue 在 defineReactive 方法中通过 `Object.defineProperty` 为其添加 getter/setter 追踪数据的变化，监测数据何时发生了变化**；对于 Array 类型的数据，**Vue 通过拦截重写数组原型上可以改变数组的 7 大操作数组方法监测数据何时发生了变化**。以上实现了数据的侦测，知道数据何时发生了变化，从而知道在什么时候收集依赖，在什么时候更新依赖。

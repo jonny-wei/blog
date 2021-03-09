@@ -265,6 +265,25 @@ key 是为 Vue 中 vnode 的唯一标记，通过这个 key，我们的 diff 操
 - 更准确：因为带 key 就不是就地复用了，在 sameNode 函数 a.key === b.key 对比中可以避免就地复用的情况。所以会更加准确。
 - 更快速：利用 key 的唯一性生成 map 对象来获取对应节点，比遍历方式更快
 
+key 主要用在 Vue 的虚拟 DOM 算法，在新旧 nodes 对比时辨识 VNodes。如果不使用 key，Vue 会使用一种最大限度减少动态元素并且尽可能的尝试就地修改/复用相同类型元素的算法。而使用 key 时，它会基于 key 的变化重新排列元素顺序，并且会移除 key 不存在的元素。
+
+有相同父元素的子元素必须有独特的 key。重复的 key 会造成渲染错误。
+
+它也可以用于强制替换元素/组件而不是重复使用它。当你遇到如下场景时它可能会很有用：
+
+- 完整地触发组件的生命周期钩子
+- 触发过渡
+
+```html
+<ul>
+  <li v-for="item in items" :key="item.id">...</li>
+</ul>
+
+<transition>
+  <span :key="text">{{ text }}</span>
+</transition>
+```
+
 
 ::: warning 参考文献
 [VNode节点](https://github.com/answershuto/learnVue/blob/master/docs/VNode%E8%8A%82%E7%82%B9.MarkDown)
