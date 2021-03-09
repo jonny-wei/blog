@@ -398,6 +398,12 @@ Vue 不允许动态添加根级别的响应式 property。为了解决这一问�
 - Vue.set( target, propertyName/index, value )
 - Vue.delete( target, propertyName/index )
 
+Vue 不允许在已创建的实例上动态添加新的响应式属性。若想实现数据与视图同步更新，可采取下面三种解决方案：
+
+- Vue.set( target, propertyName/index)
+- Object.assign()
+- $forceUpdate()
+
 vm.$set 的实现原理是：
 
 - 如果目标是数组，直接使用数组的 splice 方法触发响应式；
@@ -430,12 +436,6 @@ export function set (target: Array<any> | Object, key: any, val: any): any {
   return val
 }
 ```
-有时你可能需要为已有对象赋值多个新 property，比如使用 `Object.assign()` 或 `_.extend()`。但是，这样添加到对象上的新 property 不会触发更新。在这种情况下，你应该用原对象与要混合进去的对象的 property 一起创建一个新的对象。
-
-```js
-// 代替 `Object.assign(this.someObject, { a: 1, b: 2 })`
-this.someObject = Object.assign({}, this.someObject, { a: 1, b: 2 })
-```
 Vue.delete( target, propertyName/index ) 的实现：
 
 ```js
@@ -467,6 +467,21 @@ export function del (target: Array<any> | Object, key: any) {
   ob.dep.notify()
 }
 ```
+
+有时你可能需要为已有对象赋值多个新 property，比如使用 `Object.assign()` 或 `_.extend()`。但是，这样添加到对象上的新 property 不会触发更新。在这种情况下，你应该用原对象与要混合进去的对象的 property 一起创建一个新的对象。
+
+```js
+// 代替 `Object.assign(this.someObject, { a: 1, b: 2 })`
+this.someObject = Object.assign({}, this.someObject, { a: 1, b: 2 })
+```
+
+使用 `$forceUpdate()` 在 Vue 中做一次强制更新，`$forceUpdate()` 迫使 vue 重新渲染。仅仅影响实例本身和插入插槽内容的子组件，而不是所有子组件。
+
+
+- 如果为对象添加少量的新属性，可以直接采用 `Vue.set()`
+- 如果需要为新对象添加大量的新属性，则通过 `Object.assign()` 创建新对象
+- 如果你需要进行强制刷新时，可采取 `$forceUpdate()` (不建议)
+- vue3 是用过 proxy 实现数据响应式的，直接动态添加新属性仍可以实现数据响应式
 
 ### Q4：发布订阅设计模式
 

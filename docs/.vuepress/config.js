@@ -7,6 +7,7 @@ const sidebar = {
       children: [
         '',
         'interview/vue-communication',
+        'interview/vue-symbols',
         'interview/vue-test'
       ]
     },
@@ -19,6 +20,7 @@ const sidebar = {
         'vue/vue-render',
         'vue/vue-init',
         'vue/vue-observer',
+        'vue/vue-template',
         'vue/vue-diff',
         'vue/vue-router',
         'vue/vue-vuex',
