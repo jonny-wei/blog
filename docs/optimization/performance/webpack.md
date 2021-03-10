@@ -787,4 +787,6 @@ module.exports = {
 [项目不知道如何做性能优化？不妨试一下代码分割(代码分割原理)](https://juejin.cn/post/6844904101134729229)
 
 [网站性能优化实战——从12.67s到1.06s的故事](https://juejin.cn/post/6844903655330562062#heading-3)
+
+[在京东，我们这样配置webpack](https://jelly.jd.com/article/5ee390707c53070156dd4078)
 :::
