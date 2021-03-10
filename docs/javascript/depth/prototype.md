@@ -63,7 +63,11 @@ Object.getPrototypeOf(person) <===> Person.prototype
 person.constructor <===> Person.prototype.constructor <===> Persion 
 ```
 
-
+::: tip 注意
+- 在原型链中查找属性或方法，如果没有查找到相关属性或方法，返回的是 undefined，表示原型链中没有该属性或方法。
+- 而通过访问原型链中的原型对象，到达原型链终点，即 Object.prototype 的值为 null。
+- 通过 instanceof 操作符可以确定原型与实例的关系。instanceof 操作符会递归查找原型链直到找到了或者到达顶层为止。
+:::
 
 ## 疑点
 
