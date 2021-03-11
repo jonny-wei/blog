@@ -157,6 +157,8 @@ foo()
 
 [聊聊V8引擎的垃圾回收](https://segmentfault.com/a/1190000014383214)
 
+[聊聊V8引擎的垃圾回收](https://mp.weixin.qq.com/s/ESEogtcywtog26nXhnsCDA)
+
 [V8垃圾回收？看这篇就够了！](https://www.cnblogs.com/xiaoyuxy/p/12258874.html)
 
 [JS垃圾回收机制](https://juejin.cn/post/6932276699283324936)

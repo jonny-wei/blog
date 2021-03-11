@@ -393,9 +393,172 @@ Babel 本身不支持动态 import 语法，它需要 @babel/plugin-syntax-dynam
 </script>
 ```
 
+## 数据分屏加载
+
+实现原理：先加载一部分数据，当触发某个条件时加载剩余的数据，新得到的数据不会影响原有数据的显示，同时最大幅度的减少服务器端资源耗用。 基于以上原理，主要有三种实现方式：
+
+- 纯粹的延迟加载，使用 setTimeout 和 setInterval 进行加载延迟。
+- 条件加载，符合某种条件，或是触发某些事件才开始异步加载。
+- 可视区加载，仅记载用户的可视区域，这个主要监控滚动条来实现，一般会距用户看到某些图片前的一段距离时开始进行记载，这样就可保证用户拉下时正好可以看到加载完毕后的图片或是内容。
+
+
+第一种方式最简单但是还是会存在一定服务器端资源浪费，延迟加载的内容可能用户并没有实际滑动到展示区域，所以我采用第三种方式，也就是数据分屏加载，vue中监测滚动事件进行数据分屏加载，以会场活动为例： 根据页面数据请求情况将页面分屏数，此处以四屏为例：
+
+```js
+data() {
+  return {
+    firstScreenLoad: false, // 首屏加载是否完成
+    loadFloor: ['header','dapai','sence','brand'],
+    floorLoaded: [] // 已加载楼层
+  };
+},
+created() {
+    this.floorLoaded = Array.from({length: this.loadFloor.length}, () => false)
+},
+methods: {
+    loadData() {
+        window.addEventListener('scroll', () => {
+        if (!this.firstScreenLoad) return false
+
+        let top = (document.documentElement.scrollTop || window.pageYOffset || document.body.scrollTop)
+        let height = window.innerHeight
+        let loadIndex = 0
+
+        if (top > height * 5) {
+          loadIndex = 4
+        } else if (top > height * 2.5) {
+          loadIndex = 3
+        } else if (top > height * 1) {
+          loadIndex = 2
+        } else if (top > this.height) {
+          loadIndex = 1
+        }
+
+        let min
+        this.floorLoaded.map((item, index) => {
+          if (item == false && !min) {
+            min = index
+          }
+        })
+        if(min && loadIndex>min) {
+          this.getLazyData(loadIndex)
+        }
+      })
+    }
+}
+```
+
+为保证首屏数据加载速度，分屏加载的数据需要在首屏数据加载完成之后再执行，所以定义一个首屏数据加载完成的标识firstScreenLoad，只有当首屏数据加载完成后才去执行分屏数据加载。通过监听滚动事件，当滚动到第二屏时加载下一屏的数据，但是在第二屏里为了避免数据反复加载，我们需要对已经加载的数据做过滤处理，所以定义一个已加载楼层的数组floorLoaded，初始化全部为false，当每加载一屏时，就将数组相应的标识置为true，然后将加载的屏数和已加载楼层的序号做对比，只有当加载屏数大于已加载楼层的序号数时才去进行数据加载，如此就可以避免每次滚动都会触发数据加载的问题。
+
 ## 图片资源懒加载
 
 对于图片过多的页面，为了加速页面加载速度，所以很多时候我们需要将页面内未出现在可视区域内的图片先不做加载， 等到滚动到可视区域后再去加载。这样对于页面加载性能上会有很大的提升，也提高了用户体验。Vue  项目中可以使用 vue-lazyload 插件。
+
+实现原理：
+
+- 设置图片src属性为同一张图片，同时自定义一个data-src属性来存储图片的真实地址
+- 页面初始化显示的时候或者浏览器发生滚动的时候判断图片是否在视野中
+- 当图片在视野中时，通过js自动改变该区域的图片的src属性为真实地址
+
+基于以上功能我们引入vue-lazyload，在main.js进行引入插件并配置。
+
+```js
+import VueLazyLoad from 'vue-lazyload'
+Vue.use(VueLazyload, {
+  preLoad: 1.5,
+  attempt: 2,
+  loading: '//img30.360buyimg.com/uba/jfs/t22357/176/210555046/9106/323dc062/5b03bd29Nb8dda14d.jpg'
+});
+```
+
+vue文件中将需要懒加载的图片绑定 v-bind:src 修改为 v-lazy:
+
+```html
+<img v-lazy="cate.pictureUrl" :key="cate.pictureUrl" alt />
+```
+
+但是vue使用swiper循环播放，如果同时用了懒加载VueLazyload，轮播一圈之后第一张显示空白，解决思路就是首尾两张图片不用懒加载，中间的所有图片都使用懒加载，代码：
+
+```js
+<img v-if="index===0||index==(swiperData.list.length-1)" :src="cate.pictureUrl" alt />
+<img v-else v-lazy="cate.pictureUrl" :key="cate.pictureUrl" alt />
+```
+
+## 无限下拉加载
+
+对于有很多相似条目需要展示的页面，可以用无限下拉的方式来避免资源浪费，只有当用户操作向下滚动才加载更多的条目。 
+
+具体思路就是监听滚动事件，页面首先加载一屏数据，当滚动到一定位置再加载一批，以此类推。思路可能很简单：判断滚动到当前元素，然后动态添加 dom 内容。但是实现起来可能有很多小问题：
+
+- 如何判断是否滚动到当前元素
+- 是在某个 div 里滚动还是整个页面滚动
+- 每次加载时记录第几次加载
+- 加载失败的处理等。 
+- 
+- 此处使用了自定义指令，定义了一个 v-scroll 指令。 首先定义几个参数：
+
+```js
+data() {
+    return {
+      energyList: null, // 数据总列表
+      energyRender: null, // 数据渲染列表
+      times: 1, // 数据已经加载次数
+      count: 0 // 数据需要加载总次数
+    }
+}
+```
+然后给对应参数赋值，这里要对不足偶数的商品做一次隐藏处理，因为页面模块是一行展示两个，然后这里以一屏6个商品为例，所以首次渲染列表为总列表的前6个商品。
+
+```js
+watch: {
+    energyData: function (newVal, oldVal) { 
+      if (newVal) {
+        this.energyList = this.energyData.nengliangbujizhan.list;
+        if (this.energyList.length % 2 !== 0) {
+          this.energyList.pop();
+        }
+        this.energyRender = this.energyList.slice(0, 6);
+        this.count = Math.floor(this.energyList.length / 6);
+      }
+    }
+}
+```
+
+接下来就是我们最关键的自定义指令，主要就是监听页面的滚动事件，判断页面是否滚动到当前元素，当滚动到当前元素则执行loadMore函数，再加载一屏数据，直至数据加载完成，实现代码如下：
+
+```js
+directives: {
+    scroll: {
+      bind: function (el, binding) {
+        window.addEventListener('scroll', () => {
+          const top = (document.documentElement.scrollTop ||
+                  window.pageYOffset || document.body.scrollTop);
+          const height = window.screen.height;
+          if (top + height >= el.offsetHeight) {
+            const fnc = binding.value;
+            fnc();
+          }
+        });
+      }
+    }
+  },
+  methods: {
+    loadMore() {
+      if (this.times <= this.count) {
+        const newAry = [];
+        for (let i = 0; i < 6; i += 1) {
+          if (this.energyList.length > (this.times * 6) + i) {
+            newAry.push(this.energyList[(this.times * 6) + i]);
+          }
+        }
+        this.energyRender = [...this.energyRender, ...newAry];
+        this.times += 1;
+      }
+    }
+  }
+```
+
+最后在需要按需加载的模块的外层dom元素上增加 v-scroll="loadMore" 属性，内层数据列表循环取 energyRender 列表的数据即可。
 
 ## 第三方插件的按需引入
 
