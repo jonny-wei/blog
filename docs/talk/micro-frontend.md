@@ -123,4 +123,10 @@ router.beforeEach((to, from, next) => {
 [qiankun 官网常见问题](https://qiankun.umijs.org/zh/faq)
 
 [微前端在美团外卖的实践](https://juejin.cn/post/6844904073972432903#heading-5)
+
+[基于lerna和single-spa,sysyem.js搭建vue的微前端框架](https://www.jianshu.com/p/7d1359e29d39)
+
+[微前端在小米 CRM 系统的实践](https://mp.weixin.qq.com/s/5qwgZ9aNKFC3naWRUGajmA)
+
+[滴普大前端|DevOps（A10）基于qiankun的微前端实践](https://mp.weixin.qq.com/s/kqINSvBH2QpcTtWtzHc10Q)
 :::
