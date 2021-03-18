@@ -392,10 +392,14 @@ Object.defineProperty() 只能对属性进行数据劫持，不能对整个对�
 - 对于 Array 只要是通过数组原型上的方法对数组进行操作就都可以侦测到，但是在日常开发中，还可以通过数组的下标来操作数据，例如通过修改数组长度，用索引直接设置一个数组项，这也是无法侦测到的。
 - 只有在 Vue 初始化实例时对属性执行 getter/setter 转化，所以属性必须在 data 对象上存在才能让 Vue 将它转换为响应式的。
 
+由于 Vue 不允许动态添加根级响应式 property，所以你必须在初始化实例前声明所有根级响应式 property，哪怕只是一个空值。如果你未在 data 选项中声明 message，Vue 将警告你渲染函数正在试图访问不存在的 property。这时候就可以用 `Vue.set(vm.$set)` 和 `Vue.delete(vm.$delete)` 。这样的限制在背后是有其技术原因的，它消除了在依赖项跟踪系统中的一类边界情况，也使 Vue 实例能更好地配合类型检查系统工作，以及可维护性代码。
+
+由于 Vue 会在**初始化实例时**对 property 执行 getter/setter 转化，所以 property 必须在 data 对象上存在才能让 Vue 将它转换为响应式的。对于已经创建的实例，Vue 不允许动态添加根级别的响应式 property。`Vue.set(object, propertyName, value)` 方法向嵌套对象添加响应式 property
+
 Vue 不能检测以下数组的变动：
 
-- 当你利用索引直接设置一个数组项时，例如：`vm.items[indexOfItem] = newValue`
-- 当你修改数组的长度时，例如：`vm.items.length = newLength`
+- 当你利用索引直接设置一个数组项时，例如：`vm.items[indexOfItem] = newValue`  可以这样解决 `vm.items.splice(indexOfItem, 1, newValue)` 或 `vm.$set(vm.items, indexOfItem, newValue)`
+- 当你修改数组的长度时，例如：`vm.items.length = newLength`。可以这样解决 `vm.items.splice(newLength)`
 
 Vue 不允许动态添加根级别的响应式 property。为了解决这一问题，Vue 增加了两个全局API: `Vue.set(vm.$set)` 和 `Vue.delete(vm.$delete)` 。
 
@@ -404,8 +408,8 @@ Vue 不允许动态添加根级别的响应式 property。为了解决这一问�
 
 Vue 不允许在已创建的实例上动态添加新的响应式属性。若想实现数据与视图同步更新，可采取下面三种解决方案：
 
-- Vue.set( target, propertyName/index)
-- Object.assign()
+- Vue.set( target, propertyName/index，value)
+- Object.assign() / deepClone() 浅拷贝与深拷贝
 - $forceUpdate()
 
 vm.$set 的实现原理是：
