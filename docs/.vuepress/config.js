@@ -22,6 +22,7 @@ const sidebar = {
         'vue/vue-observer',
         'vue/vue-template',
         'vue/vue-diff',
+        'vue/vue-nextTick',
         'vue/vue-router',
         'vue/vue-vuex',
       ]
@@ -286,6 +287,7 @@ const sidebar = {
         'micro-frontend',
         'BFF',
         'auth',
+        'experience',
         'friendship-link'
       ]
     }
