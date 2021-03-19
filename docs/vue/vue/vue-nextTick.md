@@ -332,4 +332,40 @@ export default {
 }
 ```
 
-每次 `++` 时，都会根据响应式触发 `setter -> Dep -> Watcher -> update -> patch`。 如果这时候没有异步更新视图，那么每次 `++` 都会直接操作 DOM 更新视图，这是非常消耗性能的。 所以 Vue 实现了一个 `queue队列（queueWatcher），在下一个 tick 的时候会统一执行 queue 中 Watcher 的 run。同时，拥有相同 id的 Watcher 不会被重复加入到该 queue 中去，所以不会执行 1000 次 Watcher 的 run。最终更新视图只会直接将 test 对应的 DOM 的 0 变成 1000。 **保证更新视图操作 DOM 的动作是在当前栈执行完以后下一个 tick 的时候调用，大大优化了性能**。
+每次 `++` 时，都会根据响应式触发 `setter -> Dep -> Watcher -> update -> patch`。 如果这时候没有异步更新视图，那么每次 `++` 都会直接操作 DOM 更新视图，这是非常消耗性能的。 所以 Vue 实现了一个 `queue队列（queueWatcher），在下一个 tick 的时候会统一执行 queue 中 Watcher 的 run。同时，拥有相同 id的 Watcher 不会被重复加入到该 queue 中去，所以不会执行 1000 次 Watcher 的 run。最终更新视图只会直接将 test 对应的 DOM 的 0 变成 1000。 **保证更新视图操作 DOM 的动作是在当前栈执行完以后下一个 tick 的时候调用，大大优化了性能**。只要让 nextTick 里的代码放在 UI Render 步骤后执行，就能访问到更新后的 DOM。
+
+Vue 就是这样的思路，并不是用 MutationObserver 进行 DOM 变动监听，而是用队列控制的方式达到目的。那么 Vue 又是如何做到队列控制的呢？我们可以很自然地想到 setTimtout，把 nextTick 要执行的代码当作下一个 task 放入队列末尾。
+
+
+## 降级策略
+
+微任务队列和宏任务队列是交替执行，执行微任务的过程中又产生新的微任务，也会接着执行新的微任务，不会留在下一次事件循环中。也就是说，宏任务总要等到微任务都执行完后才能执行，微任务有着更高的优先级。
+
+队列控制的最佳选择是微任务，而微任务的最佳选择是 Promise。但是如果当前环境不支持 Promise，Vue 就不得不降级为宏任务来做队列控制了。
+
+Vue2.5+ 降级方案：
+
+- Promise（需要 ES6 兼容）【微任务】
+- MutationObserver（iOS9.3.3+ 版本存在问题/IE11 不可靠等兼容问题）【微任务】
+- setImmdediate（只有 IE 和 Node.js 支持）【宏任务】
+- setTimeout（至少有 4ms 延迟，兜底方案）【宏任务】
+
+### MutationObserver
+
+MutationObserver 是 HTML5 新增的内置对象，用于监听 DOM 修改事件，能够监听到节点的属性、文本内容、子节点等的改动。基本用法如下：
+
+```js
+const observer = new MutationObserver(function() {
+  // 这里是回调函数
+  console.log('Done had been modified!');
+});
+
+const article = document.querySelector('article');
+observer.observer(article);
+```
+
+## 总结
+
+- Vue 用**异步更新队列**的方式来控制 DOM 更新与 nexTick 回调的先后顺序执行
+- microtask（微任务）因为其高优先级特性，能确保队列中的微任务在一次事件循环前被执行完毕
+- 因为兼容性问题，Vue 不得不做 microtask（微任务）向 macrotask（宏任务）的降级方案

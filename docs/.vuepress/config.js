@@ -8,7 +8,9 @@ const sidebar = {
         '',
         'interview/vue-communication',
         'interview/vue-symbols',
-        'interview/vue-test'
+        'interview/vue-test',
+        'interview/vue-router',
+        'interview/vue-vuex',
       ]
     },
     {
@@ -23,8 +25,6 @@ const sidebar = {
         'vue/vue-template',
         'vue/vue-diff',
         'vue/vue-nextTick',
-        'vue/vue-router',
-        'vue/vue-vuex',
       ]
     },
     {
