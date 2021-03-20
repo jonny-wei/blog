@@ -410,6 +410,7 @@ Vue 不允许在已创建的实例上动态添加新的响应式属性。若想�
 
 - Vue.set( target, propertyName/index，value)
 - Object.assign() / deepClone() 浅拷贝与深拷贝
+- 利用扩展运算符，以新对象替换老对象。
 - $forceUpdate()
 
 vm.$set 的实现原理是：

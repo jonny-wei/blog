@@ -639,6 +639,36 @@ created(){
     })
 ```
 
+## Vuex 按需加载
+
+vuex 按需加载，避免首页初始化所有数据。原理：
+
+利用 vue 的插件机制，使用 Vue.use(vuex) 时，会调用 vuex 的 install 方法，装载 vuex。applyMixin 方法使用 vue 混入机制，vuex 是利用 vue 的 mixin 混入机制，在 beforeCreate 钩子前混入 vuexInit 方法，vuexInit 方法实现了 store 注入 vue 组件实例，并注册了 vuex store 的引用属性 `$store`。所以我们可以自己写一个 mixin ，在 beforeCreate 钩子中通过 registerModule 动态注册模块，实现组件按需加载 vuex 状态数据。
+
+```js
+Vue.use(function() {
+    Vue.mixin({
+        beforeCreate: function() {
+            // $options是组件选项，包含组件.vue文件的 `export default` 的属性
+            // 为了拿到在组件定义的是否按需加载的属性值 `isNeedVuex`
+            if(this.$options.isNeedVuex) {
+                // 需要设置.vue文件的name属性，跟单文件组件名字命名一样
+                let name = this.$options.name;
+                import("./store/modules/" + name).then((res) => {
+                    console.log(res);
+                    // res.default就是代表我们在store/modules文件夹下对应文件的 export default对象
+                    // registerModule 模块动态注册功能使得其他 Vue 插件可以通过在 store 中附加新模块的方式来使用 Vuex 管理状态。
+                    this.$store.registerModule(name, res.default);
+                });
+            }
+        }
+    });
+});
+```
+
+
+
+
 
 ::: warning 参考文献
 [揭秘 Vue.js 九个性能优化技巧](https://juejin.cn/post/6922641008106668045#heading-0)

@@ -273,7 +273,7 @@ key 的特殊 attribute 主要用在 Vue 的虚拟 DOM 算法，在新旧 nodes 
   <span :key="text">{{ text }}</span>
 </transition>
 ```
-当 text 发生改变时，<span> 总是会被替换而不是被修改，因此会触发过渡。
+当 text 发生改变时，`<span>` 总是会被替换而不是被修改，因此会触发过渡。
 
 key 是为 Vue 中 vnode 的唯一标记，通过这个 key，我们的 diff 操作可以更准确、更快速。diff 算法中双端两两比较一共有4种比较方式，如果以上 4 种比较都没匹配，如果设置了key，就会用 key 再进行比较，在比较的过程中，遍历会往中间靠，一旦 StartIdx > EndIdx 表明 oldCh 和 newCh 至少有一个已经遍历完了，就会结束比较。
 
@@ -307,11 +307,15 @@ key 主要用在 Vue 的虚拟 DOM 算法，在新旧 nodes 对比时辨识 VNod
 
 ### Q2. keep-alive 原理
 
-keep-alive 主要用于保留组件状态或避免重新渲染。
+keep-alive 主要用于保留组件状态或避免重新渲染。当然 keep-alive 不仅仅是能够保存页面/组件的状态，它还可以避免组件反复创建和渲染，有效提升系统性能。
 
 - include - 字符串或正则表达式。只有名称匹配的组件会被缓存。
 - exclude - 字符串或正则表达式。任何名称匹配的组件都不会被缓存。
-- max - 数字。最多可以缓存多少组件实例。
+- max - 数字。最多可以缓存多少组件实例。超出上限使用 LRU 的策略置换缓存数据
+
+::: tip LRU
+内存管理的一种页面置换算法，对于在内存中但又不用的数据块（内存块）叫做LRU，操作系统会根据哪些数据属于LRU而将其移出内存而腾出空间来加载另外的数据。
+:::
 
 `<keep-alive>` 包裹动态组件时，会缓存不活动的组件实例，而不是销毁它们。`<keep-alive>` 是一个抽象组件：它自身不会渲染一个 DOM 元素，也不会出现在组件的父组件链中。当组件在 `<keep-alive>` 内被切换，它的 activated 和 deactivated 这两个生命周期钩子函数将会被对应执行。activated 和 deactivated 将会在 `<keep-alive>` 树内的所有嵌套组件中触发。
 
@@ -323,6 +327,123 @@ keep-alive 主要用于保留组件状态或避免重新渲染。
 ::: tip 注意
 `<keep-alive>` 是用在其一个直属的子组件被开关的情形。如果你在其中有 v-for 则不会工作。
 :::
+
+keep-alive 源码：
+
+```js
+// src/core/components/keep-alive.js
+export default {
+  name: 'keep-alive',
+  abstract: true, // 判断当前组件虚拟dom是否渲染成真实dom的关键
+  props: {
+      include: patternTypes, // 缓存白名单
+      exclude: patternTypes, // 缓存黑名单
+      max: [String, Number] // 缓存的组件
+  },
+  // 初始化两个对象分别缓存VNode(虚拟DOM)和VNode对应的键集合
+  created() {
+     this.cache = Object.create(null) // 缓存虚拟dom
+     this.keys = [] // 缓存的虚拟dom的键集合
+  },
+  /**
+   * 删除 this.cache 中缓存的 VNode 实例。
+   * 不是简单地将 this.cache 置为 null，而是遍历调用 pruneCacheEntry 函数删除。  
+   * 删除缓存的 VNode 还要对应组件实例的 destory 钩子函数
+   */
+  destroyed() {
+    for (const key in this.cache) {
+       // 删除所有的缓存
+       pruneCacheEntry(this.cache, key, this.keys)
+    }
+  },
+  /**
+   * 在 mounted 这个钩子中对 include 和 exclude 参数进行监听
+   * 然后实时地更新（删除）this.cache 对象数据。
+   * pruneCache 函数的核心也是去调用 pruneCacheEntry
+   */
+  mounted() {
+    // 实时监听黑白名单的变动
+    this.$watch('include', val => {
+        pruneCache(this, name => matched(val, name))
+    })
+    this.$watch('exclude', val => {
+        pruneCache(this, name => !matches(val, name))
+    })
+ },
+
+ render() {
+    // 先省略...
+ }
+}
+
+// 删除缓存的VNode还要对应组件实例的destory钩子函数
+function pruneCacheEntry (
+  cache: VNodeCache,
+  key: string,
+  keys: Array<string>,
+  current?: VNode
+) {
+ const cached = cache[key]
+ if (cached && (!current || cached.tag !== current.tag)) {
+    cached.componentInstance.$destroyed() // 执行组件的destroy钩子函数
+ }
+ cache[key] = null
+ remove(keys, key)
+}
+```
+
+`<keep-alive>` 直接实现了 render 函数，而不是我们常规模板的方式，执行 `<keep-alive>` 组件渲染的时候，就会执行到这个 render 函数，接下来我们分析一下它的实现。
+
+```js
+render () {
+  const slot = this.$slots.defalut
+  const vnode: VNode = getFirstComponentChild(slot) // 找到第一个子组件对象
+  const componentOptions : ?VNodeComponentOptions = vnode && vnode.componentOptions
+  if (componentOptions) { // 存在组件参数
+    // check pattern
+    const name: ?string = getComponentName(componentOptions) // 组件名
+    const { include, exclude } = this
+    if (// 条件匹配
+      // not included
+      （include && (!name || !matches(include, name))）||
+      // excluded
+        (exclude && name && matches(exclude, name))
+    ) {
+        return vnode
+    }
+    
+    const { cache, keys } = this
+    // 定义组件的缓存key
+    const key: ?string = vnode.key === null ? componentOptions.Ctor.cid + (componentOptions.tag ? `::${componentOptions.tag}` : '') : vnode.key
+     if (cache[key]) { // 已经缓存过该组件
+        vnode.componentInstance = cache[key].componentInstance
+        remove(keys, key)
+        keys.push(key) // 调整key排序
+     } else {
+        cache[key] = vnode //缓存组件对象
+        keys.push(key)
+        if (this.max && keys.length > parseInt(this.max)) {
+          //超过缓存数限制，将第一个删除
+          pruneCacheEntry(cahce, keys[0], keys, this._vnode)
+        }
+     }
+     
+      vnode.data.keepAlive = true //渲染和执行被包裹组件的钩子函数需要用到
+ 
+ }
+ return vnode || (slot && slot[0])
+}
+```
+
+- 获取 keep-alive 包裹着的第一个子组件对象及其组件名；
+- 根据设定的黑白名单（如果有）进行条件匹配，决定是否缓存。不匹配，直接返回组件实例（VNode），否则执行第三步；
+- 根据组件 ID 和 tag 生成缓存 Key，并在缓存对象中查找是否已缓存过该组件实例。如果存在，直接取出缓存值并更新该 key 在 this.keys 中的位置（更新key的位置是实现LRU置换策略的关键），否则执行第四步；
+- 在 this.cache 对象中存储该组件实例并保存 key 值，之后检查缓存的实例数量是否超过 max 设置值，超过则根据 LRU 置换策略删除最近最久未使用的实例（即是下标为0的那个key）;
+- 最后并且很重要，将该组件实例的 keepAlive 属性值设置为 true。
+
+
+`<keep-alive>` 组件是一个抽象组件，它的实现通过自定义 render 函数并且利用了插槽，并且知道了 `<keep-alive>` 缓存 vnode，了解组件包裹的子元素——也就是插槽是如何做更新的。且在 patch 过程中对于已缓存的组件不会执行 mounted，所以不会有一般的组件的生命周期函数但是又提供了 activated 和 deactivated 钩子函数。
+
 
 
 ::: warning 参考文献
