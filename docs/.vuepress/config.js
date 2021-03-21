@@ -254,7 +254,10 @@ const sidebar = {
       title: 'H5',
       collapsable: false,
       sidebarDepth: 2,
-      children: []
+      children: [
+        '',
+        'h5/mobile-fit'
+      ]
     },
     {
       title: 'RN',
