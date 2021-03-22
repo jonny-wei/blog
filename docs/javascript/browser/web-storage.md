@@ -89,9 +89,9 @@ indexedDB 就是一个非关系型数据库，它不需要你去写一些特定�
 5. 在操作结果上进行一些操作（可以在 request 对象中找到）
 
 ### 基础 API
-- 建立打开indexdb：window.indexedDB.open("testDB")
-- 关闭indexdb：indexdb.close()；
-- 删除indexdb：window.indexedDB.deleteDatabase(indexdb)。
+- 建立打开indexedDB：window.indexedDB.open("testDB")
+- 关闭indexedDB：indexdb.close()；
+- 删除indexedDB：window.indexedDB.deleteDatabase(indexdb)。
 
 ::: tip 注意
 - 键值对存储。内部采用对象仓库存放数据，在这个对象仓库中数据采用键值对的方式来存储。
@@ -101,9 +101,9 @@ indexedDB 就是一个非关系型数据库，它不需要你去写一些特定�
 
 具体查看 
 
-[indexDB MDN](https://developer.mozilla.org/zh-CN/docs/Web/API/IndexedDB_API) 
+[indexedDB MDN](https://developer.mozilla.org/zh-CN/docs/Web/API/IndexedDB_API) 
 
-[indexDB 操作](https://www.jianshu.com/p/bb116c7a74b3)
+[indexedDB 操作](https://www.jianshu.com/p/bb116c7a74b3)
 
 ## 存储方式对比
 
