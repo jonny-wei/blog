@@ -26,7 +26,7 @@ const sidebar = {
         'vue/vue-diff',
         'vue/vue-nextTick',
         'vue/vue-lifecycle',
-        'vue/computed'
+        'vue/vue-computed'
       ]
     },
     {
