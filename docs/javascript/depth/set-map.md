@@ -1,8 +1,17 @@
 # Set 和 Map
 
+Set 和 Map 主要的应用场景在于 **数据重组** 和 **数据储存**
+
+Set 是一种叫做 **集合** 的数据结构，Map 是一种叫做 **字典** 的数据结构
+
+集合与字典的区别：
+
+- 共同点：集合、字典 可以存储不重复的值
+- 不同点：集合是以 [value, value] 的形式存储元素，字典是以 [key, value] 的形式存储
+
 ## Set
 
-Set本身是一个构造函数，用来生成 Set 数据结构。
+Set本身是一个构造函数，用来生成 Set 数据结构。Set 对象允许你储存任何类型的唯一值，无论是原始值或者是对象引用。
 
 ### 静态属性
 
@@ -37,9 +46,18 @@ Set本身是一个构造函数，用来生成 Set 数据结构。
 - 直接用 for...of(value) 循环遍历 Set
 - 实现并集（Union）、交集（Intersect）和差集（Difference）。
 
+```js
+let set1 = new Set([1, 2, 3])
+let set2 = new Set([4, 3, 2])
+
+let intersect = new Set([...set1].filter(value => set2.has(value)))
+let union = new Set([...set1, ...set2])
+let difference = new Set([...set1].filter(value => !set2.has(value)))
+```
+
 ## WeakSet
 
-WeakSet 结构与 Set 类似，也是不重复的值的集合。
+WeakSet 结构与 Set 类似，也是不重复的值的集合。WeakSet 对象允许你将弱引用对象储存在一个集合中。
 
 ### 操作方法
 
@@ -110,9 +128,59 @@ Map 的键实际上是跟内存地址绑定的，只要内存地址不一样，�
 - Map 结构转数组结构，可用扩展运算符（...）
 
 
+```js
+// Map 转 Array
+const map = new Map([[1, 1], [2, 2], [3, 3]])
+console.log([...map])	// [[1, 1], [2, 2], [3, 3]]
+
+// Array 转 Map
+const map = new Map([[1, 1], [2, 2], [3, 3]])
+console.log(map)	// Map {1 => 1, 2 => 2, 3 => 3}
+
+// Map 转 object
+// 因为 Object 的键名都为字符串，而Map 的键名为对象，所以转换的时候会把非字符串键名转换为字符串键名。
+function mapToObj(map) {
+    let obj = Object.create(null)
+    for (let [key, value] of map) {
+        obj[key] = value
+    }
+    return obj
+}
+const map = new Map().set('name', 'An').set('des', 'JS')
+mapToObj(map) // {name: "An", des: "JS"}
+
+// Object 转 Map
+function objToMap(obj) {
+    let map = new Map()
+    for (let key of Object.keys(obj)) {
+        map.set(key, obj[key])
+    }
+    return map
+}
+
+objToMap({'name': 'An', 'des': 'JS'}) // Map {"name" => "An", "des" => "JS"}
+
+// Map 转 JSON
+function mapToJson(map) {
+    return JSON.stringify([...map])
+}
+
+let map = new Map().set('name', 'An').set('des', 'JS')
+mapToJson(map)	// [["name","An"],["des","JS"]]
+
+// JSON 转 Map
+function jsonToStrMap(jsonStr) {
+  return objToMap(JSON.parse(jsonStr));
+}
+
+jsonToStrMap('{"name": "An", "des": "JS"}') // Map {"name" => "An", "des" => "JS"}
+```
+
 ## WeakMap
 
-WeakMap 结构与 Map 结构类似，也是用于生成键值对的集合。
+WeakMap 结构与 Map 结构类似，也是用于生成键值对的集合。**注意，WeakMap 弱引用的只是键名，而不是键值。键值依然是正常引用。**
+
+WeakMap 中，每个键对自己所引用对象的引用都是弱引用，在没有其他引用和该键引用同一对象，这个对象将会被垃圾回收（相应的key则变成无效的），所以，WeakMap 的 key 是不可枚举的。
 
 ### 与 Map 的区别
 
