@@ -22,7 +22,7 @@ features:
   details: 收录移动端适配,移动端优化,混合移动应用,RN等移动端知识。
 - title: 浏览器与网络专题
   details: 收录计算机通信,HTTP等通信协议,浏览器渲染原理等基础知识。
-- title: 项目
-  details: 收录项目复盘。
+- title: 其他
+  details: 撸码点滴，杂谈。
 footer: MIT Licensed | Copyright © 2019-present 花帽子 
 ---

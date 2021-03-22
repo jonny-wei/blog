@@ -6,26 +6,19 @@ vue-router 默认 hash 模式 —— 使用 URL 的 hash 来模拟一个完整�
 
 用路由的 history 模式，这种模式充分利用 `history.pushState` API 来完成 URL 跳转而无须重新加载页面。不过这种模式要玩好，还需要后台配置支持。因为我们的应用是个单页客户端应用，如果后台没有正确的配置，当用户在浏览器直接访问 `http://oursite.com/user/id` 就会返回 404，这就不好看了。所以呢，你要在服务端增加一个覆盖所有情况的候选资源：如果 URL 匹配不到任何静态资源，则应该返回同一个 index.html 页面，这个页面就是你 app 依赖的页面。这么做以后，你的服务器就不再返回 404 错误页面，因为对于所有路径都会返回 index.html 文件。为了避免这种情况，你应该在 Vue 应用里面覆盖所有的路由情况，然后在给出一个 404 页面。或者，如果你使用 Node.js 服务器，你可以用服务端路由匹配到来的 URL，并在没有匹配到路由的时候返回 404，以实现回退。
 
-history 模式，利用了 `html5 History Interface` 中新增的 pushState() 和 replaceState() 方法。这两个方法应用于浏览器的历史记录栈，在当前已有的 back、forward、go 的基础之上，它们提供了对历史记录进行修改的功能。只是当它们执行修改时，虽然改变了当前的 url，但浏览器不会立即向后端发送请求。
-
-hash 模式和 history 模式都属于浏览器自身的特性，vue-router只是利用了这两个特性（通过浏览器提供的接口）来实现前端路由。
-
-
-pushState 方法不会触发页面刷新，只是导致了 history 对象发生变化，地址栏会有反应。如果 pushState 的 url 参数，设置了一个新的锚点值（即hash），并不会触发 hashChange 事件，如果设置了一个跨域网址，则会报错。
-
-
+history 模式，利用了 `html5 History Interface` 中新增的 pushState() 和 replaceState() 方法。这两个方法应用于浏览器的历史记录栈，在当前已有的 back、forward、go 的基础之上，它们提供了对历史记录进行修改的功能。只是当它们执行修改时，虽然改变了当前的 url，但浏览器不会立即向后端发送请求。hash 模式和 history 模式都属于浏览器自身的特性，vue-router 只是利用了这两个特性（通过浏览器提供的接口）来实现前端路由。pushState 方法不会触发页面刷新，只是导致了 history 对象发生变化，地址栏会有反应。如果 pushState 的 url 参数，设置了一个新的锚点值（即hash），并不会触发 hashChange 事件，如果设置了一个跨域网址，则会报错。
 
 每当同一个文档的浏览历史（即history）出现变化时，就会触发 popState 事件。需要注意：仅仅调用 pushState 方法或 replaceState 方法，并不会触发该事件，只有用户点击浏览器后退和前进按钮时，或者使用 js 调用 back、forward、go 方法时才会触发。另外该事件只针对同一个文档，如果浏览历史的切换，导致加载不同的文档，该事件不会被触发。使用的时候，可以为 popState 事件指定回调函数。注意：页面第一次加载的时候，浏览器不会触发popState事件
 
 
-::: 补充
-history.pushstate(state, title, url)方法接受三个参数
+::: tip 补充
+history.pushstate(state, title, url) 方法接受三个参数
 
-- state: 一个与指定网址相关的状态对象，popState事件触发时，该对象会传入回调函数，如果不需要这个对象，此处可填null
-- title: 新页面的标题，但是所有浏览器目前都忽略这个值，因此这里可以填null
+- state: 一个与指定网址相关的状态对象，popState 事件触发时，该对象会传入回调函数，如果不需要这个对象，此处可填 null
+- title: 新页面的标题，但是所有浏览器目前都忽略这个值，因此这里可以填 null
 - url: 新的网址，必须与当前页面处在同一个域，浏览器的地址栏将显示这个网址
 
-history.replaceState()方法的参数和pushState()方法一摸一样，区别是它修改浏览器历史当中的记录。
+history.replaceState() 方法的参数和 pushState() 方法一摸一样，区别是它修改浏览器历史当中的记录。
 :::
 
 

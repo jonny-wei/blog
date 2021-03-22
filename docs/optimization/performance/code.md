@@ -639,6 +639,8 @@ created(){
     })
 ```
 
+通过 localStorage 或者 sessionStorage 做 vuex 数据持久化，因为 localStorage 与 sessionStorage 页面刷新是数据不会丢失。
+
 ## Vuex 按需加载
 
 vuex 按需加载，避免首页初始化所有数据。原理：
@@ -666,6 +668,10 @@ Vue.use(function() {
 });
 ```
 
+
+## Service Workers 缓存离线化
+
+[Service Workers 缓存离线化](https://juejin.cn/post/6844903783240204301)
 
 
 

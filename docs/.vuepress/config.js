@@ -25,6 +25,8 @@ const sidebar = {
         'vue/vue-template',
         'vue/vue-diff',
         'vue/vue-nextTick',
+        'vue/vue-lifecycle',
+        'vue/computed'
       ]
     },
     {
@@ -76,8 +78,11 @@ const sidebar = {
       collapsable: false,
       sidebarDepth: 1,
       children: [
+        'basis/css-rule',
         'basis/css-box',
         'basis/css-bfc',
+        'basis/css-ifc',
+        'basis/css-cc',
         'basis/css-layout',
         'basis/css-isuess',
       ]
@@ -144,7 +149,7 @@ const sidebar = {
     },
     {
       title: 'DOM',
-      sidebarDepth: 2,
+      sidebarDepth: 1,
       collapsable: false,
       children: [
         'dom/dom-event',
@@ -154,7 +159,7 @@ const sidebar = {
   typescript: [
     {
       title: 'TypeScript基础',
-      sidebarDepth: 2,
+      sidebarDepth: 1,
       collapsable: false,
       children: [
         'basis/abstract',
@@ -162,7 +167,7 @@ const sidebar = {
     },
     {
       title: 'TypeScript进阶',
-      sidebarDepth: 2,
+      sidebarDepth: 1,
       collapsable: false,
       children: [
         'advanced/abstract',
@@ -253,7 +258,7 @@ const sidebar = {
     {
       title: 'H5',
       collapsable: false,
-      sidebarDepth: 2,
+      sidebarDepth: 1,
       children: [
         '',
         'h5/mobile-fit'
@@ -282,7 +287,7 @@ const sidebar = {
   ],
   talk: [
     {
-      title: '项目',
+      title: '其他',
       collapsable: false,
       sidebarDepth: 1,
       children: [
@@ -331,7 +336,7 @@ module.exports = {
       {text: 'Node', link: '/node/'},
       {text: '优化', link: '/optimization/'},
       {text: '移动端', link: '/mobile/'},
-      {text: '项目', link: '/talk/'},
+      {text: '其他', link: '/talk/'},
       {
         text: 'GitHub',
         items: [

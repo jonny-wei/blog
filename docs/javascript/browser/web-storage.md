@@ -60,7 +60,7 @@ window.localStorage.clear()
 
 ### sessionStorage
 sessionStorage 在关闭页面后即被清空，而 localStorage 则会一直保存。很多时候数据只需要在用户浏览一组页面期间使用，关闭窗口后数据就可以丢弃了，这种情况使用 sessionStorage 就比较方便。
-注意，刷新页面 sessionStorage 不会清除，但是打开同域新页面访问不到。
+注意，**刷新页面 sessionStorage 不会清除，但是打开同域新页面访问不到**。
 
 ```js
 window.sessionStorage.username = 'hehe'                   // 设置
@@ -73,10 +73,12 @@ window.sessionStorage.clear()
 
 ## indexedDB
 
-indexedDB就是一个非关系型数据库，它不需要你去写一些特定的sql语句来对数据库进行操作，因为它是nosql的，数据形式使用的是json。IndexedDB很适合存储大量数据，它的API是异步调用的。
+IndexedDB 是一种底层 API，用于在客户端存储大量的结构化数据（也包括文件/二进制大型对象（blobs））。该 API 使用索引实现对数据的高性能搜索。虽然 Web Storage 在存储较少量的数据很有用，但对于存储更大量的结构化数据来说力不从心。而 IndexedDB 提供了这种场景的解决方案。
+
+indexedDB 就是一个非关系型数据库，它不需要你去写一些特定的 sql 语句来对数据库进行操作，因为它是 nosql 的，数据形式使用的是 json。IndexedDB 很适合存储大量数据，它的 API 是异步调用的。
 
 ### 特点
-- IndexedDB是一种低级API，用于客户端存储大量结构化数据。该 API 使用索引来实现对该数据的高性能搜索。
+- IndexedDB 是一种低级 API，用于客户端存储大量结构化数据。该 API 使用索引来实现对该数据的高性能搜索。
 - 为应用创建离线版本。
 
 ### 操作方式
@@ -96,6 +98,12 @@ indexedDB就是一个非关系型数据库，它不需要你去写一些特定�
 - 异步操作。数据库的读写属于 I/O 操作, 浏览器中对异步 I/O 提供了支持。
 - 受同源策略限制，即无法访问跨域的数据库。
 :::
+
+具体查看 
+
+[indexDB MDN](https://developer.mozilla.org/zh-CN/docs/Web/API/IndexedDB_API) 
+
+[indexDB 操作](https://www.jianshu.com/p/bb116c7a74b3)
 
 ## 存储方式对比
 

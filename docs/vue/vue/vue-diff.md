@@ -456,4 +456,6 @@ render () {
 [Virtual DOM 与 diff (Vue实现)](https://github.com/answershuto/learnVue/blob/master/docs/VirtualDOM%E4%B8%8Ediff(Vue%E5%AE%9E%E7%8E%B0).MarkDown)
 
 [深入剖析：Vue核心之虚拟DOM](https://juejin.cn/post/6844903895467032589#heading-14)
+
+[为什么 Vue 中不要用 index 作为 key？（diff 算法详解）](https://juejin.cn/post/6844904113587634184#heading-0)
 :::
