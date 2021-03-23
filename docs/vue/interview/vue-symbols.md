@@ -55,6 +55,18 @@ keyCode存在很多，但 vue 为我们提供了别名，分为以下两种：
 - 普通键（enter、tab、delete、space、esc、up...）
 - 系统修饰键（ctrl、alt、meta、shift...）
 - 还可以通过以下方式自定义一些全局的键盘码别名 `Vue.config.keyCodes.f2 = 113`
+- .exact 修饰符允许你控制由精确的系统修饰符组合触发的事件。(2.5.0新增)
+
+```html
+<!-- 即使 Alt 或 Shift 被一同按下时也会触发 -->
+<button v-on:click.ctrl="onClick">A</button>
+
+<!-- 有且只有 Ctrl 被按下的时候才触发 -->
+<button v-on:click.ctrl.exact="onCtrlClick">A</button>
+
+<!-- 没有任何系统修饰符被按下的时候才触发 -->
+<button v-on:click.exact="onClick">A</button>
+```
 
 ## v-bind 修饰符
 
@@ -71,4 +83,8 @@ v-bind 修饰符主要是为属性进行操作，用来分别有如下：
 - 注意带有 .sync 修饰符的 v-bind 不能和表达式一起使用
 
 - 将 `v-bind.sync` 用在一个字面量的对象上，例如 `v-bind.sync=”{ title: doc.title }”`，是无法正常工作
+:::
+
+::: tip warning 参考文献
+[vue 修饰符](https://cn.vuejs.org/v2/guide/events.html#%E4%BA%8B%E4%BB%B6%E4%BF%AE%E9%A5%B0%E7%AC%A6)
 :::

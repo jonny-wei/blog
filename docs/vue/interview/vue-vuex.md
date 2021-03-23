@@ -350,8 +350,16 @@ Vuex 的 state 状态是响应式，是借助 vue 的 data 响应式，将 state
 devtoolPlugin 中提供了此功能。因为 dev 模式下所有的 state 的改变都会被记录下来，'时空穿梭' 功能其实就是将当前的 state 替换为记录中某个时刻的 state状态，利用 `store.replaceState(targetState)` 方法将执行 `this._vm.state = state` 实现。
 
 
+### Q7. actions 和 mutations 区别
+
+actions 和 Mutations功能基本一样，不同点是，actions 是异步的改变 state 状态，而 Mutations 是同步改变状态。
+
+同步的意义在于这样每一个 mutation 执行完成后都可以对应到一个新的状态（和 reducer 一样），这样 devtools 就可以打个 snapshot 存下来，然后就可以随便 time-travel 了。如果你开着 devtool 调用一个异步的 action，你可以清楚地看到它所调用的 mutation 是何时被记录下来的，并且可以立刻查看它们对应的状态----尤雨溪
+
 ::: warning 参考文献
 [从头开始学习Vuex](https://github.com/ljianshu/Blog/issues/36)
 
 [Vuex框架原理与源码分析](https://mp.weixin.qq.com/s/8Q_r3cyx1ly28GnkY_DHpQ)
+
+[Vuex源码解析](https://github.com/answershuto/learnVue/blob/master/docs/Vuex%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90.MarkDown)
 :::

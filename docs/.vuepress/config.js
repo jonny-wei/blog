@@ -26,7 +26,8 @@ const sidebar = {
         'vue/vue-diff',
         'vue/vue-nextTick',
         'vue/vue-lifecycle',
-        'vue/vue-computed'
+        'vue/vue-computed',
+        'vue/vue-slot'
       ]
     },
     {

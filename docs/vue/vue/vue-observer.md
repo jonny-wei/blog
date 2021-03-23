@@ -412,6 +412,7 @@ Vue 不允许在已创建的实例上动态添加新的响应式属性。若想�
 - Object.assign() / deepClone() 浅拷贝与深拷贝
 - 利用扩展运算符，以新对象替换老对象。
 - $forceUpdate()
+- Vue.observable(object) 让一个对象可响应。Vue 内部会用它来处理 data 函数返回的对象。2.6.0 新增。
 
 vm.$set 的实现原理是：
 
