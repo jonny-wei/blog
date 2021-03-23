@@ -248,7 +248,11 @@ router.beforeEach((to, from, next) => {
 
 ## monorepo
 
-monorepo 优点：
+### Monorepo vs Multirepo
+
+![monorepo](/blog/images/talk/monorepo1.png)
+
+### monorepo 优点
 
 - 代码复用更容易;
 - 精简依赖管理，去除多个包的重复依赖；
@@ -258,7 +262,7 @@ monorepo 优点：
 - 统一的地方处理 issue;
 - 方便统一生成 ChangeLog。
 
-monorepo 缺点：
+### monorepo 缺点
 
 - 丢失版本信息，统一发布版本的 monorepo，会丢失各自项目的版本信息，尽管也可以单独发布版本；
 - 缺乏针对包的权限控制(Git)，只要需要访问一个项目的，就必须要给开发者授权整个仓库，可能存在安全问题；
@@ -267,6 +271,12 @@ monorepo 缺点：
 目前比较主流的方案是采用 yarn workspaces + lerna 来实现 monorepo 策略。
 
 ## lerna
+
+Lerna 是一个管理多个 npm 模块的工具，是 Babel 自己用来维护自己的 Monorepo 并开源出的一个项目。优化维护多包的工作流，解决多个包互相依赖，且发布需要手动维护多个包的问题。
+
+lerna不负责构建，测试等任务，它提出了一种集中管理package的目录模式，提供了一套自动化管理程序，让开发者不必再深耕到具体的组件里维护内容，在项目根目录就可以全局掌控，基于 npm scripts，使用者可以很好地完成组件构建，代码格式化等操作。目前最常见的 monorepo 解决方案是 Lerna 和 yarn 的 workspace 特性，基于lerna和yarn workspace的monorepo工作流。
+
+[Lerna 中文教程详解](https://juejin.cn/post/6844903856153821198)
 
 ### lerna bootstrap
 
@@ -287,6 +297,8 @@ lerna bootstrap --hoist
 脚手架全部 eject 出来，然后手动挪到顶层，让子项目共享
 
 [mono-repo-demo](https://github.com/dennis-jiang/mono-repo-demo)
+
+
 
 ::: warning 参考文献
 [Micro Frontends](https://micro-frontends.org/)
@@ -316,6 +328,8 @@ lerna bootstrap --hoist
 [使用mono-repo实现跨项目组件共享](https://mp.weixin.qq.com/s/-A3Yg2TX4fCkkx9vXgREFA)
 
 [项目级 monorepo 策略最佳实践](https://juejin.cn/post/6924854598268108807#heading-2)
+
+[lerna+yarn workspace+monorepo项目的最佳实践](https://juejin.cn/post/6844903918279852046#heading-0)
 
 [qiankun 官网常见问题](https://qiankun.umijs.org/zh/faq)
 

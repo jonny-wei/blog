@@ -16,6 +16,54 @@
 
 [处理v-html的潜在XSS风险](https://blog.csdn.net/lj1530562965/article/details/108790220)
 
+### 多选拖拽与排序
+
+场景：项目中要做一个一份数据在多个列表之间拖拽分配并排序，且要支持多选拖拽的功能
+
+调研：轮子市场转了一圈，找到了一个 [Vue.Draggable](https://github.com/SortableJS/Vue.Draggable) 的组件，Vue.Draggable 使用基于 sortable.js 实现拖拽排序功能，支持 vue 过渡动画，支持智能滚动(选中拖拽要让它自动滚动列表)，支持撤销操作等，非常适合使用。但是这个组件没有集成元素多选功能(例如 windows 中文件的多选，shift、ctrl的多选)，然而 sortable.js 这个库以插件的方式实现了多选的功能，Vue.Draggable 又是基于 sortable.js 的，所以最后只能在 Vue.Draggable 源码中引入 sortable.js 的 [MultiDrag](https://github.com/SortableJS/Sortable/tree/master/plugins) 插件。
+
+使用： [Vue.Draggable 文档总结](https://blog.csdn.net/zjiang1994/article/details/79809687)
+
+```js
+// vuedraggable.js
+
+// 引入 MultiDrag 插件
+import Sortable, { MultiDrag } from 'sortablejs';
+import {
+  insertNodeAt, camelize, console, removeNode,
+} from './helper';
+
+if (MultiDrag && !MultiDrag.singleton) {
+  MultiDrag.singleton = new MultiDrag();
+  Sortable.mount(MultiDrag.singleton);
+}
+
+const props = {
+  ...
+  // 加入 multiDrag 与 selectedClass 的 props
+  multiDrag: {
+    type: Boolean,
+    required: false,
+    default: false,
+  },
+  selectedClass: {
+    type: String,
+    required: false,
+    default: null,
+  },
+};
+
+mounted() {
+  // 合并 options
+  if (this.multiDrag) {
+      options.multiDrag = true;
+      options.selectedClass = this.selectedClass;
+    }
+  // 实例化 Sortable  
+  this._sortable = new Sortable(this.rootContainer, options);
+}
+```
+
 
 ## JS
 
