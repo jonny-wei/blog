@@ -29,3 +29,5 @@
 [浅谈SSL协议的握手过程](https://juejin.cn/post/6856595606677716999)
 
 [完全吃透 TLS/SSL](https://juejin.cn/post/6844903624640823310#heading-1)
+
+[HTTP 、 HTTPS 、 HTTP2 的区别](https://github.com/sisterAn/JavaScript-Algorithms/issues/131)

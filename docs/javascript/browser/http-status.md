@@ -150,6 +150,8 @@
 301 和 308 都是永久性重定向，不同的是 308 遵循浏览器规范不允许将 POST 请求重定向为 GET。
 302，303，307 都是临时重定向，但是 303 不管原请求是什么方法，重定向请求的方法都是 GET（或 HEAD，不常用），而 307 不允许将 POST 重定向为 GET。
 
+[http 301 302 307之间的区别](https://github.com/sisterAn/JavaScript-Algorithms/issues/154)
+
 ## 参考资料
 
 [HTTP状态码](https://baike.baidu.com/item/HTTP%E7%8A%B6%E6%80%81%E7%A0%81/5053660?fr=aladdin)
