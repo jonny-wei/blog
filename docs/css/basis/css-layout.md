@@ -256,6 +256,7 @@ justify-content 属性定义了子元素在主轴上的对齐方式
 - center：居中
 - space-between：两端对齐，子元素之间的间隔都相等
 - space-around：每个子元素两侧的间隔相等。所以，子元素与子元素的间隔 比 子元素与边框的间隔 大一倍
+- space-evenly：弹性容器子项均匀分布，所有项目之间及项目与边框之间的距离相等。
 
 #### align-items
 
