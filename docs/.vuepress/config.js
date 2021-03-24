@@ -236,13 +236,15 @@ const sidebar = {
     },
     {
       title: '文件处理',
-      sidebarDepth: 2,
+      sidebarDepth: 1,
       collapsable: false,
-      children: []
+      children: [
+        'files/reference'
+      ]
     },
     {
       title: '图片处理',
-      sidebarDepth: 2,
+      sidebarDepth: 1,
       collapsable: false,
       children: [
         'images/reference'
@@ -250,7 +252,7 @@ const sidebar = {
     },
     {
       title: '换肤',
-      sidebarDepth: 2,
+      sidebarDepth: 1,
       collapsable: false,
       children: []
     },

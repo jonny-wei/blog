@@ -94,7 +94,36 @@ mounted() {
 
 ### 四种相等性算法
 
-- 严格相等比较 ===, indexOf, lastIndexOF 认为NaN与NaN不等，+0与-0相等
+- 严格相等比较 ===, indexOf, lastIndexOf 认为 NaN 与 NaN 不等，+0 与 -0 相等
 - 非严格相等比较 ==
-- 同值零 Set,Map,include等 认为NaN与NaN相等，+0与-0相等
-- 同值 Object.is 认为NaN与NaN相等，+0与-0不等
+- 同值零 Set，Map，include等 认为 NaN 与 NaN 相等，+0 与 -0 相等
+- 同值 Object.is() 认为 NaN 与 NaN 相等，+0 与 -0 不等
+
+### 相等运算符 == 隐式转换规则
+
+相等运算符 == 会对操作值进行隐式转换后进行比较
+
+- 如果其中一个操作值为布尔值，则在比较之前先将其转换为数值
+- 如果其中一个操作值为字符串，另一个操作值为数值，则通过 Number() 函数将字符串转换为数值
+- 如果其中一个操作值是对象，另一个不是，则调用对象的 valueOf() 方法，得到的结果按照前面的规则进行比较
+- null 与undefined 是相等的
+- 如果一个操作值为 NaN，则返回 false
+- 如果两个操作值都是对象，则比较它们是不是指向同一个对象
+
+```js
+'1' == true; // true
+'1' == 1; // true
+'1' == {}; // false
+'1' == []; // false
+undefined == undefined; // true
+undefined == null; // true
+nul == null; // true
+```
+
+### 5 种类型检测
+
+- typeof： typeof 操作符适合对 基本类型（除 null 之外）及 function 的检测使用，而对引用数据类型（如 Array）等不适合使用。
+- instanceof：instanceof 运算符用与检测一个对象在其 原型链 中是否存在一个构造函数的 prototype 属性。不同 window 或 iframe 之间的对象类型检测无法使用 instanceof 检测。
+- Object.prototype.toString：Object.prototype.toString 属于 Object 的原型方法，而 Array ， Function 等类型作为 Object 的实例，都重写了 toString 方法。因此，不同对象类型调用 toString 方法时，调用的是重写后的 toString 方法，而非 Object 上原型 toString 方法。`Object.prototype.toString.call(value).slice(8, -1)`
+- constructor：任何对象都有 constructor 属性，继承自原型对象，constructor 会指向构造这个对象的构造器或构造函数。`Student.prototype.constructor === Student;`
+- Array.isArray()：数组检测
