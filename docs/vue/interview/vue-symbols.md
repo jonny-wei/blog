@@ -85,6 +85,6 @@ v-bind 修饰符主要是为属性进行操作，用来分别有如下：
 - 将 `v-bind.sync` 用在一个字面量的对象上，例如 `v-bind.sync=”{ title: doc.title }”`，是无法正常工作
 :::
 
-::: tip warning 参考文献
+::: warning 参考文献
 [vue 修饰符](https://cn.vuejs.org/v2/guide/events.html#%E4%BA%8B%E4%BB%B6%E4%BF%AE%E9%A5%B0%E7%AC%A6)
 :::

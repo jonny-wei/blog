@@ -127,3 +127,9 @@ nul == null; // true
 - Object.prototype.toString：Object.prototype.toString 属于 Object 的原型方法，而 Array ， Function 等类型作为 Object 的实例，都重写了 toString 方法。因此，不同对象类型调用 toString 方法时，调用的是重写后的 toString 方法，而非 Object 上原型 toString 方法。`Object.prototype.toString.call(value).slice(8, -1)`
 - constructor：任何对象都有 constructor 属性，继承自原型对象，constructor 会指向构造这个对象的构造器或构造函数。`Student.prototype.constructor === Student;`
 - Array.isArray()：数组检测
+
+### setTimeout 和 setImmediate
+
+定时器线程其实只是一个计时的作用，他并不会真正执行时间到了的回调，真正执行这个回调的还是JS主线程。所以当时间到了定时器线程会将这个回调事件给到事件触发线程，然后事件触发线程将它加到事件队列里面去。最终JS主线程从事件队列取出这个回调执行。事件触发线程不仅会将定时器事件放入任务队列，其他满足条件的事件也是他负责放进任务队列。
+
+setTimeout(fn, 0) 不是立即执行的意思，而是任务 fn 会添加到 event-loop 的事件队列中。仅当，浏览器处理事件队列时， 0 毫秒，确保让这个任务 fn 会被执行。setImmediate 就是 setTimeout(fn, 0) 的替代函数。新旧两种解决方案，目的都是，为了让浏览器处理 更重要的任务时 进行让道。与 setTimeout(fn, 0) 不同的是，setImmediate 的处理优先级更高，即 setImmediate 优先于 setTimeout 执行。setImmediate 的设计更像 nodejs 中的 process.nextTick。process.nextTick 不在 Event Loop 的任何阶段，他是一个特殊 API，他会立即执行，然后才会继续执行Event Loop。
