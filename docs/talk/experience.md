@@ -199,7 +199,7 @@ setTimeout(fn, 0) 不是立即执行的意思，而是任务 fn 会添加到 eve
 - 内联块实现：将行内多个元素设定为 inline-block 行内块，然后在父元素添加 text-align。
 - 弹性布局：`justify-content: center`。
 - 固定宽度-外边距偏移：先相对于父元素向右偏离半个父元素宽度，然后使用负左外边距(负 margin)校正居中元素的偏移量。
-- 固定宽度-外边距适配
+- 固定宽度-外边距适配：(position: absolute; left: 0; right: 0; margin: 0 auto)
 - 未知宽度：当定位元素未知宽度时，使用 transform 对自身进行偏移可以解决这个问题(left + transform)
 
 ### 垂直居中
