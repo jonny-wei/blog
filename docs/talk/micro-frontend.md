@@ -20,15 +20,30 @@
 
 ## 其他方案
 
-#### iframe
+### 为什么不用 路由分发式
 
-iFrame 内部弹框不能够覆盖全局、滚动条问题、iFrame 内页面加载过程太慢、数据统计繁琐等等
+路由分发式：即通过路由将不同的业务分发到不同的、独立前端应用上。通常通过 HTTP 服务器的反向代理来实现(Nginx)，又或者是应用框架自带的路由来解决。但是这种方式看上去更像是多个前端应用的聚合，只是将不同的前端应用拼凑到一起，使他们看起来像是一个完整的整体。但是实际并不是，每次用户从 A 应用到 B 应用的时候，往往需要刷新页面，重新加载资源文件。
 
-#### npm 包
+缺点：刷新页面，重新加载了资源
+
+### 为什么不用 iframe
+
+iframe 最大的特性就是提供了浏览器原生的硬隔离方案，不论是样式隔离、js 隔离这类问题统统都能被完美解决。但他的最大问题也在于他的隔离性无法被突破，导致应用间上下文无法被共享，随之带来的开发体验、产品体验的问题。
+
+缺点：
+
+- url 不同步。浏览器刷新 iframe url 状态丢失、后退前进按钮无法使用。
+- UI 不同步，DOM 结构不共享。想象一下屏幕右下角 1/4 的 iframe 里来一个带遮罩层的弹框，同时我们要求这个弹框要浏览器居中显示，还要浏览器 resize 时自动居中。内部弹框不能够覆盖全局、滚动条问题。
+- 全局上下文完全隔离，内存变量不共享。iframe 内外系统的通信、数据同步等需求，主应用的 cookie 要透传到根域名都不同的子应用中实现免登效果。
+- 慢。每次子应用进入都是一次浏览器上下文重建、资源重新加载的过程。
+
+### 为什么不用 npm 包
 
 把各个拆分的项目引用公共头、尾和导航组件看似一个较好的解决方案，但是当公共组件一旦升级，往往各个拆分项目都要重新升级并上线，开发体验和升级成本大打折扣，同时它也会因为各个项目不及时更新而导致项目之间跳转后体验不一致的现象。
 
-## 为什么用
+npm 包这种静态的共享方式，丧失了动态下发代码的能力，导致了其过慢的工程响应速度，这在现在云服务流行的时代就会显得格外扎眼。而微前端这种纯动态的服务依赖方式，恰好能方便的解决上面的问题：被依赖的微应用更新后的产物，在产品刷新后即可动态的获取到，如果我们在微应用加载器中再辅以灰度逻辑，那么动态更新带来的变更风险也能得到有效的控制。
+
+## 使用场景
 
 不同于 iFrame 方式的融合，iFrame 是通过一些视觉样式的欺骗，让用户感觉各个应用在同一个页面，从本质上讲 iFrame 和重新打开一个页面没有什么太大区别。但是微前端的融合方式，是将子应用的 DOM（文档对象模型）整个加载到了当前页面，并且解析文档的 JavaScript 和 CSS 资源并运行，它就像在同一个项目的单页应用一样。
 
@@ -38,6 +53,44 @@ iFrame 内部弹框不能够覆盖全局、滚动条问题、iFrame 内页面加
 - 独立运行。每个子应用之间状态隔离，运行时状态不共享
 - 项目臃肿，打包构建时间长
 
+### 与路由绑定的方式渲染微应用
+
+以路由(url)为维度来划分微应用，基于 qiankun 的 `registerMicroApps` API，提供 entry html 地址，并为其分配一个路由规则即可。路由与应用绑定的方式简单直观，是微前端中最为常见的使用场景，通常我们会用这种方式**将一堆独立域名访问的 MPA 应用，整合成一个一体化的 SPA 应用**。
+
+局限性：
+
+- 由于 **URL/路由** 的 **唯一性/排他性** 的特点，这种方式只适用单实例场景需求
+- 微应用的调度都是由路由系统来自动处理的，虽然省事但是碰到更复杂的需求，如同一个路由下，根据不同的用户权限展示不同的微应用这类个性化诉求，需要写一些中间层代码来曲线救国
+- 应用挂载的容器节点等需提前准备好，不然碰到 **动态/嵌套** 路由这类情况，可能会因为路由 listener 监听触发的时序不确定，导致微应用无法完成挂载的问题
+
+### 以组件的方式使用微应用
+
+qiankun 2.0 的发布带来一个全新的 API `loadMicroApp`，通过这个 API 我们可以自己去控制一个微应用加载/卸载。开发者可以在脱离路由的限制下，以更自由的方式去渲染我们的微应用。基于 `loadMicroApp` API，我们只需要做一些简单的封装，即可以类似组件的开发体验，完成微应用的接入。这类方式适用于一些可共用的、带业务逻辑的服务型组件。通过组件的这种方式，我们可以完全自主的控制微应用的渲染，并与之做一些复杂的交互。不论是在开发者的编码心智，还是用户的体验上，都跟使用一个普通的业务组件无异。
+
+局限性：
+
+组件的方式非常灵活，几乎解决了所有路由绑定方式渲染微应用的问题，但也有自己的一些局限：需要确保被加载的微应用是不含自己的路由系统，否则会出现多个应用间路由系统互相 `抢占/冲突` 的情况。
+
+## 工程思考
+
+### 嵌套渲染场景
+
+在应用 A 中通过调用 loadMicroApp(B) 的方式唤起微应用 B，然后在微应用 B 中通过 loadMicroApp(C) 的方式唤起微应用 C，通过这样的调用链路即可很完美的完成产品上的诉求。但是现实情况往往没有那么简单，前面提到过，若想要 `loadMicroApp` API 能符合预期的运行，我们需要确保被加载的微应用是不含自己的路由系统，否则会出现多个应用间路由系统互相 `抢占/冲突` 的情况。而现实情况是，我们**大部分需要复用的页面/组件，都会是某个站点的局部路由页**，很少有人会专门起一个仓库，用来专门把这个页面抽取成一个微应用。这种场景下，我们其实**只需要确保微应用的路由系统不会干扰到全局的 URL 系统即可**。A/B 均是子应用，但是在 A 中可以再通过抽屉呼出 B，同时浏览器地址栏也不会被 B 的路由干扰，还是 A 的路由。
+
+### 极限渲染场景
+
+把一个微应用的 20+ 路由页同时渲染到了一个 url 下，例如，列表中每一个 demo 都是通过 qiankun 渲染的一个独立微应用实例，而每一个微应用实例，实际对应是同一个应用的不同路由页。不同于前面几个场景，将同一个应用的不同页面，同时渲染到主应用的不同 UI 容器中这个需求下，有几个比较特殊的问题需要去考虑：
+
+- 是否需要特殊的微应用生产方式
+- 多路由系统共存带来的 冲突/抢占 问题
+- 不同微应用间的样式隔离
+- 如何优化渲染性能：既然每一个微应用实例实际对应的是同一个应用，那我们如何尽可能多的复用一些运行时或者沙箱，从而降低这么多微应用同时渲染代理的运行时开销
+
+### 新的 UI 共享模式
+
+在以前，如果我们希望复用一个站点的局部 UI，几乎只有这样一条路径：从业务系统中`抽取出一个组件 -> 发布 npm 包 -> 调用方使用 npm 包`。将这部分代码抽取成若干个单独的文件，同时还要考虑如何跟已有的系统做上下文解耦，这类工作出现在一个越是年代久远的项目上，实施起来就越是困难。
+
+不同于组件库的研发流程，微前端的场景下，大部分时候我们不会为了去复用一个 UI，而去专门写一个微应用出来。通常我们期望的是，从一个已有系统中，直接选取我们需要复用的部分，嵌入到我们自己的容器里进行渲染。基于上面提到过的微应用多实例的渲染方案，我们可以考虑将需要复用的组件，以路由 URL 作为 ID 的方式导出。
 
 ## 实战经验
 
@@ -56,6 +109,7 @@ single-spa 解决了以应用为维度的路由，应用的注册，监听，最
 - umi 插件，提供了 @umijs/plugin-qiankun 供 umi 应用一键切换成微前端架构系统。
 
 qiankun@2.0 新功能
+
 - 支持多应用并行及多实例沙箱
 - 支持手动 加载/卸载 微应用
 - 支持 IE11 沙箱兼容
@@ -91,8 +145,8 @@ Preload 技术在微前端项目中优势尤为明显，微前端有很多子应
 - 主应用根据 path 来判断微应用
 
   - history 模式的微应用之间的跳转，或者微应用跳主应用页面，直接使用微应用的路由实例是不行的，原因是微应用的路由实例跳转都基于路由的 base。有两种办法可以跳转：
-      1. history.pushState()
-      2. 将主应用的路由实例通过 props 传给微应用，微应用这个路由实例跳转。
+    1. history.pushState()
+    2. 将主应用的路由实例通过 props 传给微应用，微应用这个路由实例跳转。
 
 ### CSS 样式隔离
 
@@ -109,7 +163,6 @@ Preload 技术在微前端项目中优势尤为明显，微前端有很多子应
 - Runtime css transformer 动态加载/卸载样式表
 
   通过运行时来改变当前子应用所引用的 CSS，这种方案虽然可行，但是在运行时动态的增加、修改、删除样式，会在性能上有一定的消耗。
-
 
 ::: tip 样式隔离
 在最新的 qiankun 版本中，你也可以尝试通过配置 `{ scope: { experimentalStyleIsolation: true } }` 的方式开启**运行时的 scoped css 功能**，从而解决应用间的样式隔离问题。
@@ -137,19 +190,18 @@ qiankun 内部的实现方式是通过 Proxy 来实现的沙箱模式，即在�
 
 ```js
 // 创建事件
-let event = new CustomEvent('event-a', {
-  detail: 'hello'
+let event = new CustomEvent("event-a", {
+  detail: "hello"
 });
 // 监听事件
-document.addEventListener('event-a', function(e){
+document.addEventListener("event-a", function(e) {
   console.log(e.detail);
-})
+});
 // 触发事件
 document.dispatchEvent(event);
 ```
 
 qiankun 框架已经为我们准备好了基于 props 的通讯方式，主应用和子应用之间可以通过设置和监听全局状态，来相互传递信息。但是只能做到主、子应用之间的直接通讯。
-
 
 ::: tip 官方链接
 [qiankun](https://qiankun.umijs.org/zh/cookbook)
@@ -169,17 +221,16 @@ Web components 的一个重要属性是封装——可以将标记结构、样�
 
 具体操作见 [Shadow DOM](https://developer.mozilla.org/zh-CN/docs/Web/Web_Components/Using_shadow_DOM)
 
-
 ## 踩坑
 
 样式污染与事件监听不生效。
 
-样式隔离也是微前端面临的一个重要问题，在 qiankun@1.x  中，支持了微应用之间的样式隔离（仅沙箱开启时生效），但尚存一些问题：
+样式隔离也是微前端面临的一个重要问题，在 qiankun@1.x 中，支持了微应用之间的样式隔离（仅沙箱开启时生效），但尚存一些问题：
 
 - 主子应用之间的样式隔离依赖手动配置插件处理
 - 多应用场景下微应用之间的样式隔离亟待处理
 
-**qiankun样式隔离方案**：
+**qiankun 样式隔离方案**：
 
 为此，引入了一个新的选项，`sandbox: { strictStyleIsolation?: boolean }` 。在该选项开启的情况下，会以 `Shadow DOM` 的形式嵌入微应用，以此来做到应用样式的真正隔离。
 
@@ -193,12 +244,11 @@ Web components 的一个重要属性是封装——可以将标记结构、样�
 
 此外 Shadow DOM 场景下还会有一些额外的事件处理、边界处理等问题。
 
-
 ::: tip 实验性的隔离隔离
 qiankun 还提供了一个实验性的样式隔离特性，当 `experimentalStyleIsolation` 被设置为 true 时，qiankun 会**改写子应用所添加的样式为所有样式规则增加一个特殊的选择器规则来限定其影响范围**
 :::
 
-在 qiankun@2.2.2版本之前，qiankun 只能解决子应用之间的样式相互污染，不能解决子应用与主应用的样式相互污染。子应用切换到主应用时，会出现样式丢失问题和事件监听不生效问题。在具有路由懒加载的 Vue 子应用之间互相切换，懒加载组件的样式不会重建。路由懒加载的子应用(异步加载的组件)，多次切换时也同样会出现样式丢失问题。
+在 qiankun@2.2.2 版本之前，qiankun 只能解决子应用之间的样式相互污染，不能解决子应用与主应用的样式相互污染。子应用切换到主应用时，会出现样式丢失问题和事件监听不生效问题。在具有路由懒加载的 Vue 子应用之间互相切换，懒加载组件的样式不会重建。路由懒加载的子应用(异步加载的组件)，多次切换时也同样会出现样式丢失问题。
 
 原因：子应用跳转时，子应用的卸载需要一点点时间，在这段时间内主项目加载了，插入了 css，但是被子项目的 css 沙箱记录了，连同子项目一同卸载移除了。换句话说，主应用样式丢失的问题跟子应用卸载的时机有关系：当切换子应用时，当前子应用沙箱环境还未被卸载，但主应用 css 已被插入，当卸载时会连带主应用 css 一起被清除。在 `<head></head>` 能看到。主项目事件监听也是一样的，所以需要在子项目卸载完成后再跳转。
 
@@ -217,13 +267,13 @@ js 沙箱只劫持了 window.addEventListener，使用 document.body.addEventLis
 解决办法：我原本想在路由钩子函数里面判断下，子项目是否卸载完成，卸载完成再跳转路由，然而路由不跳转，子项目根本不会卸载。临时解决办法是先复制一下 HTMLHeadElement.prototype.appendChild 和 window.addEventListener ，路由钩子函数 beforeEach 中判断一下，如果当前路由是子项目，并且去的路由是父项目的，则还原这两个对象。
 
 ```js
-const isChildRoute = path => childRoute.some(item => path.startsWith(item))
+const isChildRoute = path => childRoute.some(item => path.startsWith(item));
 const rawAppendChild = HTMLHeadElement.prototype.appendChild;
 const rawAddEventListener = window.addEventListener;
 
 router.beforeEach((to, from, next) => {
   // 从子项目跳转到主项目
-  if(isChildRoute(from.path) && !isChildRoute(to.path)){
+  if (isChildRoute(from.path) && !isChildRoute(to.path)) {
     HTMLHeadElement.prototype.appendChild = rawAppendChild;
     window.addEventListener = rawAddEventListener;
   }
@@ -237,12 +287,11 @@ router.beforeEach((to, from, next) => {
 
 - 可以使用 lerna 统一管理所有项目，方便维护，或者让每个应用拥有独立的仓库，做到独立开发。
 
-  Lerna是一个使用 git 和 npm 来处理多包依赖管理的工具，利用它能够自动帮助我们管理各种模块包之间的版本依赖关系。
+  Lerna 是一个使用 git 和 npm 来处理多包依赖管理的工具，利用它能够自动帮助我们管理各种模块包之间的版本依赖关系。
 
 - 可以使用 SystemJS 实现应用的动态加载、独立部署。
 
   system.js 的作用就是动态按需加载模块。假如我们子项目都使用了 vue, vuex, vue-router，每个项目都打包一次，就会很浪费。 system.js 可以配合 webpack 的 externals 属性，将这些模块配置成外链，然后实现按需加载,当然了，你也可以直接用 script 标签将这些公共的 js 全部引入，借助 system.js 这个插件，我们只需要将子项目的 app.js 暴露给它即可。
-
 
 [使用 mono-repo 实现跨项目组件共享](https://mp.weixin.qq.com/s/-A3Yg2TX4fCkkx9vXgREFA)
 
@@ -274,7 +323,7 @@ router.beforeEach((to, from, next) => {
 
 Lerna 是一个管理多个 npm 模块的工具，是 Babel 自己用来维护自己的 Monorepo 并开源出的一个项目。优化维护多包的工作流，解决多个包互相依赖，且发布需要手动维护多个包的问题。
 
-lerna不负责构建，测试等任务，它提出了一种集中管理package的目录模式，提供了一套自动化管理程序，让开发者不必再深耕到具体的组件里维护内容，在项目根目录就可以全局掌控，基于 npm scripts，使用者可以很好地完成组件构建，代码格式化等操作。目前最常见的 monorepo 解决方案是 Lerna 和 yarn 的 workspace 特性，基于lerna和yarn workspace的monorepo工作流。
+lerna 不负责构建，测试等任务，它提出了一种集中管理 package 的目录模式，提供了一套自动化管理程序，让开发者不必再深耕到具体的组件里维护内容，在项目根目录就可以全局掌控，基于 npm scripts，使用者可以很好地完成组件构建，代码格式化等操作。目前最常见的 monorepo 解决方案是 Lerna 和 yarn 的 workspace 特性，基于 lerna 和 yarn workspace 的 monorepo 工作流。
 
 [Lerna 中文教程详解](https://juejin.cn/post/6844903856153821198)
 
@@ -298,18 +347,16 @@ lerna bootstrap --hoist
 
 [mono-repo-demo](https://github.com/dennis-jiang/mono-repo-demo)
 
-
-
 ::: warning 参考文献
 [Micro Frontends](https://micro-frontends.org/)
 
 [qiankun 技术圆桌](https://www.yuque.com/kuitos/gky7yw)
 
-[说说JS中的沙箱](https://juejin.cn/post/6844903954074058760)
+[说说 JS 中的沙箱](https://juejin.cn/post/6844903954074058760)
 
-[解密微前端：从qiankun看沙箱隔离](https://juejin.cn/post/6896643767353212935)
+[解密微前端：从 qiankun 看沙箱隔离](https://juejin.cn/post/6896643767353212935)
 
-[解密微前端：从qiankun看子应用加载](https://juejin.cn/post/6891888458919641096)
+[解密微前端：从 qiankun 看子应用加载](https://juejin.cn/post/6891888458919641096)
 
 [qiankun 2.x 运行时沙箱 源码分析](https://juejin.cn/post/6885214342552223757)
 
@@ -325,21 +372,21 @@ lerna bootstrap --hoist
 
 [qiankun 微前端方案实践及总结](https://juejin.cn/post/6844904185910018062#heading-0)
 
-[使用mono-repo实现跨项目组件共享](https://mp.weixin.qq.com/s/-A3Yg2TX4fCkkx9vXgREFA)
+[使用 mono-repo 实现跨项目组件共享](https://mp.weixin.qq.com/s/-A3Yg2TX4fCkkx9vXgREFA)
 
 [项目级 monorepo 策略最佳实践](https://juejin.cn/post/6924854598268108807#heading-2)
 
-[lerna+yarn workspace+monorepo项目的最佳实践](https://juejin.cn/post/6844903918279852046#heading-0)
+[lerna+yarn workspace+monorepo 项目的最佳实践](https://juejin.cn/post/6844903918279852046#heading-0)
 
 [qiankun 官网常见问题](https://qiankun.umijs.org/zh/faq)
 
 [微前端在美团外卖的实践](https://juejin.cn/post/6844904073972432903#heading-5)
 
-[基于lerna和single-spa,sysyem.js搭建vue的微前端框架](https://www.jianshu.com/p/7d1359e29d39)
+[基于 lerna 和 single-spa,sysyem.js 搭建 vue 的微前端框架](https://www.jianshu.com/p/7d1359e29d39)
 
 [微前端在小米 CRM 系统的实践](https://mp.weixin.qq.com/s/5qwgZ9aNKFC3naWRUGajmA)
 
-[滴普大前端|DevOps（A10）基于qiankun的微前端实践](https://mp.weixin.qq.com/s/kqINSvBH2QpcTtWtzHc10Q)
+[滴普大前端|DevOps（A10）基于 qiankun 的微前端实践](https://mp.weixin.qq.com/s/kqINSvBH2QpcTtWtzHc10Q)
 
 [前端微服务化解决方案](https://alili.tech/archive/ea599f7c/)
 
@@ -350,4 +397,6 @@ lerna bootstrap --hoist
 [微前端：未来前端开发的新趋势](https://github.com/xitu/gold-miner/blob/master/TODO1/micro-frontends-1.md)
 
 [微前端技术在商羚商户端的实战 - 京东](https://jelly.jd.com/article/603c5a026d84e3013e8846f6)
+
+[探索微前端的场景极限](https://mp.weixin.qq.com/s/FE3jsrqHrLWIjdEqaetoiA)
 :::

@@ -316,7 +316,7 @@ setTimeout(fn, 0) 不是立即执行的意思，而是任务 fn 会添加到 eve
     right: 0;
     bottom: 0;
     padding: 0 20px 0 10px;
-    content: '...';
+    content: "...";
   }
 }
 ```
