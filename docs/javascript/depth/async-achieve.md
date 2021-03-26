@@ -74,6 +74,21 @@ new myPromsie(resolve => {
 
 Promise()
 
+```js
+new Promise(executor)
+new Promise(function(resolve, reject){...})
+```
+
+Promise 的参数 executor 是带有 resolve 和 reject 两个参数的函数。而这两个参数也是函数，由 JavaScript 引擎提供，不用开发者部署。
+
+- Promise 构造函数执行时立即调用 executor 函数，resolve 和 reject 两个函数作为参数传入 executor （executor 函数会在 Promise 构造函数返回新建对象前被调用）。
+- executor 内部通常会执行一些异步操作，一旦完成，可以调用 resolve 函数来将 Promise 状态改成 Fulfilled，或者在发生错误时将它的状态改为 Rejected
+- 无法取消 Promise，一旦新建它就会立即执行，无法中途取消
+- 如果不设置回调函数（executor），Promise 内部抛出错误，不会反应到外部
+- 当处于 Pending 状态时，无法得知目前进展到哪一个阶段
+
+如果某些事件不断地反复发生，一般来说，使用  Stream  模式是比部署 Promise 更好的选择。
+
 #### 静态方法
 
 - Promise.all(iterable) 都成功时才成功
@@ -94,11 +109,11 @@ Promise()
 
 - Promise.resolve(value)
 
-    返回一个状态由给定 value 决定的 Promise 对象。有时需要将现有对象转为 Promise 对象，Promise.resolve()方法就起到这个作用。
+    返回一个状态由给定 value 决定的 Promise 对象。有时需要将现有对象转为 Promise 对象，Promise.resolve()方法就起到这个作用。从 Pending（待定） 变为 Fullfilled（实现），在异步操作成功时调用，并将异步操作的结果，作为参数传递出去。该函数的参数除了正常的值以外，还可能是另一个 Promise 实例。
 
 - Promise.reject(reason)
 
-    返回一个状态为失败的 Promise 对象
+    返回一个状态为失败的 Promise 对象。从 Pending（待定） 变为 Rejected（否决），在异步失败时调用，并将异步操作报出的错误，作为参数传递出去。该函数的参数通常是 Error 对象的实例，表示抛出的错误。
 
 #### Promise 原型
 
