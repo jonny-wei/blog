@@ -31,6 +31,8 @@
 
 ## 算法
 
+[awesome-coding-js](http://www.conardli.top/docs/)
+
 [JavaScript-Algorithms](https://github.com/sisterAn/JavaScript-Algorithms)
 
 ## 浏览器
@@ -56,6 +58,8 @@
 [TaoPoppy](https://www.taopoppy.cn/)
 
 [ljianshu/Blog](https://github.com/ljianshu/Blog)
+
+[ConardLi的blog](http://www.conardli.top/blog/article/)
 
 ## 宝藏
 
