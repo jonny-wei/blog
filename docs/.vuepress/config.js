@@ -8,6 +8,7 @@ const sidebar = {
         '',
         'interview/vue-communication',
         'interview/vue-symbols',
+        'interview/vue-directive',
         'interview/vue-test',
         'interview/vue-router',
         'interview/vue-vuex',
@@ -94,6 +95,7 @@ const sidebar = {
       sidebarDepth: 1,
       children: [
         'advanced/animation',
+        'advanced/canvas',
       ]
     },
   ],
@@ -121,6 +123,7 @@ const sidebar = {
         'depth/proxy-reflect',
         'depth/module',
         'depth/decorator',
+        'depth/strict-mode',
         'depth/reference'
       ]
     },
@@ -297,6 +300,7 @@ const sidebar = {
         '',
         'micro-frontend',
         'BFF',
+        'pwa',
         'auth',
         'experience',
         'friendship-link'

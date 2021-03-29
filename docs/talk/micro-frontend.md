@@ -378,6 +378,8 @@ lerna bootstrap --hoist
 
 [lerna+yarn workspace+monorepo 项目的最佳实践](https://juejin.cn/post/6844903918279852046#heading-0)
 
+[现代前端工程为什么越来越离不开 Monorepo](https://juejin.cn/post/6944877410827370504#heading-6)
+
 [qiankun 官网常见问题](https://qiankun.umijs.org/zh/faq)
 
 [微前端在美团外卖的实践](https://juejin.cn/post/6844904073972432903#heading-5)
