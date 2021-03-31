@@ -27,6 +27,14 @@ Vuex 背后的设计思想：
 
 ```js
 // eventBus.js
+
+/**
+ * events：事件注册中心 events = [{eventName: '', listeners: []},{}]
+ * MyEvent：一个实例一组同类(eventName)事件的回调任务队列(listeners)
+ * eventName：回调函数名(类型)
+ * listeners：回调队列
+ */
+
 const events = [];
 
 function on(eventName, callback) {

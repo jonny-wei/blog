@@ -66,7 +66,9 @@ person.constructor <===> Person.prototype.constructor <===> Persion
 ::: tip 注意
 - 在原型链中查找属性或方法，如果没有查找到相关属性或方法，返回的是 undefined，表示原型链中没有该属性或方法。
 - 而通过访问原型链中的原型对象，到达原型链终点，即 Object.prototype 的值为 null。
-- 通过 instanceof 操作符可以确定原型与实例的关系。instanceof 操作符会递归查找原型链直到找到了或者到达顶层为止。
+- 通过 instanceof 操作符可以确定原型与实例的关系，判断一个实例是否属于某种类型。instanceof 操作符会递归查找原型链直到找到了或者到达顶层为止。
+- 当通过字面量方式创建对象时，它的原型就是 Object.prototype。
+- 通过 Object.create() 方式创建的对象会以传入的对象参数为对象的原型。
 :::
 
 ## 疑点

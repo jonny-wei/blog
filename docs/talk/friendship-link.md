@@ -1,6 +1,5 @@
 # 友情链接
 
-
 ## vue2
 
 [渲染器](http://hcysun.me/vue-design/zh/)
@@ -11,7 +10,7 @@
 
 [Vue.js 技术揭秘](https://ustbhuangyi.github.io/vue-analysis/v2/prepare/)
 
-[深入理解Vue.js实战](https://godbasin.github.io/vue-ebook/)
+[深入理解 Vue.js 实战](https://godbasin.github.io/vue-ebook/)
 
 ## vue3
 
@@ -23,7 +22,7 @@
 
 [ Vue3 源码解析](https://vue3js.cn/start/)
 
-[了不起的Vue3](https://juejin.cn/post/6898120355781705736#heading-4)
+[了不起的 Vue3](https://juejin.cn/post/6898120355781705736#heading-4)
 
 ## webpack
 
@@ -49,7 +48,7 @@
 
 [童欧巴](https://juejin.cn/user/3491704662669469)
 
-[Jehoshaphat Tse博主](https://github.com/tsejx)
+[Jehoshaphat Tse 博主](https://github.com/tsejx)
 
 [前端森林](https://juejin.cn/user/3737995267297838/posts)
 
@@ -59,7 +58,9 @@
 
 [ljianshu/Blog](https://github.com/ljianshu/Blog)
 
-[ConardLi的blog](http://www.conardli.top/blog/article/)
+[ConardLi 的 blog](http://www.conardli.top/blog/article/)
+
+[bigo 前端技术博客](https://github.com/bigo-frontend/blog)
 
 ## 宝藏
 
@@ -87,7 +88,7 @@
 
 [木易杨前端进阶](https://muyiy.cn/)
 
-[前端知识每日3+1](http://www.h-camel.com/index.html)
+[前端知识每日 3+1](http://www.h-camel.com/index.html)
 
 [前端面试](https://lgwebdream.github.io/FE-Interview/)
 
@@ -95,4 +96,4 @@
 
 [react-article-bucket](https://github.com/liangklfangl/react-article-bucket)
 
-[web前端面试 - 面试官系列](https://vue3js.cn/interview/)
+[web 前端面试 - 面试官系列](https://vue3js.cn/interview/)
