@@ -41,7 +41,7 @@ Promise 利用 3 大手段解决回调地狱：
 #### 4 个缺点：
 
 - **无法取消Promise**。一旦新建它就会立即执行，无法中途取消。
-- **错误被吃掉**。如果不设置回调函数，Promise 内部抛出的错误，不会反应到外部。这也是为什么一般推荐在 Promise 链的最后添加一个 catch 函数的原因。其实这并不是 Promise 独有的局限性，try/catch 也是这样，同样会捕获一个异常并简单的吃掉错误。
+- **错误被吃掉**。错误被吃掉指 Promise 内部的错误不会影响到 Promise 外部的代码。如果不设置回调函数，Promise 内部抛出的错误，不会反应到外部。这也是为什么一般推荐在 Promise 链的最后添加一个 catch 函数的原因。其实这并不是 Promise 独有的局限性，try/catch 也是这样，同样会捕获一个异常并简单的吃掉错误。不过，Node.js 有一个 unhandledRejection 事件，专门监听未捕获的 reject 错误。注意，Node 有计划在未来废除unhandledRejection事件。如果 Promise 内部有未捕获的错误，会直接终止进程，并且进程的退出码不为 0。
 - **无法得知 pending 状态**。当处于 pending 状态时，无法得知目前进展到哪一个阶段（刚刚开始还是即将完成）。
 - **单一值**。Promise 只能有一个完成值或一个拒绝原因，当需要传递多个值时，构造成一个对象或数组，然后再传递，then 中获得这个值后，又会进行取值赋值的操作。
 
@@ -85,39 +85,117 @@ new Promise(function(resolve, reject){...})
 
 Promise 的参数 executor 是带有 resolve 和 reject 两个参数的函数。而这两个参数也是函数，由 JavaScript 引擎提供，不用开发者部署。
 
-- Promise 构造函数执行时立即调用 executor 函数，resolve 和 reject 两个函数作为参数传入 executor （executor 函数会在 Promise 构造函数返回新建对象前被调用）。
+- Promise 构造函数执行时立即调用 executor 函数，resolve 和 reject 两个函数作为参数传入 executor （executor 函数会在 Promise 构造函数返回新建对象前被调用，Promise 新建后就会立即执行。）。
 - executor 内部通常会执行一些异步操作，一旦完成，可以调用 resolve 函数来将 Promise 状态改成 Fulfilled，或者在发生错误时将它的状态改为 Rejected
 - 无法取消 Promise，一旦新建它就会立即执行，无法中途取消
 - 如果不设置回调函数（executor），Promise 内部抛出错误，不会反应到外部
 - 当处于 Pending 状态时，无法得知目前进展到哪一个阶段
 
-如果某些事件不断地反复发生，一般来说，使用  Stream  模式是比部署 Promise 更好的选择。
+```js
+const promise = new Promise((resolve,reject) => {
+  if (/* 异步操作成功 */){
+    resolve(value);
+  } else {
+    reject(error);
+  }
+})
+
+promise.then(function(value) {
+  // success
+}, function(error) {
+  // failure
+});
+```
 
 #### 静态方法
 
-- Promise.all(iterable) 都成功时才成功
+- Promise.all(iterable) 
 
-    这个方法返回一个新的 promise 对象，该 promise 对象在 iterable 参数对象里所有的 promise 对象都成功的时候才会触发成功，一旦有任何一个 iterable 里面的 promise 对象失败则立即触发该 promise 对象的失败。如果这个新的promise对象触发了失败状态，它会把 iterable 里第一个触发失败的 promise 对象的错误信息作为它的失败错误信息。
+    这个方法返回一个新的 promise 对象，该 promise 对象在 iterable 参数对象里所有的 promise 对象都成功的时候才会触发成功，一旦有任何一个 iterable 里面的 promise 对象失败则立即触发该 promise 对象的失败。如果这个新的promise对象触发了失败状态，它会把 iterable 里第一个触发失败的 promise 对象的错误信息作为它的失败错误信息。Promise.all() 方法接受一个数组作为参数，数组元素都是 Promise 实例，如果不是，就会先调用 Promise.resolve 方法，将参数转为 Promise 实例，再进一步处理。另外，Promise.all() 方法的参数可以不是数组，但必须具有 Iterator 接口，且返回的每个成员都是 Promise 实例。
+
+    iterable 参数对象里所有的 promise 都执行成功时返回一个数组，数组中存放每个 promise 执行成功的结果，传递给新 promise 的回调函数。若有一个promise 执行失败，此时第一个被 reject 的实例的返回值，传递给新 promise 的回调函数。一般 Promise.all(iterable) 中的 promise 都是互相有关联的。
 
 -  Promise.allSettled(iterable) ES2020
 
     等到所有 promises 都已敲定（settled）（每个promise都已兑现（fulfilled）或已拒绝（rejected））。返回一个promise，该 promise 在所有 promise 完成后完成。并带有一个对象数组，每个对象对应每个 promise 的结果。当您有多个彼此不依赖的异步任务成功完成时，或者您总是想知道每个 promise 的结果时，通常使用它。比之下，Promise.all() 更适合彼此相互依赖或者在其中任何一个 reject 时立即结束。
 
-- Promise.any(iterable) 一个成功即返回 ES2021
+- Promise.any(iterable)  ES2021
 
-    接收一个 Promise 对象的集合，当其中的一个 promise 成功，就返回那个成功的promise的值。本质上，这个方法和Promise.all() 是相反的。
+    接收一个 Promise 对象的集合，当其中的一个 promise 成功，就返回那个成功的promise的值。有一个成功或就返回 ，所有失败后才返回失败。本质上，这个方法和 Promise.all() 是相反的。
 
 - Promise.race(iterable)
 
-    当 iterable 参数里的任意一个子 promise 被成功或失败后，父 promise 马上也会用子 promise 的成功返回值或失败详情作为参数调用父 promise 绑定的相应句柄，并返回该 promise 对象。
+    当 iterable 参数里的任意一个子 promise 被成功或失败后，父 promise 马上也会用子 promise 的成功返回值或失败详情作为参数调用父 promise 绑定的相应句柄，并返回该 promise 对象。率先改变状态的 Promise 实例返回，不论结果是否成功或失败。
 
 - Promise.resolve(value)
 
-    返回一个状态由给定 value 决定的 Promise 对象。有时需要将现有对象转为 Promise 对象，Promise.resolve()方法就起到这个作用。从 Pending（待定） 变为 Fullfilled（实现），在异步操作成功时调用，并将异步操作的结果，作为参数传递出去。该函数的参数除了正常的值以外，还可能是另一个 Promise 实例。
+    返回一个状态由给定 value 决定的 Promise 对象。有时需要**将现有对象转为 Promise 对象，Promise.resolve() 方法就起到这个作用**。从 Pending（待定） 变为 Fullfilled（实现），在异步操作成功时调用，并将异步操作的结果，作为参数传递出去。该函数的参数除了正常的值以外，还可能是另一个 Promise 实例。**需要注意的是，立即 resolve()的 Promise 对象，是在本轮“事件循环”（event loop）的结束时执行，而不是在下一轮“事件循环”的开始时。** 
 
 - Promise.reject(reason)
 
-    返回一个状态为失败的 Promise 对象。从 Pending（待定） 变为 Rejected（否决），在异步失败时调用，并将异步操作报出的错误，作为参数传递出去。该函数的参数通常是 Error 对象的实例，表示抛出的错误。
+    返回一个状态为失败的 Promise 对象。也会返回一个新的 Promise 实例，该实例的状态为 rejected。从 Pending（待定） 变为 Rejected（否决），在异步失败时调用，并将异步操作报出的错误，作为参数传递出去。该函数的参数通常是 Error 对象的实例，表示抛出的错误。
+
+```js
+const p1 = new Promise(function (resolve, reject) {
+  // ...
+});
+
+const p2 = new Promise(function (resolve, reject) {
+  // ...
+  resolve(p1);
+})
+
+```
+p1 和 p2 都是 Promise 的实例，但是 p2 的 resolve 方法将 p1 作为参数，即一个异步操作的结果是返回另一个异步操作。注意，**这时 p1 的状态就会传递给 p2，也就是说，p1 的状态决定了 p2 的状态**。如果 p1 的状态是 pending，那么 p2 的回调函数就会等待 p1 的状态改变；如果 p1 的状态已经是 resolved 或者 rejected，那么 p2 的回调函数将会立刻执行。
+
+```js
+new Promise((resolve, reject) => {
+  resolve(1);
+  console.log(2);
+}).then(r => {
+  console.log(r);
+});
+// 2
+// 1
+```
+调用 resolve 或 reject 并不会终结 Promise 的参数函数的执行。上面代码中，调用 resolve(1) 以后，后面的 console.log(2) 还是会执行，并且会首先打印出来。这是因为立即 resolved 的 Promise 是在本轮事件循环的末尾执行，总是晚于本轮循环的同步任务。本轮同步任务(宏任务) 执行完才去执行异步微任务。
+
+```js
+new Promise((resolve, reject) => {
+  return resolve(1);
+  // 后面的语句不会执行
+  console.log(2);
+})
+```
+
+一般来说，调用 resolve 或 reject 以后，Promise 的使命就完成了，后继操作应该放到then方法里面，而不应该直接写在resolve或reject的后面。所以，最好在它们前面加上 return 语句，这样就不会有意外。
+
+```js
+const p = Promise.resolve('Hello');
+
+p.then(function (s) {
+  console.log(s)
+});
+// Hello
+```
+Promise.resolve() 方法会将这个对象转为 Promise 对象，然后就立即执行 thenable 对象的 then() 方法。上面代码生成一个新的 Promise 对象的实例 p。由于字符串 Hello 不属于异步操作（判断方法是字符串对象不具有 then 方法），返回 Promise 实例的状态从一生成就是 resolved，所以回调函数会立即执行。Promise.resolve() 方法的参数，会同时传给回调函数。
+
+```js
+setTimeout(function () {
+  console.log('three');
+}, 0);
+
+Promise.resolve().then(function () {
+  console.log('two');
+});
+
+console.log('one');
+
+// one
+// two
+// three
+```
+**需要注意的是，立即 resolve()的 Promise 对象，是在本轮“事件循环”（event loop）的结束时执行，而不是在下一轮“事件循环”的开始时**。上面代码中， setTimeout(fn, 0) 在下一轮“事件循环”开始时执行，Promise.resolve() 在本轮“事件循环”结束时执行，console.log('one') 则是立即执行，因此最先输出。
 
 #### Promise 原型
 
@@ -129,7 +207,7 @@ Promise 的参数 executor 是带有 resolve 和 reject 两个参数的函数。
   - then 函数的返回值为 Promise
   - then 可以被同一个 Promise 多次调用
 
-   添加解决(fulfillment)和拒绝(rejection)回调到当前 promise, 返回一个新的 promise, 将以回调的返回值来 resolve.
+   它的作用是为 Promise 实例添加状态改变时的回调函数。添加解决(fulfillment)和拒绝(rejection)回调到当前 promise, 返回一个新的 promise, 将以回调的返回值来 resolve。then方法的第一个参数是resolved状态的回调函数，第二个参数是rejected状态的回调函数，它们都是可选的。
 
 - Promise.prototype.catch(onRejected)
 
@@ -138,10 +216,54 @@ Promise 的参数 executor 是带有 resolve 和 reject 两个参数的函数。
 - Promise.prototype.finally(onFinally) ES2018
 
     添加一个事件处理回调于当前 promise 对象，并且在原 promise 对象解析完毕后，返回一个新的 promise 对象。回调会在当前 promise 运行完毕后被调用，无论当前 promise 的状态是完成(fulfilled)还是失败(rejected)。finally() 方法用于指定不管 Promise 对象最后状态如何，都会执行的操作。该方法是 ES2018 引入标准的。finally 方法里面的操作，应该是与状态无关的，不依赖于 Promise 的执行结果。
+
+```js
+p.then((val) => console.log('fulfilled:', val))
+  .catch((err) => console.log('rejected', err));
+
+// 等同于
+p.then((val) => console.log('fulfilled:', val))
+  .then(null, (err) => console.log("rejected:", err));
+
+const promise = new Promise(function(resolve, reject) {
+  try {
+    throw new Error('test');
+  } catch(e) {
+    reject(e);
+  }
+});
+promise.catch(function(error) {
+  console.log(error);
+});
+
+// 等同于
+const promise = new Promise(function(resolve, reject) {
+  reject(new Error('test'));
+});
+promise.catch(function(error) {
+  console.log(error);
+});
+```
+
+如果该对象状态变为 resolved，则会调用 then() 方法指定的回调函数；如果异步操作抛出错误，状态就会变为 rejected，就会调用 catch() 方法指定的回调函数，处理这个错误。另外，then() 方法指定的回调函数，如果运行中抛出错误，也会被 catch() 方法捕获。如果 Promise 状态已经变成 resolved，再抛出错误是无效的。**一般来说，不要在then()方法里面定义 Reject 状态的回调函数（即then的第二个参数），总是使用catch方法。**
+
+
+```js
+const promise = new Promise(function (resolve, reject) {
+  resolve('ok');
+  setTimeout(function () { throw new Error('test') }, 0)
+});
+promise.then(function (value) { console.log(value) });
+// ok
+// Uncaught Error: test
+```
+上面代码中，Promise 指定在下一轮“事件循环”再抛出错误。到了那个时候，Promise 的运行已经结束了，所以这个错误是在 Promise 函数体外抛出的，会冒泡到最外层，成了未捕获的错误。一般总是建议，Promise 对象后面要跟 catch() 方法，这样可以处理 Promise 内部发生的错误。catch() 方法返回的还是一个 Promise 对象，因此后面还可以接着调用 then() 方法。
 #### 串行与并行
 
 - 串行：一个异步请求完了之后在进行下一个请求
 - 并行：多个异步请求同时进行
+
+
 
 ### Promise/A+ 规范
 
