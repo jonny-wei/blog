@@ -62,6 +62,8 @@
 
 [bigo 前端技术博客](https://github.com/bigo-frontend/blog)
 
+[后盾人](https://houdunren.gitee.io/note/)
+
 ## 宝藏
 
 [JavaScript Guidebook](https://tsejx.github.io/javascript-guidebook/)：JavaScript 知识图谱 - ECMAScript | DOM | BOM | HTML5 | 计算机网络 | 设计模式
