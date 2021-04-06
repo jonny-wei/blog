@@ -95,6 +95,19 @@ mounted() {
 - 同值零 Set，Map，include 等 认为 NaN 与 NaN 相等，+0 与 -0 相等
 - 同值 Object.is() 认为 NaN 与 NaN 相等，+0 与 -0 不等
 
+### 强制类型转换规则
+
+转布尔值规则：
+
+- undefined、null、false、NaN、''、0、-0 都转为 false。
+- 其他所有值都转为 true，包括所有对象。
+
+转数字规则：
+
+- true 为 1，false 为 0
+- null 为 0，undefined 为 NaN，symbol 报错
+- 字符串看内容，如果是数字或者进制值就正常转，否则就 NaN
+
 ### 相等运算符 == 隐式转换规则
 
 相等运算符 == 会对操作值进行隐式转换后进行比较
@@ -123,6 +136,8 @@ nul == null; // true
 - Object.prototype.toString：Object.prototype.toString 属于 Object 的原型方法，而 Array ， Function 等类型作为 Object 的实例，都重写了 toString 方法。因此，不同对象类型调用 toString 方法时，调用的是重写后的 toString 方法，而非 Object 上原型 toString 方法。`Object.prototype.toString.call(value).slice(8, -1)`
 - constructor：任何对象都有 constructor 属性，继承自原型对象，constructor 会指向构造这个对象的构造器或构造函数。`Student.prototype.constructor === Student;`
 - Array.isArray()：数组检测
+
+此外 `Number.isNaN()` 判断 NaN；类似使用原型链上的方法判断数组与对象：obj.push() push is not a function。
 
 ### setTimeout 和 setImmediate
 

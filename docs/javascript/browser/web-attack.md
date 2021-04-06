@@ -105,6 +105,10 @@ CSRF 英文全称是 Cross-site request forgery，是指黑客引诱用户打开
   
   - 在浏览器端如果要发起某些请求，那么需要带上页面中的 CSRF Token，然后服务器会验证该 Token 是否合法。如果是从第三方站点发出的请求，那么将无法获取到 CSRF Token 的值，所以即使发出了请求，服务器也会因为 CSRF Token 不正确而拒绝请求。
 
+- 加大请求成本，如验证码
+
+- 限制白名单请求
+
 ::: tip Cookie SameSite
 Cookie 的 SameSite 属性用来限制第三方 Cookie，从而减少安全风险。他可以设置三个值:
 - Strict
