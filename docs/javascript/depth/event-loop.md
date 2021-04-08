@@ -8,6 +8,8 @@ JavaScript代码的执行过程中，除了依靠函数调用栈来搞定函数�
 
 ## 事件循环机制
 
+事件循环既可能是浏览器的主事件循环也可能是被一个 web worker 所驱动的事件循环。
+
 Chrome 中的事件循环：
 
 ![chrome事件循环](/blog/images/javascript/chrome事件循环.png)
@@ -53,7 +55,7 @@ chromium 内核基本的事件循环系统：
 JavaScript 引擎发起的任务称为微观任务
 :::
 
-一个线程中，事件循环是唯一的，但是任务队列可以拥有多个。任务队列又分为 **macro-task（宏任务）** 与 **micro-task（微任务）**，在最新标准中，它们被分别称为 task 与 jobs。
+一个线程中，事件循环是唯一的，但是任务队列可以拥有多个。任务队列又分为 **macro-task（宏任务）** 与 **micro-task（微任务）**，在最新标准中，它们被分别称为 task 与 jobs。在异步模式下，创建 **异步任务** 主要分为 **宏任务** 与 **微任务** 两种。ES6 规范中，宏任务（Macrotask） 称为 Task， 微任务（Microtask） 称为 Jobs。宏任务是由宿主（浏览器、Node）发起的，而微任务由 JS 自身发起。
 
 ### 宏任务与微任务
 
@@ -62,18 +64,22 @@ JavaScript 引擎发起的任务称为微观任务
 - script(整体代码)
 - setTimeout
 - setInterval
-- setImmediate
-- I/O
+- setImmediate(Node环境)
+- I/O，事件队列
 - UI render
 
 
 **micro-task 微任务** 大概包括:
 
-- process.nextTick
-- Promise
+- process.nextTick(Node环境)
+- Promise.[ then/catch/finally ]
 - Async/Await(实际就是promise)
+- queueMicrotask
 - MutationObserver(html5新特性)
+- requestAnimationFrame(有争议)
 - Object.observe(已废弃)
+
+[在 JavaScript 中通过 queueMicrotask() 使用微任务](https://developer.mozilla.org/zh-CN/docs/Web/API/HTML_DOM_API/Microtask_guide)
 
 ## 处理执行时间长的任务
 
