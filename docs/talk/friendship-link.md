@@ -24,6 +24,10 @@
 
 [了不起的 Vue3](https://juejin.cn/post/6898120355781705736#heading-4)
 
+## TypeScript
+
+[TypeScript 入门教程](https://ts.xcatliu.com/)
+
 ## webpack
 
 [Webpack Guidebook](https://tsejx.github.io/webpack-guidebook/)
@@ -33,6 +37,8 @@
 [awesome-coding-js](http://www.conardli.top/docs/)
 
 [JavaScript-Algorithms](https://github.com/sisterAn/JavaScript-Algorithms)
+
+[小浩算法](https://www.geekxh.com/)
 
 ## 浏览器
 

@@ -183,6 +183,8 @@ ES Modules 之所以能 Tree-shaking 主要为以下四个原因（摘自尤雨�
 - import binding 是 immutable 的，类似 const。比如说你不能 import { a } from ‘./a’ 然后给 a 赋值个其他什么东西。
 
 ::: warning 参考文献
+[js模块化编程不完全指北](https://github.com/xuexueq/blog/issues/3)
+
 [彻底理清 AMD,CommonJS,CMD,UMD,ES6](https://juejin.cn/post/6844904066233925639#heading-6)
 
 [一文搞懂JS模块、模块格式、模块加载器和模块打包器](https://juejin.cn/post/6917810024253227021#heading-0)
