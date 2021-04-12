@@ -123,15 +123,15 @@ function removeNode(el) {
 2. 如果新旧 VNode 都是静态（isStatic）的，同时它们的 key 相同（代表同一节点），并且新的 VNode 是 clone 或者是标记了 once（标记 v-once 属性，只渲染一次），那么只需要替换 componentInstance 即可
 
 3. 判断 VNode 是否是文本节点，是否有 text 属性
-   
+
    - 如果 VNode 不是文本节点，且存在子节点
 
-      - 如果 Vnode 和 oldVnode 均有子节点，则执行 updateChildren 对子节点进行 diff 操作，这也是 diff 的核心部分
-      - 如果 Vnode 有子节点，oldVnode 没有子节点但有文本节点，则将 oldVnode 的文本节点清空，然后插入 Vnode 的子节点；否则直接新增
-      - 如果 VNode 没有子节点，oldVnode 有子节点，则删除 el 的所有子节点，直接清空
+     - 如果 Vnode 和 oldVnode 均有子节点，则执行 updateChildren 对子节点进行 diff 操作，这也是 diff 的核心部分
+     - 如果 Vnode 有子节点，oldVnode 没有子节点但有文本节点，则将 oldVnode 的文本节点清空，然后插入 Vnode 的子节点；否则直接新增
+     - 如果 VNode 没有子节点，oldVnode 有子节点，则删除 el 的所有子节点，直接清空
 
-   -  如果 VNode 是文本节点，也就不存在子节点，如果 oldeVnode 和 Vnode 都有文本节点且不相等，那么会将 oldVnode 的文本节点更新为 Vnode 的文本节点
-   -  如果 VNode 与 oldVNode 都没有子节点，则清空 oldVnode 的文本节点即可
+   - 如果 VNode 是文本节点，也就不存在子节点，如果 oldeVnode 和 Vnode 都有文本节点且不相等，那么会将 oldVnode 的文本节点更新为 Vnode 的文本节点
+   - 如果 VNode 与 oldVNode 都没有子节点，则清空 oldVnode 的文本节点即可
 
 ```js
 // 更新节点
@@ -149,7 +149,7 @@ function patchVnode(oldVnode, vnode, insertedVnodeQueue, removeOnly) {
     vnode.key === oldVnode.key &&
     (isTrue(vnode.isCloned) || isTrue(vnode.isOnce))
   ) {
-    vnode.componentInstance = oldVnode.componentInstance
+    vnode.componentInstance = oldVnode.componentInstance;
     return;
   }
 
@@ -226,15 +226,14 @@ diff 算法是一种通过同层的树节点进行比较的高效算法。diff �
 
 如果以上情况均不符合，进入 key 的比较：
 
--  **oldKeyToIdx**：一个哈希表，存放旧节点的 key 与节点的映射关系；如果没有 oldKeyToIdx 则会通过 createKeyToOldIdx 会得到一个 oldKeyToIdx，里面存放旧节点的 key 与节点的映射关系，只不过这个 key 是 index 序列。从 oldKeyToIdx 这个哈希表中可以找到与新节点是否有相同 key 的旧节点，如果同时满足 sameVnode，patchVnode 的同时会将这个真实 DOM（elmToMove）移动到 oldStartVnode 对应的真实 DOM 的前面。
+- **oldKeyToIdx**：一个哈希表，存放旧节点的 key 与节点的映射关系；如果没有 oldKeyToIdx 则会通过 createKeyToOldIdx 会得到一个 oldKeyToIdx，里面存放旧节点的 key 与节点的映射关系，只不过这个 key 是 index 序列。从 oldKeyToIdx 这个哈希表中可以找到与新节点是否有相同 key 的旧节点，如果同时满足 sameVnode，patchVnode 的同时会将这个真实 DOM（elmToMove）移动到 oldStartVnode 对应的真实 DOM 的前面。
 
-- **idxInOld**：拿新节点的 key 去 oldKeyToIdx 找是否有与旧节点相同的节点，即旧节点中是否有与新节点 key 相同的节点，没有就通过 findIdxInOld 遍历旧节点并通过  sameVnode 判断是否有相同节点，有返回索引。
+- **idxInOld**：拿新节点的 key 去 oldKeyToIdx 找是否有与旧节点相同的节点，即旧节点中是否有与新节点 key 相同的节点，没有就通过 findIdxInOld 遍历旧节点并通过 sameVnode 判断是否有相同节点，有返回索引。
 
-    - idxInOld 不存在，即新节点在旧节点中都没有找到，说明这是一个之前没有的新节点，需要通过 createElm 创建新节点
-    - idxInOld 存在，则进一步通过 sameVnode(vnodeToMove, newStartVnode) 判断是否是同一节点
-        
-        - 是同一节点，则通过 patchVnode 更新，并移动节点
-        - 不是同一节点，即相同的 key 不同的元素，则通过 createElm 创建新节点
+  - idxInOld 不存在，即新节点在旧节点中都没有找到，说明这是一个之前没有的新节点，需要通过 createElm 创建新节点
+  - idxInOld 存在，则进一步通过 sameVnode(vnodeToMove, newStartVnode) 判断是否是同一节点
+    - 是同一节点，则通过 patchVnode 更新，并移动节点
+    - 不是同一节点，即相同的 key 不同的元素，则通过 createElm 创建新节点
 
 先 `oldStartVnode、oldEndVnode` 与 `newStartVnode、newEndVnode` 两两通过 sameVnode 进行 4 次比较，若成立，则通过 patchVnode 更新节点内容，并移动节点位置。若不成立，再进一步比较 key，idxInOld 判断新节点是否被旧节点复用了。idxInOld 不存在，说明旧节点没有复用新节点，新节点需要 createElm 创建；idxInOld 存在，说明新节点有被复用的可能性，为什么这么说，因为此时我们只知道节点的 key 相同，是否是通过简单的**通过移动节点位置达到复用的目的**，还是说通过创建节点进行原地复用或就地修改，需要进一步通过 sameVnode(vnodeToMove, newStartVnode) 判断是否是同一节点。是同一节点，则直接通过 patchVnode 更新，并移动节点；否则，虽然有相同的 key 但是不同的元素，则通过 createElm 创建新节点，就地修改。从这一点我们就可以思考出为什么 `v-for` 的时候要加上 key？为什么这个 key 建议简单的通过 index 来标识？
 
@@ -408,6 +407,7 @@ function updateChildren(
   }
 }
 ```
+
 新旧节点分别有两个指针，分别指向各自的头部节点和尾部节点。
 
 - 当新旧节点的头部值得对比，进入 patchNode 方法，同时各自的头部指针+1；

@@ -8,7 +8,6 @@ const sidebar = {
         '',
         'interview/vue-communication',
         'interview/vue-symbols',
-        'interview/vue-directive',
         'interview/vue-test',
         'interview/vue-router',
         'interview/vue-vuex',
@@ -28,7 +27,8 @@ const sidebar = {
         'vue/vue-nextTick',
         'vue/vue-lifecycle',
         'vue/vue-computed',
-        'vue/vue-slot'
+        'vue/vue-slot',
+        'vue/vue-directive',
       ]
     },
     {
