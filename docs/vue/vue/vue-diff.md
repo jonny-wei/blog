@@ -118,17 +118,20 @@ function removeNode(el) {
 
 ### 更新节点 patchVnode
 
-- 如果新旧 VNode 都是静态（isStatic）的，同时它们的 key 相同（代表同一节点），并且新的 VNode 是 clone 或者是标记了 once（标记 v-once 属性，只渲染一次），那么只需要替换 elm 以及 componentInstance 即可
+1. VNode 与 oldVnode 新旧节点相同，不更新，直接结束。
 
-- 如果 oldeVnode 和 Vnode 都有文本节点且不相等，那么会将 oldVnode 的文本节点更新为 Vnode 的文本节点
+2. 如果新旧 VNode 都是静态（isStatic）的，同时它们的 key 相同（代表同一节点），并且新的 VNode 是 clone 或者是标记了 once（标记 v-once 属性，只渲染一次），那么只需要替换 componentInstance 即可
 
-- 如果 oldVnode 和 Vnode 均有子节点，则执行 updateChildren 对子节点进行 diff 操作，这也是 diff 的核心部分
+3. 判断 VNode 是否是文本节点，是否有 text 属性
+   
+   - 如果 VNode 不是文本节点，且存在子节点
 
-- 如果 oldVnode 有文本节点而 Vnode 有子节点，则将 oldVnode 的文本节点清空，然后插入 Vnode 的子节点
+      - 如果 Vnode 和 oldVnode 均有子节点，则执行 updateChildren 对子节点进行 diff 操作，这也是 diff 的核心部分
+      - 如果 Vnode 有子节点，oldVnode 没有子节点但有文本节点，则将 oldVnode 的文本节点清空，然后插入 Vnode 的子节点；否则直接新增
+      - 如果 VNode 没有子节点，oldVnode 有子节点，则删除 el 的所有子节点，直接清空
 
-- 如果 oldVnode 有子节点而 Vnode 没有子节点，则删除 el 的所有子节点
-
-- 如果 oldVnode 有文本节点但和 Vnode 一样没有子节点，则清空 oldVnode 的文本节点即可
+   -  如果 VNode 是文本节点，也就不存在子节点，如果 oldeVnode 和 Vnode 都有文本节点且不相等，那么会将 oldVnode 的文本节点更新为 Vnode 的文本节点
+   -  如果 VNode 与 oldVNode 都没有子节点，则清空 oldVnode 的文本节点即可
 
 ```js
 // 更新节点
@@ -146,6 +149,7 @@ function patchVnode(oldVnode, vnode, insertedVnodeQueue, removeOnly) {
     vnode.key === oldVnode.key &&
     (isTrue(vnode.isCloned) || isTrue(vnode.isOnce))
   ) {
+    vnode.componentInstance = oldVnode.componentInstance
     return;
   }
 
@@ -202,9 +206,9 @@ diff 算法是一种通过同层的树节点进行比较的高效算法。diff �
 - 比较只会在同层级进行, 不会跨层级比较
 - 在 diff 比较的过程中，循环从两边向中间比较(vue 的双端比较法)
 
-新旧两个 VNode 节点的左右头尾两侧均有一个变量标识，在遍历过程中这几个变量都会向中间靠拢。当 oldStartIdx <= oldEndIndex 或者 newStartIdx <= newEndIdx 时结束循环。在遍历中，如果存在 key，并且满足 sameVnode，会将该 DOM 节点进行复用，否则则会创建一个新的 DOM 节点。
+新旧两个 VNode 节点的左右头尾两侧均有一个变量标识，在遍历过程中这几个变量都会向中间靠拢。当 `oldStartIdx <= oldEndIdx` 或者 `newStartIdx <= newEndIdx` 时结束循环。在遍历中，如果存在 key，并且满足 sameVnode，会将该 DOM 节点进行复用(只通过移动节点顺序)，否则则会创建一个新的 DOM 节点。
 
-oldStartVnode、oldEndVnode 与 newStartVnode、newEndVnode 两两比较共有四种比较方法：
+`oldStartVnode、oldEndVnode` 与 `newStartVnode、newEndVnode` 两两比较共有四种比较方法：
 
 1. 当新旧子树的两个开始节点或新旧子树的两个结束节点相同时
 
@@ -220,10 +224,190 @@ oldStartVnode、oldEndVnode 与 newStartVnode、newEndVnode 两两比较共有�
 
 4. 当旧子树中没有新子树中的节点，会将新节点插入到 oldStartVnode 前
 
-如果以上情况均不符合，则通过 createKeyToOldIdx 会得到一个 oldKeyToIdx，里面存放了一个 key 为旧的 VNode，value 为对应 index 序列的哈希表。从这个哈希表中可以找到是否有与 newStartVnode 一致 key 的旧的 VNode 节点，如果同时满足 sameVnode，patchVnode 的同时会将这个真实 DOM（elmToMove）移动到 oldStartVnode 对应的真实 DOM 的前面。
+如果以上情况均不符合，进入 key 的比较：
 
-当然也有可能 newStartVnode 在旧的 VNode 节点找不到一致的 key，或者是即便 key 相同却不是 sameVnode，这个时候会调用 createElm 创建一个新的 DOM 节点。
+-  **oldKeyToIdx**：一个哈希表，存放旧节点的 key 与节点的映射关系；如果没有 oldKeyToIdx 则会通过 createKeyToOldIdx 会得到一个 oldKeyToIdx，里面存放旧节点的 key 与节点的映射关系，只不过这个 key 是 index 序列。从 oldKeyToIdx 这个哈希表中可以找到与新节点是否有相同 key 的旧节点，如果同时满足 sameVnode，patchVnode 的同时会将这个真实 DOM（elmToMove）移动到 oldStartVnode 对应的真实 DOM 的前面。
 
+- **idxInOld**：拿新节点的 key 去 oldKeyToIdx 找是否有与旧节点相同的节点，即旧节点中是否有与新节点 key 相同的节点，没有就通过 findIdxInOld 遍历旧节点并通过  sameVnode 判断是否有相同节点，有返回索引。
+
+    - idxInOld 不存在，即新节点在旧节点中都没有找到，说明这是一个之前没有的新节点，需要通过 createElm 创建新节点
+    - idxInOld 存在，则进一步通过 sameVnode(vnodeToMove, newStartVnode) 判断是否是同一节点
+        
+        - 是同一节点，则通过 patchVnode 更新，并移动节点
+        - 不是同一节点，即相同的 key 不同的元素，则通过 createElm 创建新节点
+
+先 `oldStartVnode、oldEndVnode` 与 `newStartVnode、newEndVnode` 两两通过 sameVnode 进行 4 次比较，若成立，则通过 patchVnode 更新节点内容，并移动节点位置。若不成立，再进一步比较 key，idxInOld 判断新节点是否被旧节点复用了。idxInOld 不存在，说明旧节点没有复用新节点，新节点需要 createElm 创建；idxInOld 存在，说明新节点有被复用的可能性，为什么这么说，因为此时我们只知道节点的 key 相同，是否是通过简单的**通过移动节点位置达到复用的目的**，还是说通过创建节点进行原地复用或就地修改，需要进一步通过 sameVnode(vnodeToMove, newStartVnode) 判断是否是同一节点。是同一节点，则直接通过 patchVnode 更新，并移动节点；否则，虽然有相同的 key 但是不同的元素，则通过 createElm 创建新节点，就地修改。从这一点我们就可以思考出为什么 `v-for` 的时候要加上 key？为什么这个 key 建议简单的通过 index 来标识？
+
+#### key 的作用
+
+key 主要用在 Vue 的虚拟 DOM 的 diff 算法中，是 vnode 的唯一标记，diff 算法中双端两两比较一共有 4 种比较方式，如果以上 4 种比较都没匹配，如果设置了 key，就会用 key 再进行比较。通过这个 key，我们的 diff 操作可以更准确、更快速的达到复用节点，更新视图的目的。复用节点就需要通过移动元素的位置来达到更新的目的。
+
+能够移动元素的关键在于：我们需要在新旧 children 的节点中保存映射关系(idxInOld 存在)，以便我们能够在旧节点中找到可复用的节点。这时候我们就需要给节点添加唯一标识，也就是我们常说的 key。在没有 key 的情况下，我们是没办法知道新节点是否被复用的可能性，即不知道是否可以通过移动元素位置达到节点复用，更新视图的目的。如果知道了映射关系，我们就很容易判断新节点是否可复用：只需要遍历新 children 中的每一个节点，并去旧节点的 oldKeyToIdx 哈希表中寻找是否存在具有相同 key 值的节点。
+
+如果没有 key 或者使用 index 作为 key，Vue 会使用一种最大限度减少动态元素并且通过创建节点进行原地复用或就地修改相同类型元素的算法来更新。而使用 key 时并进一步通过 sameVnode 判断是否是同一节点。如果是同一节点，它会基于 key 的变化重新排列元素顺序，并且会移除 key 不存在的元素。否则，虽然有相同的 key (例如 index 作为 key 相同)但是不同的元素，则通过 createElm 创建新节点，就地修改。总结起来 key 的作用如下：
+
+- 如遇到 **完整地触发组件的生命周期钩子** 或 **触发过渡** 的场景，可以用于强制替换元素/组件而不是重复使用它
+- 更准确，基于 key 的变化重新排列元素顺序，并且会移除 key 不存在的元素，通过移动节点位置，避免原地复用或就地修改来达到复用节点，更新视图的目的。有相同父元素的子元素必须有独特的 key。重复的 key 会造成渲染错误。
+- 更快速，利用 key 的唯一性生成 map 对象(oldKeyToIdx 哈希表)来获取对应节点，比遍历方式更快
+
+```js
+// sameVnode
+function sameVnode(a, b) {
+  return (
+    a.key === b.key &&
+    ((a.tag === b.tag &&
+      a.isComment === b.isComment &&
+      isDef(a.data) === isDef(b.data) &&
+      sameInputType(a, b)) ||
+      (isTrue(a.isAsyncPlaceholder) &&
+        a.asyncFactory === b.asyncFactory &&
+        isUndef(b.asyncFactory.error)))
+  );
+}
+
+// updateChildren
+function updateChildren(
+  parentElm,
+  oldCh,
+  newCh,
+  insertedVnodeQueue,
+  removeOnly
+) {
+  let oldStartIdx = 0;
+  let newStartIdx = 0;
+  let oldEndIdx = oldCh.length - 1;
+  let oldStartVnode = oldCh[0];
+  let oldEndVnode = oldCh[oldEndIdx];
+  let newEndIdx = newCh.length - 1;
+  let newStartVnode = newCh[0];
+  let newEndVnode = newCh[newEndIdx];
+  let oldKeyToIdx, idxInOld, vnodeToMove, refElm;
+
+  // removeOnly is a special flag used only by <transition-group>
+  // to ensure removed elements stay in correct relative positions
+  // during leaving transitions
+  const canMove = !removeOnly;
+
+  if (process.env.NODE_ENV !== "production") {
+    checkDuplicateKeys(newCh);
+  }
+
+  while (oldStartIdx <= oldEndIdx && newStartIdx <= newEndIdx) {
+    if (isUndef(oldStartVnode)) {
+      oldStartVnode = oldCh[++oldStartIdx]; // Vnode has been moved left
+    } else if (isUndef(oldEndVnode)) {
+      oldEndVnode = oldCh[--oldEndIdx];
+    } else if (sameVnode(oldStartVnode, newStartVnode)) {
+      patchVnode(
+        oldStartVnode,
+        newStartVnode,
+        insertedVnodeQueue,
+        newCh,
+        newStartIdx
+      );
+      oldStartVnode = oldCh[++oldStartIdx];
+      newStartVnode = newCh[++newStartIdx];
+    } else if (sameVnode(oldEndVnode, newEndVnode)) {
+      patchVnode(
+        oldEndVnode,
+        newEndVnode,
+        insertedVnodeQueue,
+        newCh,
+        newEndIdx
+      );
+      oldEndVnode = oldCh[--oldEndIdx];
+      newEndVnode = newCh[--newEndIdx];
+    } else if (sameVnode(oldStartVnode, newEndVnode)) {
+      // Vnode moved right
+      patchVnode(
+        oldStartVnode,
+        newEndVnode,
+        insertedVnodeQueue,
+        newCh,
+        newEndIdx
+      );
+      canMove &&
+        nodeOps.insertBefore(
+          parentElm,
+          oldStartVnode.elm,
+          nodeOps.nextSibling(oldEndVnode.elm)
+        );
+      oldStartVnode = oldCh[++oldStartIdx];
+      newEndVnode = newCh[--newEndIdx];
+    } else if (sameVnode(oldEndVnode, newStartVnode)) {
+      // Vnode moved left
+      patchVnode(
+        oldEndVnode,
+        newStartVnode,
+        insertedVnodeQueue,
+        newCh,
+        newStartIdx
+      );
+      canMove &&
+        nodeOps.insertBefore(parentElm, oldEndVnode.elm, oldStartVnode.elm);
+      oldEndVnode = oldCh[--oldEndIdx];
+      newStartVnode = newCh[++newStartIdx];
+    } else {
+      if (isUndef(oldKeyToIdx))
+        oldKeyToIdx = createKeyToOldIdx(oldCh, oldStartIdx, oldEndIdx);
+      idxInOld = isDef(newStartVnode.key)
+        ? oldKeyToIdx[newStartVnode.key]
+        : findIdxInOld(newStartVnode, oldCh, oldStartIdx, oldEndIdx);
+      if (isUndef(idxInOld)) {
+        // New element
+        createElm(
+          newStartVnode,
+          insertedVnodeQueue,
+          parentElm,
+          oldStartVnode.elm,
+          false,
+          newCh,
+          newStartIdx
+        );
+      } else {
+        vnodeToMove = oldCh[idxInOld];
+        if (sameVnode(vnodeToMove, newStartVnode)) {
+          patchVnode(
+            vnodeToMove,
+            newStartVnode,
+            insertedVnodeQueue,
+            newCh,
+            newStartIdx
+          );
+          oldCh[idxInOld] = undefined;
+          canMove &&
+            nodeOps.insertBefore(parentElm, vnodeToMove.elm, oldStartVnode.elm);
+        } else {
+          // same key but different element. treat as new element
+          createElm(
+            newStartVnode,
+            insertedVnodeQueue,
+            parentElm,
+            oldStartVnode.elm,
+            false,
+            newCh,
+            newStartIdx
+          );
+        }
+      }
+      newStartVnode = newCh[++newStartIdx];
+    }
+  }
+  if (oldStartIdx > oldEndIdx) {
+    refElm = isUndef(newCh[newEndIdx + 1]) ? null : newCh[newEndIdx + 1].elm;
+    addVnodes(
+      parentElm,
+      refElm,
+      newCh,
+      newStartIdx,
+      newEndIdx,
+      insertedVnodeQueue
+    );
+  } else if (newStartIdx > newEndIdx) {
+    removeVnodes(oldCh, oldStartIdx, oldEndIdx);
+  }
+}
+```
 新旧节点分别有两个指针，分别指向各自的头部节点和尾部节点。
 
 - 当新旧节点的头部值得对比，进入 patchNode 方法，同时各自的头部指针+1；
@@ -256,42 +440,15 @@ oldStartVnode、oldEndVnode 与 newStartVnode、newEndVnode 两两比较共有�
 
 ### Q1. Vue 中的 key 有什么作用
 
-key 的特殊 attribute 主要用在 Vue 的虚拟 DOM 算法，在新旧 nodes 对比时辨识 VNodes。如果不使用 key，Vue 会使用一种最大限度减少动态元素并且尽可能的尝试就地修改/复用相同类型元素的算法。而使用 key 时，它会基于 key 的变化重新排列元素顺序，并且会移除 key 不存在的元素。
+key 主要用在 Vue 的虚拟 DOM 的 diff 算法中，是 vnode 的唯一标记，diff 算法中双端两两比较一共有 4 种比较方式，如果以上 4 种比较都没匹配，如果设置了 key，就会用 key 再进行比较。通过这个 key，我们的 diff 操作可以更准确、更快速的达到复用节点，更新视图的目的。复用节点就需要通过移动元素的位置来达到更新的目的。
 
-有相同父元素的子元素必须有独特的 key。重复的 key 会造成渲染错误。
+能够移动元素的关键在于：我们需要在新旧 children 的节点中保存映射关系(idxInOld 存在)，以便我们能够在旧节点中找到可复用的节点。这时候我们就需要给节点添加唯一标识，也就是我们常说的 key。在没有 key 的情况下，我们是没办法知道新节点是否被复用的可能性，即不知道是否可以通过移动元素位置达到节点复用，更新视图的目的。如果知道了映射关系，我们就很容易判断新节点是否可复用：只需要遍历新 children 中的每一个节点，并去旧节点的 oldKeyToIdx 哈希表中寻找是否存在具有相同 key 值的节点。
 
-它也可以用于强制替换元素/组件而不是重复使用它。当你遇到如下场景时它可能会很有用：
+如果没有 key 或者使用 index 作为 key，Vue 会使用一种最大限度减少动态元素并且通过创建节点进行原地复用或就地修改相同类型元素的算法来更新。而使用 key 时并进一步通过 sameVnode 判断是否是同一节点。如果是同一节点，它会基于 key 的变化重新排列元素顺序，并且会移除 key 不存在的元素。否则，虽然有相同的 key (例如 index 作为 key 相同)但是不同的元素，则通过 createElm 创建新节点，就地修改。总结起来 key 的作用如下：
 
-- 完整地触发组件的生命周期钩子
-- 触发过渡
-
-```html
-<transition>
-  <span :key="text">{{ text }}</span>
-</transition>
-```
-
-当 text 发生改变时，`<span>` 总是会被替换而不是被修改，因此会触发过渡。
-
-key 是为 Vue 中 vnode 的唯一标记，通过这个 key，我们的 diff 操作可以更准确、更快速。diff 算法中双端两两比较一共有 4 种比较方式，如果以上 4 种比较都没匹配，如果设置了 key，就会用 key 再进行比较，在比较的过程中，遍历会往中间靠，一旦 StartIdx > EndIdx 表明 oldCh 和 newCh 至少有一个已经遍历完了，就会结束比较。
-
-通过移动元素的位置来达到更新的目的。能够移动元素的关键在于：我们需要在新旧 children 的节点中保存映射关系，以便我们能够在旧 children 的节点中找到可复用的节点。这时候我们就需要给 children 中的节点添加唯一标识，也就是我们常说的 key，在没有 key 的情况下，我们是没办法知道新 children 中的节点是否可以在旧 children 中找到可复用的节点的。知道了映射关系，我们就很容易判断新 children 中的节点是否可被复用：只需要遍历新 children 中的每一个节点，并去旧 children 中寻找是否存在具有相同 key 值的节点。
-
-所以 Vue 中 key 的作用是：
-
-key 是为 Vue 中 vnode 的唯一标记，通过这个 key，我们的 diff 操作可以更准确、更快速：
-
-- 更准确：因为带 key 就不是就地复用了，在 sameNode 函数  a.key === b.key 对比中可以避免就地复用的情况。所以会更加准确。
-- 更快速：利用 key 的唯一性生成 map 对象来获取对应节点，比遍历方式更快
-
-key 主要用在 Vue 的虚拟 DOM 算法，在新旧 nodes 对比时辨识 VNodes。如果不使用 key，Vue 会使用一种最大限度减少动态元素并且尽可能的尝试就地修改/复用相同类型元素的算法。而使用 key 时，它会基于 key 的变化重新排列元素顺序，并且会移除 key 不存在的元素。
-
-有相同父元素的子元素必须有独特的 key。重复的 key 会造成渲染错误。
-
-它也可以用于强制替换元素/组件而不是重复使用它。当你遇到如下场景时它可能会很有用：
-
-- 完整地触发组件的生命周期钩子
-- 触发过渡
+- 如遇到 **完整地触发组件的生命周期钩子** 或 **触发过渡** 的场景，可以用于强制替换元素/组件而不是重复使用它
+- 更准确，基于 key 的变化重新排列元素顺序，并且会移除 key 不存在的元素，通过移动节点位置，避免原地复用或就地修改来达到复用节点，更新视图的目的。有相同父元素的子元素必须有独特的 key。重复的 key 会造成渲染错误。
+- 更快速，利用 key 的唯一性生成 map 对象(oldKeyToIdx 哈希表)来获取对应节点，比遍历方式更快
 
 ```html
 <ul>
@@ -447,11 +604,11 @@ function pruneCacheEntry(
 }
 
 // remove 方法（shared/util.js）
-export function remove (arr: Array<any>, item: any): Array<any> | void {
+export function remove(arr: Array<any>, item: any): Array<any> | void {
   if (arr.length) {
-    const index = arr.indexOf(item)
+    const index = arr.indexOf(item);
     if (index > -1) {
-      return arr.splice(index, 1)
+      return arr.splice(index, 1);
     }
   }
 }
