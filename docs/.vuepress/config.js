@@ -96,6 +96,7 @@ const sidebar = {
       children: [
         'advanced/animation',
         'advanced/canvas',
+        'advanced/css-text',
       ]
     },
   ],
@@ -157,6 +158,9 @@ const sidebar = {
       collapsable: false,
       children: [
         'dom/dom-event',
+        'dom/virtual-list',
+        'dom/drag',
+        'dom/edit',
       ]
     },
   ],

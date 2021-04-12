@@ -347,3 +347,19 @@ setTimeout(fn, 0) 不是立即执行的意思，而是任务 fn 会添加到 eve
 - 监听 DOM 尺寸变化
 - 判断是否溢出 scrollHeight > offsetHeight
 - 二分查找多行截取字符临界值（算法的解法：判断字符串是否溢出，二分查找字符串溢出临界子串，控制...显示）
+
+## CSS 中的相对
+
+- padding: 10%; 基于父元素的宽度的百分比的内边距
+- position: static; HTML 元素的默认值，即没有定位，遵循正常的文档流对象。静态定位的元素不会受到 top, bottom, left, right影响。
+- position: relative; 相对定位元素的定位是相对其左上顶点的正常位置进行定位,定位后元素还会占据原来的空间。
+- position: absolute; 相对于 static 定位以外的第一个父元素进行定位，如果父级不是，会一直往上到 body，脱离文档流
+- position: fixed; 生成固定定位的元素，相对于浏览器窗口进行定位，脱离文档流。（老 IE 不支持），即使窗口是滚动的它也不会移动。
+- position: sticky; 粘性定位可以被认为是相对定位和固定定位的混合。元素在跨越特定阈值前为相对定位，之后为固定定位。主要用于 scroll 事件的监听上
+- position: inherit;	规定应该从父元素继承 position 属性的值。
+
+无论属于哪种，都要先找到其祖先元素中最近的 position 值不为 static 的元素，然后再判断：若此元素为 inline 元素，则 containing block 为能够包含这个元素生成的第一个和最后一个 inline box 的 padding box （除 margin, border 外的区域）的最小矩形；否则,则由这个祖先元素的 padding box 构成。
+
+- static（默认的）/ relative：简单说就是它的父元素的内容框（即去掉 padding 的部分）
+- absolute: 向上找最近的定位为 absolute/relative 的元素
+- fixed: 它的 containing block 一律为根元素（html/body），根元素也是 initial containing block
