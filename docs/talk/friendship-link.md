@@ -40,6 +40,8 @@
 
 [小浩算法](https://www.geekxh.com/)
 
+[JavaScript 排序算法汇总](https://www.qcyoung.com/2016/12/18/JavaScript%20%E6%8E%92%E5%BA%8F%E7%AE%97%E6%B3%95%E6%B1%87%E6%80%BB-NSConflict-yangzj1992/)
+
 ## 浏览器
 
 [浏览器工作原理与实践](https://blog.poetries.top/browser-working-principle/)
