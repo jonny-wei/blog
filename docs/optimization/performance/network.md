@@ -190,20 +190,20 @@ Expires 是http1.0的响应头，代表的含义是资源本地缓存的过期�
 
 #### Cache-Control
 
-Cache-Control 是http1.0中新增的字段。由于Expires设置的是资源的具体过期时间，如果服务器时间和客户端时间不一样，就会造成缓存错乱，比如认为调节了客户端的时间，所以设置资源有效期的时长更合理。http1.1 添加了 Cache-Control 的 max-age 字段。max-age 代表的含义是资源有效期的时长，是一个相对时长，单位为s。浏览器再次发送请求时，会把第一次请求的时间和 max-age 字段值相加和当前时间比较，以此判断是否命中本地缓存。max-age 使用的都是客户端时间，比 Expires 更可靠。如果 max-age 和Expires 同时出现，max-age 的优先级更高。Cache-Control 提供了更多的字段来控制缓存：
+Cache-Control 是http1.1中新增的字段。由于Expires设置的是资源的具体过期时间，如果服务器时间和客户端时间不一样，就会造成缓存错乱，比如人为调节了客户端的时间，所以设置资源有效期的时长更合理。http1.1 添加了 Cache-Control 的 max-age 字段。max-age 代表的含义是资源有效期的时长，是一个相对时长，单位为s。浏览器再次发送请求时，会把第一次请求的时间和 max-age 字段值相加和当前时间比较，以此判断是否命中本地缓存。max-age 使用的都是客户端时间，比 Expires 更可靠。如果 max-age 和Expires 同时出现，max-age 的优先级更高。Cache-Control 提供了更多的字段来控制缓存：
 
-- no-store,不判断强缓存和协商缓存，服务器直接返回完整资源
-- no-cache,不判断强缓存，每次都需要向浏览器发送请求，进行协商缓存判断
-- public,指示响应可被任何缓存区缓存
-- private,通常只为单个用户缓存，不允许任何共享缓存对其进行缓存,通常用于用户个人信息
+- no-store：不判断强缓存和协商缓存，服务器直接返回完整资源
+- no-cache：不判断强缓存，每次都需要向浏览器发送请求，进行协商缓存判断
+- public：指示响应可被任何缓存区缓存
+- private：通常只为单个用户缓存，不允许任何共享缓存对其进行缓存,通常用于用户个人信息
 
 ### 协商缓存
 
-协商缓存的判断在服务器端进行，判断是否命中的依据就是这次请求和上次请求之间资源是否发生改变。未发生改变命中，发生改变则未命中。判断文件是否发生改变的方法有两个：**Last-Modified、If-Modified-Since** 和 **Etag、If-None-Match**。
+协商缓存的判断在服务器端进行，判断是否命中的依据就是这次请求和上次请求之间资源是否发生改变。未发生改变则命中，发生改变则未命中。判断文件是否发生改变的方法有两个：**Last-Modified、If-Modified-Since** 和 **Etag、If-None-Match**。
 
 #### Last-Modified、If-Modified-Since
 
-Last-Modified 是 http1.0 中的响应头字段，代表请求的资源最后一次的改变时间。If-Modified-Since 是 http1.0 的请求头，If-Modified-Since 的值是上次请求服务器返回的Last-Modified 的值。浏览器第一次请求资源时，服务器返回 Last-Modified,浏览器缓存该值。浏览器第二次请求资源时，用于缓存的 Last-Modified 赋值给If-Modified-Since，发送给服务器。服务器判断 If-Modified-Since 和服务器本地的 Last-Modified 是否相等。如果相等，说明资源未发生改变，命中协商缓存；如果不相等，说明资源发生改变，未命中协商缓存。
+Last-Modified 是 http1.0 中的响应头字段，代表请求的资源最后一次的改变时间。If-Modified-Since 是 http1.0 的请求头，If-Modified-Since 的值是上次请求服务器返回的Last-Modified 的值。浏览器第一次请求资源时，服务器返回 Last-Modified,浏览器缓存该值。浏览器第二次请求资源时，用于缓存的 Last-Modified 赋值给 If-Modified-Since，发送给服务器。服务器判断 If-Modified-Since 和服务器本地的 Last-Modified 是否相等。如果相等，说明资源未发生改变，命中协商缓存；如果不相等，说明资源发生改变，未命中协商缓存。
 
 #### Etag、If-None-Match
 Last-Modified、If-Modified-Since 使用的都是服务器提供的时间，所以相对来说还是很可靠的。但是由于修改时间的精确级别或者定期生成文件这种情况，会造成一定的错误。所以 http1.1 添加 Etag、If-None-Match 字段，完善协商缓存的判断。Etag 是根据资源文件内容生成的资源唯一标识符，一旦资源内容发生改变，Etag 就会发生改变。基于内容的标识符比基于修改时间的更可靠。If-None-Match 的值是上次请求服务器返回的 Etag 的值。Etag、If-None-Match 的判断过程和 Last-Modified、If-Modified-Since一致，Etag、If-None-Match 的优先级更高。
@@ -223,7 +223,7 @@ Last-Modified、If-Modified-Since 使用的都是服务器提供的时间，所�
 一个完整的 HTTP 请求需要经历 DNS 查找，TCP 握手，浏览器发出 HTTP 请求，服务器接收请求，服务器处理请求并发回响应，浏览器接收响应等过程。http 80% 响应时间花在了图片、样式、脚本等资源下载上。我们不能减少页面请求资源，所以通过将资源整合到一个文件，从而减少 HTTP 请求次数，来达到优化目的。通过以下手段减少 http 请求次数：
 
 - 压缩静态资源文件
-- 合并js和css文件
+- 合并js或css文件
 - 减少外部脚本数量
 - 延迟加载与懒加载
 - 行内图片(Base64编码)
