@@ -34,6 +34,10 @@
 
 ## 算法
 
+[lodash源码分析](https://github.com/yeyuqiudeng/pocket-lodash)
+
+[You don't (may not) need Lodash/Underscore](https://github.com/you-dont-need/You-Dont-Need-Lodash-Underscore)
+
 [awesome-coding-js](http://www.conardli.top/docs/)
 
 [JavaScript-Algorithms](https://github.com/sisterAn/JavaScript-Algorithms)
@@ -69,6 +73,8 @@
 [ljianshu/Blog](https://github.com/ljianshu/Blog)
 
 [ConardLi 的 blog](http://www.conardli.top/blog/article/)
+
+[frontend_frank的博客](https://blog.csdn.net/frontend_frank)
 
 [bigo 前端技术博客](https://github.com/bigo-frontend/blog)
 
