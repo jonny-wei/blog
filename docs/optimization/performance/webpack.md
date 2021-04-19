@@ -147,7 +147,7 @@ TreeShaking 可以去除无用代码，它依赖于 ES6 的 import、export 的�
   - 只能作为模块顶层的语句出现
   - import 的模块只能时字符串常量(不能动态)
   - import binding 时 immutable 的(不能修改)
-- uglify 阶段删除无用的代码
+- 压缩阶段删除无用的代码
 
 
 它正常工作的前提是代码必须采用 ES6 的模块化语法，因为 ES6 模块化语法是静态的（在导入、导出语句中的路径必须是静态字符串，且不能放入其他代码块中）。
@@ -651,9 +651,9 @@ new webpack.DllReferencePlugin({
 一般开发环境开启，线上环境关闭，线上排查问题时可将 sourcemap 上传错误监控系统。
 
 - eval：使用 eval 包裹模块代码，包裹最后有 sourcemap 信息
-- source map：产生 `.map` 文件
-- cheap：不包含列信息
-- inline：将 `.map` 作为 DataURL 嵌入，不单独生成 `.map` 文件
+- source map：产生 `.map` 文件，包括行列信息，loader 也有对应的 sourcemap
+- cheap：不包含列信息，只有行信息，没有列信息，loader 也没有对应的 sourcemap，对应的都是 loader 转换后的代码，不是纯正的源代码
+- inline：将 `.map` 作为 DataURL 嵌入，不单独生成 `.map` 文件，不推荐使用，因为这样会造成源代码体积巨大
 - module：包含 loader 的 sourcemap
 
 (inline-)(cheap-)(module-)(eval-)source-map 按序组合

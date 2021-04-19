@@ -1,5 +1,7 @@
 # 动画
 
+[requestAnimationFrame理解与实践](https://newbyvector.github.io/2018/05/01/2015-05-01/)
+
 [你可能不知道的Animation动画技巧与细节](https://juejin.cn/post/6889226357851553805)
 
 [浏览器动画帧渲染与执行机制探索](https://jelly.jd.com/article/5fda117df708c8014219e056)
@@ -13,3 +15,5 @@
 [前端也要懂物理 —— 惯性滚动篇](https://juejin.cn/post/6844904185121488910)
 
 [animation、transition、transform、translate傻傻分不清](https://juejin.cn/post/6844903615920898056#heading-3)
+
+[深入解析你不知道的 EventLoop 和浏览器渲染、帧动画、空闲回调](https://juejin.cn/post/6844904165462769678)

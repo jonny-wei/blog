@@ -235,7 +235,7 @@ diff 算法是一种通过同层的树节点进行比较的高效算法。diff �
     - 是同一节点，则通过 patchVnode 更新，并移动节点
     - 不是同一节点，即相同的 key 不同的元素，则通过 createElm 创建新节点
 
-先 `oldStartVnode、oldEndVnode` 与 `newStartVnode、newEndVnode` 两两通过 sameVnode 进行 4 次比较，若成立，则通过 patchVnode 更新节点内容，并移动节点位置。若不成立，再进一步比较 key，idxInOld 判断新节点是否被旧节点复用了。idxInOld 不存在，说明旧节点没有复用新节点，新节点需要 createElm 创建；idxInOld 存在，说明新节点有被复用的可能性，为什么这么说，因为此时我们只知道节点的 key 相同，是否是通过简单的**通过移动节点位置达到复用的目的**，还是说通过创建节点进行原地复用或就地修改，需要进一步通过 sameVnode(vnodeToMove, newStartVnode) 判断是否是同一节点。是同一节点，则直接通过 patchVnode 更新，并移动节点；否则，虽然有相同的 key 但是不同的元素，则通过 createElm 创建新节点，就地修改。从这一点我们就可以思考出为什么 `v-for` 的时候要加上 key？为什么这个 key 建议简单的通过 index 来标识？
+先 `oldStartVnode、oldEndVnode` 与 `newStartVnode、newEndVnode` 两两通过 sameVnode 进行 4 次比较，若成立，则通过 patchVnode 更新节点内容，并移动节点位置。若不成立，再进一步比较 key，idxInOld 判断新节点是否被旧节点复用了。idxInOld 不存在，说明旧节点没有复用新节点，新节点需要 createElm 创建；idxInOld 存在，说明新节点有被复用的可能性，为什么这么说，因为此时我们只知道节点的 key 相同，是否是通过简单的**通过移动节点位置达到复用的目的**，还是说通过创建节点进行原地复用或就地修改，需要进一步通过 sameVnode(vnodeToMove, newStartVnode) 判断是否是同一节点。是同一节点，则直接通过 patchVnode 更新，并移动节点；否则，虽然有相同的 key 但是不同的元素，则通过 createElm 创建新节点，就地修改。从这一点我们就可以思考出为什么 `v-for` 的时候要加上 key？为什么这个 key 不建议 index 来标识？
 
 #### key 的作用
 

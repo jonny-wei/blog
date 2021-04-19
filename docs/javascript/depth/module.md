@@ -144,7 +144,7 @@ SeaJs 是 CMD 规范的实现，跟 RequireJs 类似，CMD 也是 SeaJs 推广�
 - 可以向 RequireJs 一样前置依赖，但是推崇就近依赖。
 - exports 和 return 都可以暴露变量。
 
-::: tip ADM vs CMD
+::: tip AMD vs CMD
 - AMD 是提前执行， CMD 是延迟执行
 - CMD 推崇依赖就近，AMD 推崇依赖前置
 - AMD 的 API 默认是一个当多个用，CMD 的 API 严格区分，推崇职责单一

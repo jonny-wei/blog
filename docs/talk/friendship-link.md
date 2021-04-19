@@ -34,11 +34,17 @@
 
 ## 算法
 
+[lodash源码分析](https://github.com/yeyuqiudeng/pocket-lodash)
+
+[You don't (may not) need Lodash/Underscore](https://github.com/you-dont-need/You-Dont-Need-Lodash-Underscore)
+
 [awesome-coding-js](http://www.conardli.top/docs/)
 
 [JavaScript-Algorithms](https://github.com/sisterAn/JavaScript-Algorithms)
 
 [小浩算法](https://www.geekxh.com/)
+
+[JavaScript 排序算法汇总](https://www.qcyoung.com/2016/12/18/JavaScript%20%E6%8E%92%E5%BA%8F%E7%AE%97%E6%B3%95%E6%B1%87%E6%80%BB-NSConflict-yangzj1992/)
 
 ## 浏览器
 
@@ -67,6 +73,8 @@
 [ljianshu/Blog](https://github.com/ljianshu/Blog)
 
 [ConardLi 的 blog](http://www.conardli.top/blog/article/)
+
+[frontend_frank的博客](https://blog.csdn.net/frontend_frank)
 
 [bigo 前端技术博客](https://github.com/bigo-frontend/blog)
 
