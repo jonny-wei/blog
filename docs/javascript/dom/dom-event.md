@@ -57,6 +57,11 @@ DOM3 级新增事件 `stopImmediatePropagation()` 方法来阻止事件捕获，
 利用冒泡的原理，将事件加到父级身上，触发执行效果，这样只在内存中开辟一块空间，既节省内存资源又减少 DOM 操作，提高性能。
 此外还可以动态绑定事件，比如，列表新增元素或删除就不用进行重新绑定了。
 
+::: tip event.target 与 event.currentTarget 区别
+- `event.target` 返回触发事件的元素
+- `event.currentTarget` 返回绑定事件的元素，只有被点击的那个目标元素的 `event.target`才会等于 `event.currentTarget`
+:::
+
 ## 应用
 - 多个同级元素同一种事件绑定
 - 监听不存在的元素
