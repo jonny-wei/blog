@@ -35,7 +35,8 @@ h5之前，存储主要用cookies，缺点：
 |expires|过期时间。一旦过期浏览器自动删除cookie。删除：可以设置一个过去的时间；如果不设置过期时间，则cookie有效期是会话期间。|
 |path|路径。在指定路径的时候，凡是来自同一服务器，URL里有相同路径的所有WEB页面都可以共享cookies。|
 |domain|主机名，是指同一个域下的不同主机，例如：www.baidu.com和map.baidu.com就是两个不同的主机名。默认情况下，一个主机中创建的cookie在另一个主机下是不能被访问的，但可以通过domain参数来实现对其的控制：document.cookie = "name=value;domain=.baidu.com" 这样，所有*.baidu.com的主机都可以访问该cookie。|
-|secure|当secure属性设置为true时，cookie只有在https协议下才能上传到服务器，而在http协议下是没法上传的，所以也不会被窃听。|
+|secure|当 secure 属性设置为 true 时，cookie 只有在 https 协议下才能上传到服务器，而在 http 协议下是没法上传的，所以也不会被窃听。|
+|httponly|用于防止客户端脚本通过 document.cookie 属性访问 Cookie，有助于保护 Cookie 不被跨站脚本攻击窃取或篡改。但是，HTTPOnly 的应用仍存在局限性，一些浏览器可以阻止客户端脚本对 Cookie 的读操作，但允许写操作；此外大多数浏览器仍允许通过 XMLHTTP 对象读取 HTTP 响应中的 Set-Cookie 头。|
 
 ## webStorage
 
