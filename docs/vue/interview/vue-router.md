@@ -21,6 +21,10 @@ history.pushstate(state, title, url) 方法接受三个参数
 history.replaceState() 方法的参数和 pushState() 方法一摸一样，区别是它修改浏览器历史当中的记录。
 :::
 
+- Hash 模式：地址栏 URL 中有 #。vue-router 优先判断浏览器是否支持 pushState，若支持，则通过 pushState 改变 hash 值，进行目标路由匹配，渲染组件，popstate 监听浏览器操作，完成导航功能，若不支持，使用 location.hash 设置 hash 值，hashchange 监听 URL 变化完成路由导航。
+
+- History 模式：地址栏 URL 中没有 #。与 Hash 模式实现导航的思路是一样的。不同的是，vue-router 提供了 fallback 配置，当浏览器不支持 history.pushState 控制路由是否应该回退到 hash 模式。默认值为 true。
+
 
 [Vue Router](https://router.vuejs.org/zh/)
 
