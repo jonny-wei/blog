@@ -29,6 +29,7 @@ const sidebar = {
         'vue/vue-computed',
         'vue/vue-slot',
         'vue/vue-directive',
+        'vue/vue-event',
       ]
     },
     {
@@ -86,6 +87,7 @@ const sidebar = {
         'basis/css-ifc',
         'basis/css-cc',
         'basis/css-layout',
+        'basis/css-knowledge',
         'basis/css-isuess',
       ]
     },

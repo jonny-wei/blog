@@ -39,7 +39,28 @@
     盒子还是可见的，虽然 height = content = 0，但由 border 和 padding，盒子大小虽为 0，但盒子可见。
 
 ## Q2: 行内元素可以设置 padding，margin 吗？
-行内元素（inline-block）的 padding 左右有效 ，但是由于设置 padding 上下不占页面空间，无法显示效果，所以无效。此外，对行内元素设置宽高 width，height无效。
+
+- 行内元素(display: inline)
+    
+    - 设置 width, height 宽高无效
+    - 设置 margin 仅左右方向有效，上下无效；
+    - 设置 padding 仅左右方向有效，上下可设置但无效；
+    - 不会自动进行换行
+
+- 行内块元素（display: inline-block）
+
+    - 设置 width, height 宽高有效
+    - 设置 margin 上下左右都有效
+    - 设置 padding 上下左右都有效
+    - 不会自动进行换行
+
+::: tip 注意
+在行内元素中有几个特殊的标签，`<img>,<input>` 可以设置它们的宽高度以及对齐属性。
+
+文字块级标签 `<h1>~<h6>,<p>,<dt>`等里面不能放块级元素。
+
+链接里面不能再存放链接
+:::
 
 ## Q3：内边距的百分数值是如何计算的？为什么？
 例如 padding: 20%; 如果设置成百分数值，padding 会根据父元素的宽度计算。 
@@ -137,26 +158,67 @@ document.body.offsetHeight/offsetWidth
     - 缺点：添加无意义标签，语义化差
     - 不建议使用
 
-- overflow: hidden
+- overflow: hidden 触发 BFC
 
-    父元素添加 overflow:hidden，通过触发 BFC 方式，实现清除浮动
+    父元素添加 overflow:hidden，通过触发 BFC 方式，实现清除浮动。
     - 缺点：内容增多的时候容易造成不会自动换行导致内容被隐藏掉，无法显示要溢出的元素
-    - 不推荐使用
+    - 不推荐使用，只推荐没有使用 position 或对 overflow: hidden 理解比较深的开发者使用。
+
+- overflow: auto 触发 BFC
+
+    定义父元素的 overflow 为 auto，width 或 zoom 设定为 1，同时不能定义容器高度，父元素触发实现 BFC。
+    - 缺点：内部宽高超过父级 div 时，会出现滚动条。
+    - 不推荐使用，如果你需要出现滚动条或者确保你的代码不会出现滚动条就使用吧
+
+- 父元素浮动 float 触发 BFC
+
+    将包裹浮动元素的父元素设置为浮动元素，从而触发 BFC
+    - 缺点：会产生新的浮动问题。
+    - 不推荐使用。
     - 
-- 给浮动元素父级设置高度
-- 父级同时浮动（需要给父级同级元素添加浮动）
-- 父级设置成 inline-block，其 margin: 0 auto 居中方式失效
-- after 伪元素
+- 设置父级为表格元素触发 BFC
 
-    使用 after 伪元素清除浮动，符合闭合浮动思想，结构语义化正确
-    - 缺点：ie6-7 不支持伪元素：after，使用 zoom:1 触发 hasLayout
-    - 推荐使用
-
-- before、after 双伪元素
+    将父级元素变成表格元素，从而触发 BFC
+    - 缺点：会产生新的未知问题。
+    - 不推荐使用
   
-    使用 before 和 after 双伪元素清除浮动
-    - 缺点：ie6-7 不支持伪元素：after，使用 zoom:1 触发 hasLayout
-    - 推荐使用
+- 给浮动元素父级设置高度
+
+    子元素为浮动元素脱离文档流，父元素无法获取子元素高度因此无法被撑高，通过设置父元素高度，避免与父容器处于相同文档流下的块级元素顶
+    - 缺点：只适合高度固定的布局，要给出精确的高度，如果高度和父级 `div` 不一样时，会产生问题
+    - 不推荐
+
+- 父元素设置伪类作为空标签
+
+  父级块级元素定义 伪类 `:after` 和 `zoom`。原理与添加空标签类似，伪类会在父元素尾部添加一个子元素，内容为空并设置为隐藏不可见。
+  - 缺点：ie6-7 不支持伪元素：after，使用 zoom:1 触发
+  - 推荐使用，建议定义公共类，以减少 CSS 代码。
+
+- 添加空标签子元素
+
+  与浮动元素同级额外添加一个空标签子元素，为其设置 clear 属性为 both 清除浮动，让父级元素能自动获取到高度
+  - 缺点：如果页面浮动布局多，就要增加很多空 `div`，让人感觉很不好
+  - 不推荐
+
+- 添加 br 标签作为空标签
+    原理其实和第二种方法一样，只是这里的空标签使用的是 `<br/>` 标签。同样需要设置 clear 为 both。
+    - 不推荐
+
+## Q8. CSS 定位计算参照物
+
+- padding: 10%; 基于父元素的宽度的百分比的内边距
+- position: static; HTML 元素的默认值，即没有定位，遵循正常的文档流对象。静态定位的元素不会受到 top, bottom, left, right影响。
+- position: relative; 相对定位元素的定位是相对其左上顶点的正常位置进行定位,定位后元素还会占据原来的空间。
+- position: absolute; 相对于 static 定位以外的第一个父元素进行定位，如果父级不是，会一直往上到 body，脱离文档流
+- position: fixed; 生成固定定位的元素，相对于浏览器窗口进行定位，脱离文档流。（老 IE 不支持），即使窗口是滚动的它也不会移动。
+- position: sticky; 粘性定位可以被认为是相对定位和固定定位的混合。元素在跨越特定阈值前为相对定位，之后为固定定位。主要用于 scroll 事件的监听上
+- position: inherit;	规定应该从父元素继承 position 属性的值。
+
+无论属于哪种，都要先找到其祖先元素中最近的 position 值不为 static 的元素，然后再判断：若此元素为 inline 元素，则 containing block 为能够包含这个元素生成的第一个和最后一个 inline box 的 padding box （除 margin, border 外的区域）的最小矩形；否则,则由这个祖先元素的 padding box 构成。
+
+- static（默认的）/ relative：简单说就是它的父元素的内容框（即去掉 padding 的部分）
+- absolute: 向上找最近的定位为 absolute/relative 的元素
+- fixed: 它的 containing block 一律为根元素（html/body），根元素也是 initial containing block
 
 ## 参考资料
 

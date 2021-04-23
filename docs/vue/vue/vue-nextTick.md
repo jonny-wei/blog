@@ -108,14 +108,16 @@ import { isIE, isIOS, isNative } from './env'
 
 export let isUsingMicroTask = false
 
-const callbacks = [] // 存放异步执行的回调
-let pending = false // 一个标记位，如果已经有 timerFunc 被推送到任务队列中去则不需要重复推送
+const callbacks = [] // 回调队列 存放异步执行的回调
+let pending = false // 异步锁 一个标记位，如果已经有 timerFunc 被推送到任务队列中去则不需要重复推送
 
-// 下一个tick时的回调
+// 下一个tick时执行队列中的每一个回调
 function flushCallbacks () {
-  pending = false
-  const copies = callbacks.slice(0)
+  pending = false // 重置异步锁
+  // 防止出现nextTick中包含nextTick时出现问题，在执行回调函数队列前，提前复制备份并清空回调函数队列
+  const copies = callbacks.slice(0) 
   callbacks.length = 0
+  // 执行回调函数队列
   for (let i = 0; i < copies.length; i++) {
     copies[i]()
   }
@@ -176,6 +178,7 @@ if (typeof Promise !== 'undefined' && isNative(Promise)) {
 // 导出 nextTick
 export function nextTick (cb?: Function, ctx?: Object) {
   let _resolve
+  // 回调函数推入回调队列
   callbacks.push(() => {
     if (cb) {
       try {
@@ -187,11 +190,12 @@ export function nextTick (cb?: Function, ctx?: Object) {
       _resolve(ctx)
     }
   })
+  // 如果异步锁未锁上，锁上异步锁，调用异步函数，准备等同步函数执行完后，就开始执行回调函数队列
   if (!pending) {
     pending = true
     timerFunc()
   }
-  // $flow-disable-line
+  // $flow-disable-line  // 如果没有提供回调，并且支持Promise，返回一个Promise
   if (!cb && typeof Promise !== 'undefined') {
     return new Promise(resolve => {
       _resolve = resolve
