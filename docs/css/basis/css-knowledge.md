@@ -127,3 +127,11 @@
 ## 回流与重绘
 
 [怎么理解回流跟重绘？什么场景下会触发？](https://mp.weixin.qq.com/s/hLnFQmfScwK9bWwn6sMlmw)
+
+## 获取页面元素的位置
+
+[用Javascript获取页面元素的位置](http://www.ruanyifeng.com/blog/2009/09/find_element_s_position_using_javascript.html)
+
+[各种高度clientHeight/scrollHeight/offsetHeight及应用](https://juejin.cn/post/6898575556796022797)
+
+[元素 offset client scroll 相关属性简介](https://juejin.cn/post/6844903811463512077)

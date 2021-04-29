@@ -5,3 +5,5 @@
 [BFF模式：微服务前端数据加载的最佳实践？](https://mp.weixin.qq.com/s/7xKf2fY-aAHjEOdIKULj2Q)
 
 [减少重复开发，GraphQL在低代码平台如何落地](https://mp.weixin.qq.com/s/_wPbLn19b_IwiSXOs14o7g)
+
+[你学BFF和Serverless了吗](https://juejin.cn/post/6844904185427673095)
