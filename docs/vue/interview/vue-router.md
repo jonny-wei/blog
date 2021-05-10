@@ -25,6 +25,8 @@ history.replaceState() 方法的参数和 pushState() 方法一摸一样，区�
 
 - History 模式：地址栏 URL 中没有 #。与 Hash 模式实现导航的思路是一样的。不同的是，vue-router 提供了 fallback 配置，当浏览器不支持 history.pushState 控制路由是否应该回退到 hash 模式。默认值为 true。
 
+- Abstract: 支持所有 JavaScript 运行环境，如 Node.js 服务器端。如果发现没有浏览器的 API，路由会自动强制进入这个模式。abstract 路由模式本身是用来在不支持浏览器 API 的环境中，充当 fallback，而不论是 hash 还是 history 模式都会对浏览器上的 url 产生作用，如果要实现在已存在的路由页面中内嵌其他的路由页面，而保持在浏览器当中依旧显示当前页面的路由 path，这就利用到了 abstract 这种与浏览器分离的路由模式。
+
 
 [Vue Router](https://router.vuejs.org/zh/)
 
