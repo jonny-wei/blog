@@ -18,19 +18,26 @@ XSS 全称是 Cross Site Scripting，为了与 “CSS” 区分开来，故简�
 ### 存在原因
 
 浏览器为了在安全和自由之间找到一个平衡点。支持了 **页面中的引用第三方资源** 和 **跨域资源共享（CORS）**，这样做带来了很多安全问题，其中最典型的就是 XSS 攻击。
+
 ### 攻击方式
 
-- 存储型 XSS 攻击
+- 存储型 XSS 攻击( server 端)
+  
+  常见于带有用户保存数据的网站功能，如论坛发帖、商品评论、用户私信等
 
    - 首先黑客利用站点漏洞将一段恶意 JavaScript 代码提交到网站的数据库中；
-   - 然后用户向网站请求包含了恶意 JavaScript 脚本的页面；
-   - 当用户浏览该页面的时候，恶意脚本就会执行
+   - 用户打开目标网站时，服务端将恶意代码从数据库中取出来，拼接在HTML中返回给浏览器；
+   - 用户浏览器在收到响应后解析执行，混在其中的恶意代码也同时被执行
+   - 恶意代码窃取用户数据，并发送到指定攻击者的网站，或者冒充用户行为，调用目标网站的接口，执行恶意操作
 
-- 反射型 XSS 攻击
+- 反射型 XSS 攻击( server 端)
+  
+  与存储型的区别在于，存储型的恶意代码存储在数据库中，反射型的恶意代码在 URL 上。常见于通过 URL 传递参数的功能，如网站搜索、跳转等
 
-  - 恶意 JavaScript 脚本属于用户发送给网站请求中的一部分。
-  - 随后网站又把恶意 JavaScript 脚本返回给用户。
-  - 恶意 JavaScript 脚本就可以在用户页面中被执行
+  - 攻击者构造出特殊的 URL，其中包含恶意代码。
+  - 用户打开带有恶意代码的 URL 时，网站服务端将恶意代码从 URL 中取出，拼接在 HTML 中返回给浏览器。
+  - 用户浏览器接收到响应后解析执行，混在其中的恶意代码也被执行
+  - 恶意代码窃取用户数据并发送到攻击者的网站，或者冒充用户的行为，调用目标网站接口执行攻击者指定的操作
 
 - 基于 DOM 的 XSS 攻击
 
@@ -57,7 +64,7 @@ XSS 全称是 Cross Site Scripting，为了与 “CSS” 区分开来，故简�
 
   使用 HttpOnly 标记的 Cookie 只能使用在 HTTP 请求过程中，所以无法通过 JavaScript 来读取这段 Cookie。
 
-- 充分利用 CSP
+- 充分利用 CSP（CSP HTTP Header)，即 Content-Security-Policy、X-XSS-Protection
 
   实施严格的 CSP 可以有效地防范 XSS 攻击，具体来讲 CSP 有如下几个功能：
 
@@ -66,6 +73,13 @@ XSS 全称是 Cross Site Scripting，为了与 “CSS” 区分开来，故简�
   - 禁止执行内联脚本和未授权的脚本；
   - 还提供了上报机制，这样可以帮助我们尽快发现有哪些 XSS 攻击，以便尽快修复问题。
 
+  - 增加攻击难度，配置CSP(本质是建立白名单，由浏览器进行拦截)
+  - Content-Security-Policy: default-src 'self' -所有内容均来自站点的同一个源（不包括其子域名）
+  - Content-Security-Policy: default-src 'self' *.trusted.com-允许内容来自信任的域名及其子域名 (域名不必须与CSP设置所在的域名相同)
+  - Content-Security-Policy: default-src https://yideng.com-该服务器仅允许通过 HTTPS 方式并仅从 yideng.com 域名来访问文档
+
+- 输入验证：比如一些常见的数字、URL、电话号码、邮箱地址等等做校验判断
+- 验证码
 ## CSRF（跨站请求伪造）
 
 CSRF 英文全称是 Cross-site request forgery，是指黑客引诱用户打开黑客的网站，在黑客的网站中，利用用户的登录状态发起的跨站请求。简单来讲，CSRF 攻击就是**利用了用户的登录状态，并通过第三方的站点来做一些坏事**。而且 CSRF 攻击并不需要将恶意代码注入用户的页面，仅仅是利用服务器的漏洞和用户的登录状态来实施攻击。
@@ -95,7 +109,7 @@ CSRF 英文全称是 Cross-site request forgery，是指黑客引诱用户打开
 
 - 充分利用好 Cookie 的 SameSite 属性
 
-- 验证请求的来源站点
+- 验证请求的来源站点(同源检测)
 
   根据 HTTP 请求头中的 Referer 和 Origin 属性在服务器端验证请求来源的站点。Referer 和 Origin 都是 HTTP 请求头中的一个字段，Referer 记录了该 HTTP 请求的来源地址。Origin 属性只包含了域名信息，并没有包含具体的 URL 路径。服务器的策略是优先判断 Origin，如果请求头中没有包含 Origin 属性，再根据实际情况判断是否使用 Referer 值。
 
@@ -139,3 +153,5 @@ Cookie 的 SameSite 属性用来限制第三方 Cookie，从而减少安全风�
 [前端基础篇之HTTP协议](https://juejin.cn/post/6844903844216832007#heading-23)
 
 [聊一聊WEB前端安全那些事儿](https://segmentfault.com/a/1190000006672214)
+
+[前端安全、中间人攻击](https://github.com/lgwebdream/FE-Interview/issues/16)

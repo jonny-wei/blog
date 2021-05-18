@@ -82,6 +82,8 @@
 
 [总结伪类与伪元素](http://www.alloyteam.com/2016/05/summary-of-pseudo-classes-and-pseudo-elements/)
 
+[css 伪类与伪元素区别](https://github.com/lgwebdream/FE-Interview/issues/18)
+
 ## CSS 隐藏页面元素
 
 [CSS中，有哪些方式可以隐藏页面元素？区别?](https://mp.weixin.qq.com/s/1tnP66WsEZHEDNcNV2srRA)

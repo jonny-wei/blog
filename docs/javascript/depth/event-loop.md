@@ -234,4 +234,6 @@ double intervalMilliseconds = std::max(oneMillisecond, interval * oneMillisecond
 [图解 Event Loop](https://juejin.cn/post/6844904004745592846)
 
 [彻底弄懂 JavaScript 执行机制](https://juejin.cn/post/6844903512845860872)
+
+[说一下事件循环机制(node、浏览器) ](https://github.com/lgwebdream/FE-Interview/issues/26)
 :::
