@@ -32,7 +32,7 @@ element.addEventListener(type, listener, useCapture) addEventListener()的工作
 | :---- | :---- |
 |type| 必须。字符串，指定事件名。<br> 注意: 不要使用 "on" 前缀。 例如，使用 "click" ,而不是使用 "onclick"。<br> 提示： 所有 HTML DOM 事件，可以查看 [HTML DOM Event 对象参考手册](https://www.runoob.com/jsref/dom-obj-event.html)。 |
 |listener|必须。指定要事件触发时执行的函数。<br>当事件对象会作为第一个参数传入函数。 事件对象的类型取决于特定的事件。例如， "click" 事件属于 MouseEvent(鼠标事件) 对象。 |
-|useCapture|true - 事件冒泡 <br> false - 事件捕获 <br> useCapture 默认为 false 事件捕获  |
+|useCapture|true - 事件捕获 <br> false - 事件冒泡 <br> useCapture 默认为 false 事件冒泡  |
 
 ::: tip 注意
 对于事件目标上的事件监听器来说，事件会处于“目标阶段”，而不是冒泡阶段或者捕获阶段。在目标阶段的事件会触发该元素（即事件目标）上的所有监听器，而不在乎这个监听器到底在注册时 useCapture 参数值是 true 还是 false。
