@@ -35,7 +35,6 @@
 定义一个 Observer 观察类(监听器)，判断数据是否是 Array 类型，如果不是那么就是 Object 类型数据，进而走 `this.walk(value)` 逻辑。在 walk 方法中
 遍历对象的所有属性走 `defineReactive(obj, keys[i])` 方法，在 defineReactive 方法中通过 `Object.defineProperty` 为其添加 getter/setter，在 defineReactive 中如果 obj 对象里嵌套对象，那么需要通过 `new Observer(val)` **递归**添加响应式，这就是 Object 的**深度侦测**。
 
-
 ```js
 // 源码位置：src/core/observer/index.js 下面是简化后的代码
 
@@ -165,6 +164,7 @@ methodsToPatch.forEach(function (method) {
   })
 })
 ```
+
 Array 类型数据的侦测：
 
 ```js
@@ -251,19 +251,20 @@ function copyAugment(target: Object, src: Object, keys: Array<string>): void {
 ### 小结
 
 **数据侦测的目的是**监测数据何时发生了变化，从而收集或更新依赖。为侦测数据的变化，使数据变得“可观测”，JavaScript 有两种办法：`使用 Object.defineProperty 数据劫持(vue2)` 和 `ES6 的 Proxy 数据代理(vue3)`。在 Vue2 中，是基于 `Object.defineProperty` 实现数据劫持。由于局限于 Object.defineProperty 是对象原型上的方法，并且是对象属性层面上的数据劫持，不是对象层面的数据代理。所以 Vue2 侦测数据的变化分为 Object 型的数据和 Array 型数据两种不同的侦测方式。对于 Object 类型的数据，**Vue 在 defineReactive 方法中通过 `Object.defineProperty` 为其添加 getter/setter 追踪数据的变化，监测数据何时发生了变化**；对于 Array 类型的数据，**Vue 通过拦截重写数组原型上可以改变数组的 7 大操作数组方法监测数据何时发生了变化**。以上实现了数据的侦测，知道数据何时发生了变化，从而知道在什么时候收集依赖，在什么时候更新依赖。
+
 ## 依赖收集与更新
 
-**为什么进行依赖收集**：数据变的可观测以后，我们就能知道数据什么时候发生了变化，那么当数据发生变化时，我们去通知视图更新就好了。那么问题又来了，视图那么大，我们到底该通知谁去变化？总不能一个数据变化了，把整个视图全部更新一遍吧，这样显然是不合理的。
+**为什么进行依赖收集**：数据变的可观测以后，我们就能知道数据什么时候发生了变化，那么当数据发生变化时，我们去通知视图更新就好了。那么问题又来了，视图那么大，我们到底该通知谁去变化？总不能一个数据变化了，把整个视图全部更新一遍吧，这样显然是不合理的。依赖收集的目的是为了当这些响应式数据发生变化时，触发它们的 setter 的时候，能知道应该通知哪些订阅者去做相应的逻辑处理
 
-**什么是依赖收集**：谁用到了这个数据就是谁依赖了这个数据，我们给每个数据都建一个依赖数组(因为一个数据可能被多处使用)，谁依赖了这个数据(即谁用到了这个数据)我们就把谁放入这个依赖数组中，那么当这个数据发生变化的时候，我们就去它对应的依赖数组中，把每个依赖都通知一遍，告诉他们："你们依赖的数据变啦，你们该更新啦！"。这个过程就是依赖收集。
+**什么是依赖收集**：谁用到了这个数据就是谁依赖了这个数据，我们给每个数据都建一个依赖数组(因为一个数据可能被多处使用)，谁依赖了这个数据(即谁用到了这个数据)我们就把谁放入这个依赖数组中，那么当这个数据发生变化的时候，我们就去它对应的依赖数组中，把每个依赖都通知一遍，告诉他们："你们依赖的数据变啦，你们该更新啦！"。这个过程就是依赖收集。依赖收集就是订阅数据变化的 watcher 的收集。
 
-**何时收集依赖，何时更新依赖**：在 getter 中收集依赖，在 setter 中通知依赖更新。在 getter 中调用了 `dep.depend()` 方法收集依赖，在 setter 中调用 `dep.notify()` 方法通知所有依赖更新。
+**何时收集依赖，何时更新依赖**：在 getter 中收集依赖，在 setter 中通知依赖更新。在 getter 中调用了 `dep.depend()` 方法收集依赖，在 setter 中调用 `dep.notify()` 方法通知所有依赖更新。依赖收集的前提条件：触发 get 方法或新建一个 Watcher 对象。
 
 **Array 的依赖收集疑问**：不是说 Array 无法使用 Object.defineProperty 方法吗？无法使用怎么还在 getter 中收集依赖呢？其实在平常开发的时候，全局的 data 是一个对象，组件的 data 是一个函数并 return 一个对象，不论是全局还是组件中的 data 都是通过 `{}` 包裹需要响应式的数据，所以 Array 型数据还是在getter 中收集依赖。
 
-**依赖收集到哪里**：收集依赖需要为依赖找一个存储依赖的地方，我们给每个数据都建一个依赖数组，谁依赖了这个数据我们就把谁放入这个依赖数组中。单单用一个数组来存放依赖的话，功能好像有点欠缺并且代码过于耦合。我们应该将依赖数组的功能扩展一下，更好的做法是我们应该为每一个数据都建立一个依赖管理器，把这个数据所有的依赖都管理起来。为此 Vue 定义了一个订阅器 Dep，用来收集订阅者，主要作用是用来存放 Watcher 观察者对象。它用来收集依赖、删除依赖和向依赖发送消息等。Watcher 可以理解成一个中介，数据发生变化时通知 Watcher，然后 Watcher 再通知其他地方。
+**依赖收集到哪里**：收集依赖需要为依赖找一个存储依赖的地方，我们给每个数据都建一个依赖数组，谁依赖了这个数据我们就把谁放入这个依赖数组中。单单用一个数组来存放依赖的话，功能好像有点欠缺并且代码过于耦合。我们应该将依赖数组的功能扩展一下，更好的做法是我们应该为每一个数据都建立一个依赖管理器，把这个数据所有的依赖都管理起来。为此 Vue 定义了一个订阅器 Dep，用来收集订阅者，主要作用是用来存放 Watcher 观察者对象。它用来收集依赖、删除依赖和向依赖发送消息等。Watcher 可以理解成一个中介，数据发生变化时通知 Watcher，然后 Watcher 再通知其他地方。其实依赖收集的过程就是把 Watcher 实例存放到对应的 Dep 对象中去。get 方法可以让当前的 Watcher 对象（Dep.target）存放到它的 subs 中（addSub）方法，在数据变化时，set 会调用 Dep 对象的 notify 方法通知它内部所有 Watcher 对象进行视图更新。依赖收集发生在 render 阶段，在 Vue 实例进行 $mount 的时候进行。在 render 过程中两个地方触发同一个数据的 getter，则将两个 watcher 都 addSub 到同一个 Dep 类对象中（Object.defineProperty 闭包中 Dep 类对象）。当数据修改时，该 Dep 类对象进行 notify 遍历通知 watcher 进行更新。
 
-### 发布者 Dep 
+### 订阅者 Dep
 
 如何管理依赖？Dep 订阅器类。主要做两件事情：
 
@@ -313,17 +314,35 @@ export default class Dep {
   }
 }
 ```
+
 之前对 Object 和 Array 数据分别进行了观测，利用 `Object.defineProperty` 为其属性和元素添加响应式机制，使数据变得可观测。知道了数据何时发生了变化以及何时通知依赖更新，明白在 getter 中触发依赖收集，在 setter 中触发依赖更新。为了使代码解耦，提供接口等因素用一个 Dep类(依赖管理订阅器)代替依赖数组管理依赖。在依赖管理器中添加依赖，删除依赖，以及通知依赖更新，核心方法就是 `update()`。剩下的问题就是：我们在 getter 中收集的依赖到底是谁的问题。口语层面我们可以说：“谁用到了这个数据谁就是依赖”，那么在代码层面该如何表示呢？
 
-### 订阅者 Watcher
+### 观察者 Watcher
 
 Vue 实现了一个 Watcher 类(观察者)，Watcher 类的实例就是我们上面所说的那个"谁"。换句话说就是：谁用到了数据，谁就是依赖，我们就为谁创建一个 Watcher 实例。在之后数据变化时，我们不直接去通知依赖更新，而是通知依赖对应的 Watcher 实例，由 Watcher 实例去通知真正的视图。
+
+Watcher 的四个使用场景：
+
+- 第一种：观察模版中的数据
+- 第二种：观察创建 Vue 实例时 watch 选项中的数据
+- 第三种：观察创建 Vue 实例时 computed 选项里的数据所以来的数据
+- 第四种：调用 $watch API 观察的数据或表达式
+
+Watcher 只有在这四种场景中，Watcher 才会收集依赖，更新模版或表达式，否则，数据变更后无法通知依赖这个数据的模版或表达式。Watcher 对象通过调用 updateComponent 方法达到更新视图的目的。其实 Watcher 并不实时更新视图，在实例化 Vue 构造函数时默认会将 Watcher 对象存在一个队列中，在下个 Tick 时更新异步更新视图，完成了性能优化。
 
 **为什么要引入 Watcher 类**：当属性发生变化后，我们要通知用到数据的地方，而使用这个数据的地方有很多，而且类型还不一样，既有可能是模板，也有可能是用户写的一个 watch,这时需要抽象出一个能集中处理这些情况的类。然后，我们在依赖收集阶段 **只收集这个封装好的类的实例进来**，通知也只通知它一个，再由它负责通知其他地方。
 
 **依赖收集的目的** 是将观察者 Watcher 对象存放到当前闭包中的订阅者 Dep 的 subs 中。
 
 所谓的依赖，其实就是 Watcher。至于如何收集依赖，总结起来就一句话，在 getter 中收集依赖，在 setter 中触发依赖。先收集依赖，即把用到该数据的地方收集起来，然后等属性发生变化时，把之前收集好的依赖循环触发一遍就行了。具体来说，当外界通过 Watcher 读取数据时，便会触发 getter 从而将 Watcher 添加到依赖中，哪个 Watcher 触发了 getter，就把哪个 Watcher 收集到 Dep 中。当数据发生变化时，会循环依赖列表，把所有的 Watcher 都通知一遍。
+
+派发更新：
+
+派发更新就是当数据发生改变后，通知所有订阅了这个数据变化的 watcher 执行 update
+派发更新的过程中会把所有执行 update 的 watcher 推入到队列中，在 nextTick 后执行 flush
+派发更新的核心流程是给对象赋值，触发 set 中派发更新函数。将所有 Watcher 都放入 nextTick 中进行更新，nextTick 回调中执行用户 watch 的回调函数并且渲染组件。
+
+updateComponent 函数的执行会间接触发渲染函数（vm.$options.render）的执行，而渲染函数的执行则会触发数据属性的 get 拦截器函数，从而将依赖（观察者）收集，当数据变化时重新执行 updateComponent 函数，这就完成了重新渲染。
 
 ```js
 // Watcher 简化：
@@ -370,9 +389,17 @@ Dep.target 表示当前正在计算的 Watcher，它是全局唯一的，因为�
 
 ### 小结
 
-- 在 new Vue() 后， Vue 会调用 _init 函数进行初始化，在 init 过程 data 通过 Observer 转换成了 getter/setter 的形式，来对数据追踪变化，当被设置的对象被读取的时候会执行 getter 函数，而在当被赋值的时候会执行 setter 函数。
-- 当render function 执行的时候，因为会读取所需对象的值，所以会触发 getter 函数从而将 Watcher 添加到依赖中进行依赖收集。
+- 在 `new Vue()` 后， Vue 会调用 _init 函数进行初始化，在 init 过程 data 通过 Observer 转换成了 getter/setter 的形式，来对数据追踪变化，当被设置的对象被读取的时候会执行 getter 函数，而在当被赋值的时候会执行 setter 函数。
+- 当`render function` 执行的时候，因为会读取所需对象的值，所以会触发 getter 函数从而将 Watcher 添加到依赖中进行依赖收集。
 - 在修改对象的值的时候，会触发对应的 setter， setter 通知之前依赖收集得到的 Dep 中的每一个 Watcher，告诉它们自己的值改变了，需要重新渲染视图。这时候这些 Watcher 就会开始调用 update 来更新视图。
+
+在 Vue 初始化阶段，会对配置对象中定义的不同属性做相关的处理，对于 data 和 props 而言，Vue 会通过 observe 和 `defineReactive` 等一系列的操作把 data 和 props 的每个属性变成响应式属性，同时它们内部会持有一个 Dep 实例对象，当我们访问这些数据的时候，就会触发 dep 的 depend 方法来收集依赖，这些依赖是当前正在计算的 Watcher，当前在计算的依赖也就是 `Dep.target`，作为 `Subscriber` 订阅者用于订阅这些数据的变化。当修改数据的时候，会触发 dep 的 notify 方法通知这些订阅者执行 `update` 的逻辑。
+
+对于 computed 计算属性而言，实际上会在内部创建一个 `computed watcher`，每个 `computed watcher` 会持有一个 Dep 实例，当我们访问 computed 属性的时候，会调用 `computed watcher` 的 `evaluate` 方法，这时候会触发其持有的 `depend` 方法用于收集依赖，同时也会收集到正在计算的 watcher，然后把它计算的 watcher 作为 Dep 的 `Subscriber` 订阅者收集起来，收集起来的作用就是当计算属性所依赖的值发生变化以后，会触发 `computed watcher` 重新计算，如果重新计算过程中计算结果变了也会调用 dep 的 notify 方法，然后通知订阅 computed 的订阅者触发相关的更新。
+
+对于 watch 而言，会创建一个 `user watcher`，可以理解为用户的 watcher，也就是用户自定义的一些 watch，它可以观察 data 的变化，也可以观察 computed 的变化。当这些数据发生变化以后，我们创建的这个 watcher 去观察某个数据或计算属性，让他们发生变化就会通知这个 Dep 然后调用这个 Dep 去遍历所有 `user watchers`，然后调用它们的 update 方法，然后求值发生新旧值变化就会触发 run 执行用户定义的回调函数（user callback）。
+
+Vue 的渲染都是基于这个响应式系统的。在 Vue 的创建过程中，对于每个组件而言，它都会执行组件的 `$mount` 方法，`$mount` 执行过程中内部会创建唯一的 `render watcher`，该 `render watcher` 会在 render 也就是创建 VNode 过程中会访问到定义的 data、props 或者 computed 等等。`render watcher` 相当于订阅者，订阅了这些定义的数据的变化，一旦它们发生变化以后，就会触发例如 setter 里的 notify 或者 `computed watcher` 中的 `dep.notify`，从而触发 `render watcher` 的 update，然后执行其 run 方法，执行过程中最终会调用 `updateComponent` 的方法，该方法会重新进行视图渲染。
 
 ## 总结
 
@@ -380,16 +407,14 @@ Dep.target 表示当前正在计算的 Watcher，它是全局唯一的，因为�
 
 那么这些依赖存放在哪里呢？为了使代码解耦，提供接口等因素用Vue 定义了一个依赖管理器 Dep 类(发布者，被观察者)代替依赖数组管理依赖。在依赖管理器中添加依赖，删除依赖，以及通知依赖更新。剩下的问题就是：我们在 getter 中收集的依赖到底是谁的问题。谁用到了这个数据谁就是依赖。当属性发生变化后，我们要通知用到数据的地方，而使用这个数据的地方有很多，而且类型还不一样，既有可能是模板，也有可能是用户写的一个 watch（computed watcher，user watcher实例），这时需要抽象出一个能集中处理这些情况的类。然后，我们在依赖收集阶段 **只收集这个封装好的类的实例进来**，通知也只通知它一个，再由它负责通知其他地方。
 
-
 为此 Vue 又定义了一个 Watcher 类(订阅者，观察者)。所谓的依赖，其实就是 Watcher 实例。当外界通过 Watcher 读取数据时，便会触发 getter 从而将 Watcher 添加到依赖中，哪个 Watcher 触发了 getter，就把哪个 Watcher 收集到 Dep 中。当数据发生变化时，会循环依赖列表，把所有的 Watcher 都通知一遍。依赖管理器 Dep 主要用来收集订阅者，主要作用是用来存放 Watcher 观察者对象。它用来收集依赖、删除依赖和向依赖发送消息等。在 mount 阶段的时候，会创建一个 Watcher 类的对象。这个 Watcher 实际上是连接 Vue 组件与 Dep 的桥梁。每一个 Watcher 对应一个 vue component。
-
 
 总之，当创建 Vue 实例时，Vue 会遍历 data 选项的属性，利用 `Object.defineProperty` 为每个属性添加 getter 和 setter 对数据的读取进行劫持（在 getter 中收集依赖，在 setter 中通知依赖更新），并且在内部追踪依赖，在属性被访问和修改时通知变化。每个组件实例会有相应的 Watcher 实例，会在组件渲染的过程中记录依赖的所有数据属性（进行依赖收集，还有computed watcher，user watcher实例），之后依赖项被改动时，setter 方法会通知依赖与此 data 的 Watcher 实例重新计算（派发更新），从而使它关联的组件重新渲染。
 
 - 组件初始化的时候，先给每一个 data 属性都注册 getter，setter，也就是 reactive 化。然后再 new 一个自己的 Watcher 对象，此时 Watcher 会立即调用组件的 render 函数去生成虚拟 DOM。在调用 render 的时候，就会需要用到 data 的属性值，此时会触发 getter 函数，将当前的 Watcher 函数注册进 Dep 的 subs 里。
 - 当 data 属性发生改变之后，就会遍历 subs 里所有的 Watcher 对象，通知它们去重新渲染组件。
 
-Vue 是如何给 data 对象添加 Observer 的？我们知道，Vue 实例创建的过程会有一个生命周期，其中有一个过程就是调用 vm.initData 方法处理 data 选项。在 initData 中我们要特别注意 proxy 方法，它的功能就是遍历 data 的 key，把 data 上的属性代理到 vm 实例上。proxy 方法主要通过 Object.defineProperty 的 getter 和 setter 方法实现了代理，把每一个值 vm._data.xxx 都代理到 vm.xxx 上。在 _initData 方法的最后，我们调用了 observe(data, this) 方法来对 data 做监听。observe 方法首先判断 value 是否已经添加了 ob 属性，它是一个 Observer 对象的实例。如果是就直接用，否则在 value 满足一些条件（数组或对象、可扩展、非 vue 组件等）的情况下创建一个 Observer 对象。defineReactive 方法最核心的部分就是通过调用 Object.defineProperty 给 data 的每个属性添加 getter 和 setter 方法。当 data 的某个属性被访问时，则会调用 getter 方法，判断当 Dep.target 不为空时调用 dep.depend 和 childObj.dep.depend 方法做依赖收集。如果访问的属性是一个数组，则会遍历这个数组收集数组元素的依赖。当改变 data 的属性时，则会调用 setter 方法，这时调用 dep.notify 方法进行通知。Dep 类中 subs 用来存储所有订阅它的 Watcher。至此，vm 实例中给 data 对象添加 Observer 的过程就结束了。
+Vue 是如何给 data 对象添加 Observer 的？我们知道，Vue 实例创建的过程会有一个生命周期，其中有一个过程就是调用 vm.initData 方法处理 data 选项。在 initData 中我们要特别注意 proxy 方法，它的功能就是遍历 data 的 key，把 data 上的属性代理到 vm 实例上。proxy 方法主要通过 Object.defineProperty 的 getter 和 setter 方法实现了代理，把每一个值 vm._data.xxx 都代理到 vm.xxx 上。在_initData 方法的最后，我们调用了 observe(data, this) 方法来对 data 做监听。observe 方法首先判断 value 是否已经添加了 ob 属性，它是一个 Observer 对象的实例。如果是就直接用，否则在 value 满足一些条件（数组或对象、可扩展、非 vue 组件等）的情况下创建一个 Observer 对象。defineReactive 方法最核心的部分就是通过调用 Object.defineProperty 给 data 的每个属性添加 getter 和 setter 方法。当 data 的某个属性被访问时，则会调用 getter 方法，判断当 Dep.target 不为空时调用 dep.depend 和 childObj.dep.depend 方法做依赖收集。如果访问的属性是一个数组，则会遍历这个数组收集数组元素的依赖。当改变 data 的属性时，则会调用 setter 方法，这时调用 dep.notify 方法进行通知。Dep 类中 subs 用来存储所有订阅它的 Watcher。至此，vm 实例中给 data 对象添加 Observer 的过程就结束了。
 
 在给 data 添加 Observer 之后，有一个过程是调用 vm.compile 方法对模板进行编译。compile 方法主要通过 compileNode(el, options) 方法完成节点的解析，如果节点拥有子节点，则调用 compileNodeList(el.childNodes, options) 方法完成子节点的解析。compileNodeList 方法其实就是遍历子节点，递归调用 compileNode 方法。因为 DOM 元素本身就是树结构，这种递归方法也就是常见的树的深度遍历方法，这样就可以完成整个 DOM 树节点的解析。主要通过正则表达式解析模板语法(插值表达式，指令等等)生成 Directive 对象。Directive 在初始化时定义了 this.update 方法，并创建了 Watcher，把 this.update 方法作为 Watcher 的回调函数。这里就把 Directive 和 Watcher 做了关联，当 Watcher 观察到指令表达式值变化时，会调用 Directive 实例的 _update 方法，最终调用 watcher 的 update 方法更新 DOM 节点。至此，vm 实例中编译模板、解析指令、绑定 Watcher 的过程就结束了
 
@@ -468,6 +493,7 @@ export function set (target: Array<any> | Object, key: any, val: any): any {
   return val
 }
 ```
+
 Vue.delete( target, propertyName/index ) 的实现：
 
 ```js
@@ -508,7 +534,6 @@ this.someObject = Object.assign({}, this.someObject, { a: 1, b: 2 })
 ```
 
 使用 `$forceUpdate()` 在 Vue 中做一次强制更新，`$forceUpdate()` 迫使 vue 重新渲染。仅仅影响实例本身和插入插槽内容的子组件，而不是所有子组件。
-
 
 - 如果为对象添加少量的新属性，可以直接采用 `Vue.set()`
 - 如果需要为新对象添加大量的新属性，则通过 `Object.assign()` 创建新对象
@@ -565,7 +590,6 @@ Proxy 的优势如下:
 Object.defineProperty 的优势如下:
 
 - 兼容性好，支持 IE9，而 Proxy 的存在浏览器兼容性问题,而且无法用 polyfill 磨平，因此 Vue 的作者才声明需要等到下个大版本( 3.0 )才能用 Proxy 重写。
-
 
 ::: warning 参考文献
 [深入理解vue响应式原理 8000字](https://mp.weixin.qq.com/s/SypAULMnbaSu8MSm2Ugl6g)

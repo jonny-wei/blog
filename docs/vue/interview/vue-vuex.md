@@ -9,8 +9,6 @@ Vuex 背后的设计思想：
 
 因此，我们为什么不把组件的共享状态抽取出来，以一个全局单例模式管理呢？在这种模式下，我们的组件树构成了一个巨大的“视图”，不管在树的哪个位置，任何组件都能获取状态或者触发行为！通过定义和隔离状态管理中的各种概念并通过强制规则维持视图和状态间的独立性，我们的代码将会变得更结构化且易维护。如果有些状态严格属于单个组件，最好还是作为组件的局部状态。
 
-
-
 ## 全局数据状态管理
 
 常见全局数据管理有以下几种方式：
@@ -19,7 +17,8 @@ Vuex 背后的设计思想：
 - 共享对象
 - 单向数据流
 - 树状作用域
-### eventBus 
+
+### eventBus
 
 中央事件总线，全局事件管理。
 
@@ -171,7 +170,6 @@ export function clearGlobalData(key) {
 
 通过注入对象的引用，来在不同组件中获取相同的数据源。在服务端开发的时候使用这样的方式，需要考虑锁的问题，当然单线程的 JS 里面这样的情况比较少，几乎可以不考虑。同时，很多时候我们定义了一个对象，某些地方想要共享这个对象包括它的状态数据，有些地方又想要获取一个全新初始化的对象。这种情况下，我们需要考虑怎样去维护一套这种数据与实例。
 
-
 ### 单向数据流
 
 在全局数据的使用变频繁之后，我们在定位问题的时候还会遇到不知道这个数据为何改变的情况，因为所有引用到这个全局数据的地方都可能对它进行改变。这种情况下，给数据的流动一个方向，则可以方便地跟踪数据的来源和去处。通过流的方式来管理状态，常见的状态管理工具像 Vuex、Redux 等，都是这样管理的。
@@ -202,8 +200,7 @@ vuex 通过单向数据流的方式来维护状态变更。所有的数据都会
 
 Store 指数据仓库。它包含着我们应用中大部分的状态(State)。状态也是数据的一种，相比直接展示在页面中的内容，状态更多时候是控制展示方式和逻辑的一些数据。像我们常说的用户登录态、地理位置等，一般来说我们存到 Store 中的数据，大多数都是需要多组件、多页面或是整个应用中共享的数据。Vuex 通过 store 选项，提供了一种机制将状态从根组件“注入”到每一个子组件中（需调用 `Vue.use(Vuex)`）。该 store 实例会注入到根组件下的所有子组件中，且子组件能通过 `this.$store` 访问到。
 
-
-### State 
+### State
 
 State 指全局的应用状态。一个绑定到界面或组件的状态变量，就像是data中的变量一样。vuex 使用单一状态树，用一个对象就包含了全部的应用层级状态。这样所有 State 的集合，就是 Store。
 
@@ -245,21 +242,17 @@ Vuex 中的 mutation 非常类似于事件：每个 mutation 都有一个字符�
 
 在组件中使用 `this.$store.dispatch('xxx')` 分发 action，或者使用 `mapActions` 辅助函数将组件的 methods 映射为 `store.dispatch` 调用
 
-
 ### Getter
 
 getters 是 store 的计算属性，对 state 的加工，是派生出来的数据。就像 computed 计算属性一样，getter 返回的值会根据它的依赖被缓存起来，且只有当它的依赖值发生改变才会被重新计算。由于 Vuex 的状态存储是响应式的，从 store 实例中读取状态最简单的方法就是在计算属性中返回某个状态。
 
-
-## vuex 原理
-
+## Vuex 原理
 
 vuex 规定所有的数据操作必须通过 `action -> mutation -> state(响应式数据)` 的流程来进行，再结合 Vue 的数据视图双向绑定特性来实现页面的展示更新。统一的页面状态管理以及操作处理，可以让复杂的组件交互与通信变得简单清晰，同时可在调试模式下进行时光机般的倒退前进操作，查看数据改变过程，使代码调试更加方便。
 
 ### vuex 单向数据流
 
 ![vuex的单向数据流](/blog/images/vue/vuex单向数据流.png)
-
 
 - Vue Components：Vue组件。HTML页面上，负责接收用户操作等交互行为，执行 dispatch 方法触发对应 action 进行回应。
 
@@ -281,27 +274,23 @@ vuex 规定所有的数据操作必须通过 `action -> mutation -> state(响应
 
 ### Q1. vuex 的 store 是如何注入到组件中呢？
 
-
 利用vue的插件机制，使用 Vue.use(vuex) 时，会调用 vuex 的 install 方法，装载 vuex。applyMixin 方法使用 vue 混入机制，vuex 是利用 vue 的 mixin 混入机制，在 beforeCreate 钩子前混入 vuexInit 方法，vuexInit 方法实现了 store 注入 vue 组件实例，并注册了 vuex store 的引用属性 `$store`。store 注入过程如下图所示：
 
 ![vuex的注入过程](/blog/images/vue/vuex注入过程.png)
-
 
 将初始化 Vue 根组件时传入的 store 设置到 this 对象的 `$store` 属性上，子组件从其父组件引用 `$store` 属性，层层嵌套进行设置。在任意组件中执行 `this.$store` 都能找到装载的那个 store 对象。
 
 Vue.use(Vuex) 方法执行的是 install 方法，它实现了 Vue 实例对象的 init 方法封装和注入，使传入的 store 对象被设置到 Vue 上下文环境的 `$store` 中。因此在 Vue Component 任意地方都能够通过 `this.$store` 访问到该 store。
 
-
 ### Q2. state 内部支持模块配置和模块嵌套，如何实现的？
 
-在 store 构造方法中有 makeLocalContext 方法，所有 module 都会有一个 local context，根据配置时的 path 进行匹配。所以执行如 `dispatch('user', payload)` 这类 action 时，默认的拿到都是 module 的 local state，如果要访问最外层或者是其他 module 的 state，只能从 rootState 按照 path 路径逐步进行访问。 
+在 store 构造方法中有 makeLocalContext 方法，所有 module 都会有一个 local context，根据配置时的 path 进行匹配。所以执行如 `dispatch('user', payload)` 这类 action 时，默认的拿到都是 module 的 local state，如果要访问最外层或者是其他 module 的 state，只能从 rootState 按照 path 路径逐步进行访问。
 
 ### Q3. 为什么actions、getters、mutations中能从arguments[0]中拿到store的相关数据?
 
 store 初始化时，所有配置的 action 和 mutation 以及 getters 均被封装过。在执行如 `dispatch('user', payload)`的时候，actions 中 type 为 user 的所有处理方法都是被封装后的，其第一个参数为当前的 store 对象，所以能够获取到 { dispatch, commit, state, rootState } 等数据。
 
 ![store注入](/blog/images/vue/store的实现.png)
-
 
 ### Q4. Vuex 如何区分 state 是外部直接修改，还是通过 mutation 方法修改的？
 
@@ -352,11 +341,9 @@ Vuex 的 state 状态是响应式，是借助 vue 的 data 响应式，将 state
 
 ![vuex的响应式数据](/blog/images/vue/vuex响应式实现.png)
 
-
 ### Q6. 调试时的"时空穿梭"功能是如何实现的？
 
 devtoolPlugin 中提供了此功能。因为 dev 模式下所有的 state 的改变都会被记录下来，'时空穿梭' 功能其实就是将当前的 state 替换为记录中某个时刻的 state状态，利用 `store.replaceState(targetState)` 方法将执行 `this._vm.state = state` 实现。
-
 
 ### Q7. actions 和 mutations 区别
 

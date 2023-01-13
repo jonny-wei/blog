@@ -1,7 +1,5 @@
 # 渲染器
 
-[渲染器](http://hcysun.me/vue-design/zh/)
-
 组件的本质：组件的本质是一个函数。在模板引擎年代，给什么样的数据，就渲染对应的 html 内容（模板 + 数据 = html）；
 在如今的前端框架年代，给什么样的数据，就渲染什么样的 Virtual DOM （模板 + 数据 = Virtual DOM）。
 
@@ -256,7 +254,7 @@ function mountElement(vnode, container, isSVG) {
   // 省略...
 }
 ```
-些属性不能通过 setAttribute 设置，而是应该直接通过 DOM 元素设置：value、checked、selected、muted。
+有些属性不能通过 setAttribute 设置，而是应该直接通过 DOM 元素设置：value、checked、selected、muted。
 除此之外还有一些属性也需要使用 Property 的方式设置到 DOM 元素上，例如 innerHTML 和 textContent 等等。
 
 挂载文本节点

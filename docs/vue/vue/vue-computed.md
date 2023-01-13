@@ -141,7 +141,7 @@ export function defineComputed(
 }
 ```
 
-createComputedGetter 返回一个函数 computedGetter，它就是计算属性对应的 getter：
+利用 `Object.defineProperty` 给计算属性对应的 key 值添加 `getter` 和 `setter`，`setter` 通常是计算属性是一个对象，并且拥有 set 方法的时候才有，否则是一个空函数。在平时的开发场景中，计算属性有 `setter` 的情况比较少，我们重点关注一下 `getter` 部分，缓存的配置也先忽略，最终 `getter` 对应的是 `createComputedGetter(key)` 的返回值。`createComputedGetter` 返回一个函数 `computedGetter`，它就是计算属性对应的 `getter`：
 
 ```js
 function createComputedGetter(key) {
@@ -165,8 +165,8 @@ function createGetterInvoker(fn) {
   };
 }
 ```
-computed 本质是一个惰性求值的观察者。computed 内部实现了一个惰性的 watcher，也就是 computed watcher，computed watcher 不会立刻求值，同时持有一个 dep 实例。其内部通过 this.dirty 属性标记计算属性是否需要重新求值。当 computed 的依赖状态发生改变时，就会通知这个惰性的 watcher，computed watcher 通过 this.dep.subs.length 判断有没有订阅者，有的话会重新计算，然后对比新旧值，如果变化了会重新渲染。没有的话，仅仅把 this.dirty = true。 当计算属性依赖于其他数据时，属性并不会立即重新计算，只有之后其他地方需要读取属性的时候，它才会真正计算，即具备 lazy（懒计算）特性。 Vue 想确保的不仅仅是计算属性依赖的值发生变化，而是当计算属性最终计算的值发生变化时才会触发渲染 watcher 重新渲染，本质上是一种优化。 
 
+computed 本质是一个惰性求值的观察者。computed 内部实现了一个惰性的 watcher，也就是 computed watcher，computed watcher 不会立刻求值，同时持有一个 dep 实例。其内部通过 this.dirty 属性标记计算属性是否需要重新求值。当 computed 的依赖状态发生改变时，就会通知这个惰性的 watcher，computed watcher 通过 this.dep.subs.length 判断有没有订阅者，有的话会重新计算，然后对比新旧值，如果变化了会重新渲染。没有的话，仅仅把 this.dirty = true。 当计算属性依赖于其他数据时，属性并不会立即重新计算，只有之后其他地方需要读取属性的时候，它才会真正计算，即具备 lazy（懒计算）特性。 Vue 想确保的不仅仅是计算属性依赖的值发生变化，而是当计算属性最终计算的值发生变化时才会触发渲染 watcher 重新渲染，本质上是一种优化。
 
 ## watch
 
@@ -320,3 +320,5 @@ update () {
   }
 }
 ```
+
+计算属性本质上是 computed watcher，而侦听属性本质上是 user watcher。就应用场景而言，计算属性适合用在模板渲染中，某个值是依赖了其它的响应式对象甚至是计算属性计算而来；而侦听属性适用于观测某个值的变化去完成一段复杂的业务逻辑。

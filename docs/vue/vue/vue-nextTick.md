@@ -90,6 +90,7 @@ export function queueWatcher (watcher: Watcher) {
   }
 }
 ```
+
 Watcher 对象并不是立即更新视图，而是被 push 进了一个队列 queue，此时状态处于 waiting 的状态，这时候会继续会有 Watcher 对象被 push 进这个队列 queue，等到下一个 tick 运行时，这些 Watcher 对象才会被遍历取出，更新视图。同时，id 重复的 Watcher 不会被多次加入到 queue 中去，因为在最终渲染时，我们只需要关心数据的最终结果。
 
 ### nextTick
@@ -205,13 +206,17 @@ export function nextTick (cb?: Function, ctx?: Object) {
 
 ```
 
+`next-tick.js` 申明了 `microTimerFunc` 和 `macroTimerFunc` 2 个变量，它们分别对应的是 `micro task` 的函数和 `macro task` 的函数。对于 `macro task` 的实现，优先检测是否支持原生 `setImmediate`，这是一个高版本 IE 和 Edge 才支持的特性，不支持的话再去检测是否支持原生的 `MessageChannel`，如果也不支持的话就会降级为 `setTimeout 0`；而对于 `micro task` 的实现，则检测浏览器是否原生支持 `Promise`，不支持的话直接指向 `macro task` 的实现。
+
+`next-tick.js` 还对外暴露了 `withMacroTask` 函数，它是对函数做一层包装，确保函数执行过程中对数据任意的修改，触发变化执行 `nextTick` 的时候强制走 `macroTimerFunc`。比如对于一些 DOM 交互事件，如 `v-on` 绑定的事件回调函数的处理，会强制走 `macro task`。
+
 ::: tip 注意
+
 - JS 的 event loop 执行时会区分 task(宏任务) 和 microtask(微任务)，引擎在每个 宏任务 执行完毕，从队列中取下一个 宏任务 来执行之前，会先执行完所有 微任务 队列中的 微任务。
 
 - setTimeout 回调会被分配到一个新的 宏任务 中执行，**而 Promise 的 resolve、MutationObserver 的回调都会被安排到一个新的 微任务 中执行**，会比 setTimeout 产生的 宏任务 先执行。
 
 - 要创建一个新的 微任务，优先使用 Promise，如果浏览器不支持，再尝试 MutationObserver。实在不行，再尝试 setImmediate 和 setTimeout 创建 task 宏任务了。
-
 
 为啥要用 microtask？
 
@@ -306,6 +311,18 @@ function flushSchedulerQueue () {
 }
 ```
 
+综上，据的变化到 DOM 的重新渲染是一个异步过程，发生在下一个 tick。这就是我们平时在开发的过程中，比如从服务端接口去获取数据的时候，数据做了修改，如果我们的某些方法去依赖了数据修改后的 DOM 变化，我们就必须在 nextTick 后执行。
+
+```js
+// 伪代码
+getData(res).then(()=>{
+  this.xxx = res.data
+  this.$nextTick(() => {
+    // 这里我们可以获取变化后的 DOM
+  })
+})
+```
+
 ## 为什么要异步更新视图
 
 有这么一种场景：
@@ -317,6 +334,7 @@ function flushSchedulerQueue () {
   </div>
 </template>
 ```
+
 ```js
 export default {
     data () {
@@ -335,7 +353,6 @@ export default {
 每次 `++` 时，都会根据响应式触发 `setter -> Dep -> Watcher -> update -> patch`。 如果这时候没有异步更新视图，那么每次 `++` 都会直接操作 DOM 更新视图，这是非常消耗性能的。 所以 Vue 实现了一个 `queue队列（queueWatcher）`，在下一个 tick 的时候会统一执行 queue 中 Watcher 的 run。同时，拥有相同 id 的 Watcher 不会被重复加入到该 queue 中去，所以不会执行 1000 次 Watcher 的 run。最终更新视图只会直接将 test 对应的 DOM 的 0 变成 1000。 **保证更新视图操作 DOM 的动作是在当前栈执行完以后下一个 tick 的时候调用，大大优化了性能**。只要让 nextTick 里的代码放在 UI Render 步骤后执行，就能访问到更新后的 DOM。
 
 Vue 就是这样的思路，并不是用 MutationObserver 进行 DOM 变动监听，而是用队列控制的方式达到目的。那么 Vue 又是如何做到队列控制的呢？我们可以很自然地想到 setTimtout，把 nextTick 要执行的代码当作下一个 task 放入队列末尾。
-
 
 ## 降级策略
 

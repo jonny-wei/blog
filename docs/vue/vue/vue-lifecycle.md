@@ -18,7 +18,6 @@ new Vue() --- init ---> $mount
 
 template --- compiler(parse,optimize,generate) ---> render 函数(VNode)
 
-
 模板编译通过 Compiler 完成，compiler 可以分成 parse、optimize 与 generate 三个阶段，最终得到 render function。
 
 #### Parse 解析
@@ -35,7 +34,6 @@ Generate 是将 AST 转化成 render function 字符串的过程，得到结果�
 
 在经历过 Parse、Optimize 与 Generate 这三个阶段之后，组件中就会得到用于渲染 VNode 所需的 render 函数了。
 
-
 ### 响应式系统
 
 在 init 过程中通过 `Object.defineProperty` 对响应式数据的 getter 和 setter 进行绑定，它使得当被设置的对象被读取的时候会执行 getter 函数，而在当被赋值的时候会执行 setter 函数。
@@ -43,7 +41,6 @@ Generate 是将 AST 转化成 render function 字符串的过程，得到结果�
 当 render 函数被渲染的时候，因为会读取所需对象的值，所以会触发 getter 函数进行依赖收集，依赖收集的目的是将观察者 Watcher 对象存放到当前闭包中的订阅者 Dep 的 subs 中。
 
 在修改对象的值时候，会触发 setter，setter 通知之前依赖收集得到的 Dep 中的每个 Watcher，告诉它们自己的值改变了，需要重新渲染视图。这时候这些 Watcher 就会开始调用 update 来更新视图，当然这中间还有一个 patch 过程以及使用队列来异步更新的策略。
-
 
 ### 更新视图
 
@@ -74,6 +71,50 @@ Vue实例的生命周期大致可分为4个阶段：
 - 挂载阶段：将实例挂载到指定的 DOM 上，即将模板渲染到真实 DOM 中；
 - 销毁阶段：将实例自身从父组件中删除，并取消依赖追踪及事件监听器；
 
+### create
+
+实例化 Vue 阶段。
+
+在谈到 Vue 的生命周期的时候，我们首先需要创建一个实例，也就是在 new Vue() 对象过程中，首先执行了 init 函数（init 是 Vue 构造函数内部默认执行的），为当前实例完成 基础配置，包括定义 Vue 构造函数上的 静态方法 以及相关的 生命周期钩子函数。
+
+在 beforeCreate 和 created 的钩子调用是在 initState 前后，该函数作用是初始化 props、data、methods、computed、watch 等属性，因此 beforeCreated 的钩子函数也就无法获取到 props 和 data 等定义的值，也不能调用 methods 中定义的函数。
+
+在这俩个钩子函数执行的时候，并没有渲染 DOM，所以我们也不能够访问 DOM，一般来说，如果组件在加载的时候需要和后端有交互，放在这俩个钩子函数执行都可以，如果是需要访问 props、data 等数据的话，就需要使用 created 钩子函数。
+
+完成配置对象的初始化后，会调用 created 生命周期钩子函数，这个时候 Vue 对象实例化完毕，DOM 树依旧未生成，页面还是一片空白，但是，实例已完成以下配置：数据观察（data observer）、属性和方法运算 以及 watch / event 事件回调。此时，该钩子函数适合 处理网络请求 等逻辑操作。
+
+如果在实例化配置中存在 el 选项，实例将立即进入 编译阶段，否则，则停止编译，也就意味着停止了生命周期，知道在该 Vue 实例上调用 vm.$mount(el)。
+
+编译阶段，如果存在 render 选项，则 template 将被忽略，因为 render 渲染函数是字符串模版的代替方案。如果存在 template 选项，则会通过 compiler 编译成 render function（渲染函数），预编译是在 Webpack 等构建工具中完成的，而运行时编译则是在运行时编译的。如果既无 render 选项也无 template 选项，则查找 el 选项的 outerHTML 作为 template 并编译成 render function。
+
+::: tip 优先级
+Render 选项 > template 选项 > outerHTML
+:::
+
+### mount
+
+开始挂载前，会先执行钩子函数 beforeMount，编译 template 里的内容并在虚拟 DOM 中执行，页面上依旧没有任何展示。
+
+接着，Vue 内部将给 vm 实例对象添加 $el 属性，并使用编译好的 HTML 内容替换 el 选项指向的 DOM 对象或者选择对应的 HTML 标签里面的内容。当真实 DOM 挂载完毕后，执行 mounted 钩子函数。此时，该钩子函数适合用于 访问真实 DOM 数据坐标信息。
+
+::: tip 注意
+created 阶段的网络请求与 mounted 请求的区别：前者页面视图未出现，如果请求信息过多，页面会长时间处于白屏状态。
+:::
+
+### update
+
+当数据产生变化，会进入更新周期函数并先调用 beforeUpdate，这个钩子中可进一步修改 $vm.data，但是不会触发附加的重渲染过程。然后经过新旧对比产生新的 VirtualDOM 并进行重渲染，更新完成后将调用 updated 钩子函数。
+
+当 updated 钩子调用时，组件 DOM 的 data 已经更新，所以你现在可以执行依赖于 DOM 的操作。但是不要在此时修改 data，否则会再次触发 beforeUpdate、updated 这个两个钩子，导致进入死循环。
+
+### destroy
+
+beforeDestroy 钩子函数在实例销毁钱调用，在这步，实例仍然可用。
+
+beforeDestroyed 钩子函数在 Vue 实例销毁后调用。调用后，Vue 实例指示的所有东西都会解绑定，所有的事件监听器会被移除，所有的子实例也会被销毁。
+
+### 小结
+
 | 生命周期 | 描述   | 最佳实践|
 | :----- | :---- | :----|
 | beforeCreate | 组件实例被创建之初，组件的属性生效之前。在实例初始化之后，数据观测 (data observer) 和 event/watcher 事件配置之前被调用 | 常用于初始化非响应式变量 |
@@ -86,7 +127,6 @@ Vue实例的生命周期大致可分为4个阶段：
 | deactivated  | keep-alive 专属，组件被销毁时调用。该钩子在服务器端渲染期间不被调用。  |
 | beforeDestory | 实例销毁之前调用。在这一步，**实例仍然完全可用**。该钩子在服务器端渲染期间不被调用。| 常用于销毁定时器、解绑全局事件、销毁插件对象等操作|
 | destoryed | 实例销毁后调用。该钩子被调用后，对应 Vue 实例的所有指令都被解绑，所有的事件监听器被移除，所有的子实例也都被销毁。该钩子在服务器端渲染期间不被调用。 |
-
 
 ### errorCaptured
 
@@ -156,6 +196,7 @@ mounted() {
   this.$emit("mounted");
 }
 ```
+
 以上需要手动通过 $emit 触发父组件的事件，更简单的方式可以在父组件引用子组件时通过 @hook 来监听即可，如下所示：
 
 ```js
@@ -175,9 +216,10 @@ mounted(){
 // 子组件触发 mounted 钩子函数 ...
 // 父组件监听到 mounted 钩子函数 ...     
 ```
+
 当然 @hook 方法不仅仅是可以监听 mounted，其它的生命周期事件，例如：created，updated 等都可以监听。
 
-###  Q6. v-model 的原理
+### Q6. v-model 的原理
 
 我们在 vue 项目中主要使用 v-model 指令在表单 input、textarea、select 等元素上创建双向数据绑定，我们知道 v-model 本质上不过是语法糖，v-model 在内部为不同的输入元素使用不同的属性并抛出不同的事件：
 

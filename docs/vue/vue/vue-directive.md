@@ -9,7 +9,8 @@ Vue对于自定义指令定义对象提供了几个钩子函数，这几个钩�
 - update：所在组件的 VNode 更新时调用，但是可能发生在其子 VNode 更新之前。
 - componentUpdated：指令所在组件的 VNode 及其子 VNode 全部更新后调用。
 - unbind：只调用一次，指令与元素解绑时调用。
-- 
+-
+
 有了每个状态的钩子函数，这样我们就可以让指令在不同状态下做不同的事情。
 
 ```js
@@ -68,3 +69,98 @@ export default {
 ## 原理分析
 
 我们知道如果一个 DOM 节点上绑定了指令，那么在这个 DOM 节点所对应虚拟 DOM 节点进行渲染更新的时候，不但会处理节点渲染更新的逻辑，还会处理节点上指令的相关逻辑。具体处理指令逻辑的时机是在虚拟 DOM 渲染更新的 create、update、destory 阶段。Vue 对于自定义指令定义对象提供了几个钩子函数，这几个钩子函数分别对应着指令的几种状态，我们可以根据实际的需求将指令逻辑写在合适的指令状态钩子函数中，比如，我们想让指令所绑定的元素一插入到 DOM 中就执行指令逻辑，那我们就应该把指令逻辑写在指令的 inserted 钩子函数中。在 updateDirectives 函数中就是对比新旧两份 VNode 上的指令列表，通过对比的异同点从而执行指令不同的钩子函数，让指令生效。最后，一句话概括就是：所谓让指令生效，其实就是在合适的时机执行定义指令时所设置的钩子函数。
+
+### 指令钩子函数
+
+Vue对于自定义指令定义对象提供了几个钩子函数，这几个钩子函数分别对应着指令的几种状态，一个指令从第一次被绑定到元素上到最终与被绑定的元素解绑，它会经过以下几种状态：
+
+- bind：只调用一次，指令第一次绑定到元素时调用。在这里可以进行一次性的初始化设置。
+- inserted：被绑定元素插入父节点时调用 (仅保证父节点存在，但不一定已被插入文档中)。
+- update：所在组件的 VNode 更新时调用，但是可能发生在其子 VNode 更新之前。
+- componentUpdated：指令所在组件的 VNode 及其子 VNode 全部更新后调用。
+- unbind：只调用一次，指令与元素解绑时调用。
+  
+有了每个状态的钩子函数，这样我们就可以让指令在不同状态下做不同的事情。
+
+### 指令何时生效
+
+虚拟 DOM 渲染更新的时候会触发 `create、update、destory` 这三个钩子函数，从而就会执行 `updateDirectives` 函数来处理指令的相关逻辑，执行指令函数，让指令生效。
+
+```js
+function updateDirectives (oldVnode: VNodeWithData, vnode: VNodeWithData) {
+  if (oldVnode.data.directives || vnode.data.directives) {
+    _update(oldVnode, vnode)
+  }
+}
+
+function _update (oldVnode, vnode) {
+  const isCreate = oldVnode === emptyNode
+  const isDestroy = vnode === emptyNode
+  const oldDirs = normalizeDirectives(oldVnode.data.directives, oldVnode.context)
+  const newDirs = normalizeDirectives(vnode.data.directives, vnode.context)
+
+  const dirsWithInsert = []
+  const dirsWithPostpatch = []
+
+  let key, oldDir, dir
+  for (key in newDirs) {
+    oldDir = oldDirs[key]
+    dir = newDirs[key]
+    if (!oldDir) {
+      // new directive, bind
+      callHook(dir, 'bind', vnode, oldVnode)
+      if (dir.def && dir.def.inserted) {
+        dirsWithInsert.push(dir)
+      }
+    } else {
+      // existing directive, update
+      dir.oldValue = oldDir.value
+      dir.oldArg = oldDir.arg
+      callHook(dir, 'update', vnode, oldVnode)
+      if (dir.def && dir.def.componentUpdated) {
+        dirsWithPostpatch.push(dir)
+      }
+    }
+  }
+
+  if (dirsWithInsert.length) {
+    const callInsert = () => {
+      for (let i = 0; i < dirsWithInsert.length; i++) {
+        callHook(dirsWithInsert[i], 'inserted', vnode, oldVnode)
+      }
+    }
+    if (isCreate) {
+      mergeVNodeHook(vnode, 'insert', callInsert)
+    } else {
+      callInsert()
+    }
+  }
+
+  if (dirsWithPostpatch.length) {
+    mergeVNodeHook(vnode, 'postpatch', () => {
+      for (let i = 0; i < dirsWithPostpatch.length; i++) {
+        callHook(dirsWithPostpatch[i], 'componentUpdated', vnode, oldVnode)
+      }
+    })
+  }
+
+  if (!isCreate) {
+    for (key in oldDirs) {
+      if (!newDirs[key]) {
+        // no longer present, unbind
+        callHook(oldDirs[key], 'unbind', oldVnode, oldVnode, isDestroy)
+      }
+    }
+  }
+}
+```
+
+- isCreate: 判断当前节点 vnode 对应的旧节点 oldVnode 是不是一个空节点，如果是的话，表明当前节点是一个新创建的节点。
+- isDestroy: 判断当前节点 vnode 是不是一个空节点，如果是的话，表明当前节点对应的旧节点将要被销毁。
+- oldDirs: 旧的指令集合，即 oldVnode 中保存的指令。
+- newDirs: 新的指令集合，即 vnode 中保存的指令。
+- dirsWithInsert: 保存需要触发 inserted 指令钩子函数的指令列表。
+- dirsWithPostpatch: 保存需要触发 componentUpdated 指令钩子函数的指令列表。
+
+另外，你可能还看到了在定义新旧指令集合的变量中调用了 normalizeDirectives 函数，其实该函数是用来模板中使用到的指令从存放指令的地方取出来，并将其格式进行统一化。
+

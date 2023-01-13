@@ -71,7 +71,6 @@ patchVnode 过程中创建真实 DOM 时会进行事件注册的相关钩子处�
 
 vue 在处理大列表绑定事件的时候，是有一定的性能问题的，框架内部没有把事件提到父节点上来做事件委托，唯一优化的是列表之间绑定的事件指向的函数都是同一个引用，且在 DOM 销毁的时候能主动销毁事件，所以能负载一定的数据量，如果业务里的确存在非常大量的数据，建议还是自己在父节点上进行事件绑定，或者改变交互，进行分页。
 
-
 ## 原生 DOM 事件
 
 在 patch 过程中的创建阶段和更新阶段都会执行 updateDOMListeners，首先获取 vnode.data.on，就是 data 中对应的事件对象，target 是当前 vnode 对于的 DOM 对象，normalizeEvents 主要是对 v-model 相关的处理，接着调用 updateListeners(on, oldOn, add, remove, vnode.context) 方法。updateListeners 的逻辑很简单，遍历 on 去添加事件监听，遍历 oldOn 去移除事件监听，关于监听和移除事件的方法都是外部传入的，因为它既处理原生 DOM 事件的添加删除，也处理自定义事件的添加删除。add 和 remove 的逻辑很简单，就是实际上调用原生 addEventListener 和 removeEventListener，并根据参数传递一些配置，注意这里的 hanlder 会用 withMacroTask(hanlder) 包裹一下，实际上就是强制在 DOM 事件的回调函数执行期间如果修改了数据，那么这些数据更改推入的队列会被当做 macroTask 在 nextTick 后执行
@@ -93,9 +92,9 @@ export function eventsMixin (Vue: Class<Component>) {
 }
 ```
 
-### \$on
+### `$on`
 
-vm.\$on( event, callback )
+`vm.$on( event, callback )`
 
 监听当前实例上的自定义事件。事件可以由 vm.\$emit 触发。回调函数会接收所有传入事件触发函数的额外参数。
 
@@ -143,9 +142,9 @@ Vue.prototype.$on = function(
 };
 ```
 
-### \$emit
+### `$emit`
 
-vm.\$emit( eventName, [...args] )
+`vm.$emit( eventName, [...args] )`
 
 触发当前实例上的事件。附加参数都会传给监听器回调。
 
@@ -181,9 +180,9 @@ Vue.prototype.$emit = function(event: string): Component {
 };
 ```
 
-### \$off
+### `$off`
 
-vm.\$off( [event, callback] )
+`vm.$off( [event, callback] )`
 
 移除自定义事件监听器。
 
@@ -234,9 +233,9 @@ Vue.prototype.$off = function(
 };
 ```
 
-### $once
+### `$once`
 
-vm.$once( event, callback )
+`vm.$once( event, callback )`
 
 监听一个自定义事件，但是只触发一次。一旦触发之后，监听器就会被移除。
 
