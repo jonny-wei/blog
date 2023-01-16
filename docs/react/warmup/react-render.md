@@ -213,12 +213,6 @@ useCallback 接受二个参数，第一个参数就是需要缓存的函数，�
 
 有的时候，把控制渲染，性能调优交给 React 组件本身处理显然是靠不住的，React 需要提供给使用者一种更灵活配置的自定义渲染方案，使用者可以自己决定是否更新当前组件，shouldComponentUpdate 就能达到这种效果
 
-## 问题
-
-### Q1. useCallback 和 useMemo 有什么区别？
-
-useCallback 第一个参数就是缓存的内容，useMemo 需要执行第一个函数，返回值为缓存的内容，比起 useCallback ， useMemo 更像是缓存了一段逻辑，或者说执行这段逻辑获取的结果。那么对于缓存 element 用 useCallback 可以吗，答案是当然可以了。
-
 ```js
 class Index extends React.Component{ //子组件
     state={
@@ -320,3 +314,783 @@ memo 主要逻辑是
 - 对于表单控件，最好办法单独抽离组件，独自管理自己的数据层，这样可以让 state 改变，波及的范围更小。
 - 如果需要更精致化渲染，可以配合 immutable.js 。
 - 组件颗粒化，配合 memo 等 api ，可以制定私有化的渲染空间。
+
+## 异步渲染
+
+Suspense 是 React 提出的一种同步的代码来实现异步操作的方案。Suspense 让组件‘等待’异步操作，异步请求结束后在进行组件的渲染，也就是所谓的异步渲染
+
+Suspense 是组件，有一个 fallback 属性，用来代替当 Suspense 处于 loading 状态下渲染的内容，Suspense 的 children 就是异步组件。多个异步组件可以用 Suspense 嵌套使用。
+
+```js
+// 子组件
+function UserInfo() {
+  // 获取用户数据信息，然后再渲染组件。
+  const user = getUserInfo();
+  return <h1>{user.name}</h1>;
+}
+// 父组件
+export default function Index(){
+    return <Suspense fallback={<h1>Loading...</h1>}>
+        <UserInfo/>
+    </Suspense>
+}
+```
+
+Suspense 包裹异步渲染组件 UserInfo ，当 UserInfo 处于数据加载状态下，展示 Suspense 中 fallback 的内容。异步渲染的 UserInfo 组件可以直接通过 getUserInfo 请求数据，直接用数据 user 进行渲染，很显然现在是做不到的。现在的异步请求方式比较繁琐，主要是是通过类组件 componentDidMount 或者函数组件 useEffect 进行数据交互，获得数据后通过调用 setState 或 useState 改变 state 触发视图的更新。
+
+- 统模式：挂载组件-> 请求数据 -> 再渲染组件。
+- 异步模式：请求数据-> 渲染组件。
+
+那么异步渲染相比传统数据交互相比好处就是：
+
+- 不再需要 componentDidMount 或 useEffect 配合做数据交互，也不会因为数据交互后，改变 state 而产生的二次更新作用。
+- 代码逻辑更简单，清晰。
+
+## 动态加载（懒加载）
+
+现在的 Suspense 配合 React.lazy 可以实现动态加载功能。
+
+```js
+const LazyComponent = React.lazy(()=>import('./text'))
+```
+
+React.lazy 接受一个函数，这个函数需要动态调用 import() 。它必须返回一个 Promise ，该 Promise 需要 resolve 一个 default export 的 React 组件。
+
+```js
+const LazyComponent = React.lazy(() => import('./test.js'))
+
+export default function Index(){
+   return <Suspense fallback={<div>loading...</div>} >
+       <LazyComponent />
+   </Suspense>
+}
+```
+
+用 React.lazy 动态引入 test.js 里面的组件，配合 Suspense 实现动态加载组件效果。这样很利于代码分割，不会让初始化的时候加载大量的文件。
+
+### React.lazy 和 Suspense 实现动态加载原理
+
+整个 render 过程都是同步执行一气呵成的，但是在 Suspense 异步组件情况下允许调用 Render => 发现异步请求 => 悬停，等待异步请求完毕 => 再次渲染展示数据。
+
+#### Suspense 原理
+
+Suspense 在执行内部可以通过 try{}catch{} 方式捕获异常，这个异常通常是一个 Promise ，可以在这个 Promise 中进行数据请求工作，Suspense 内部会处理这个 Promise ，Promise 结束后，Suspense 会再一次重新 render 把数据渲染出来，达到异步渲染的效果。
+
+![异步渲染1.png](/images/react/异步渲染1.png)
+
+#### React.lazy 原理
+
+lazy 内部模拟一个 promiseA 规范场景。完全可以理解 React.lazy 用 Promise 模拟了一个请求数据的过程，但是请求的结果不是数据，而是一个动态的组件。下一次渲染就直接渲染这个组件，所以是 React.lazy 利用 Suspense 接收 Promise ，执行 Promise ，然后再渲染这个特性做到动态加载的。
+
+```js
+function lazy(ctor){
+    return {
+         $$typeof: REACT_LAZY_TYPE,
+         _payload:{
+            _status: -1,  //初始化状态
+            _result: ctor,
+         },
+         _init:function(payload){
+             if(payload._status===-1){ /* 第一次执行会走这里  */
+                const ctor = payload._result;
+                const thenable = ctor();
+                payload._status = Pending;
+                payload._result = thenable;
+                thenable.then((moduleObject)=>{
+                    const defaultExport = moduleObject.default;
+                    resolved._status = Resolved; // 1 成功状态
+                    resolved._result = defaultExport;/* defaultExport 为我们动态加载的组件本身  */ 
+                })
+             }
+            if(payload._status === Resolved){ // 成功状态
+                return payload._result;
+            }
+            else {  //第一次会抛出Promise异常给Suspense
+                throw payload._result; 
+            }
+         }
+    }
+}
+```
+
+React.lazy 包裹的组件会标记 REACT_LAZY_TYPE 类型的 element，在调和阶段会变成 LazyComponent 类型的 fiber ，React 对 LazyComponent 会有单独的处理逻辑：
+
+- 第一次渲染首先会执行 init 方法，里面会执行 lazy 的第一个函数，得到一个Promise，绑定 Promise.then 成功回调，回调里得到将要渲染组件 defaultExport ，这里要注意的是，如上面的函数当第二个 if 判断的时候，因为此时状态不是 Resolved ，所以会走 else ，抛出异常 Promise，抛出异常会让当前渲染终止。
+
+- 这个异常 Promise 会被 Suspense 捕获到，Suspense 会处理 Promise ，Promise 执行成功回调得到 defaultExport（将想要渲染组件），然后 Susponse 发起第二次渲染，第二次 init 方法已经是 Resolved 成功状态，那么直接返回 result 也就是真正渲染的组件。这时候就可以正常渲染组件了。
+
+![异步渲染2.png](/images/react/异步渲染2.png)
+
+## 渲染错误边界
+
+React 组件渲染过程如果有一个环节出现问题，就会导致整个组件渲染失败，那么整个组件的 UI 层都会显示不出来。如果越靠近 APP 应用的根组件，渲染过程中出现问题造成的影响就越大，有可能直接造成白屏的情况。举个例子：
+
+```js
+function ErrorTest(){
+    return 
+}
+function Test(){
+    return <div>let us learn React!</div>
+}
+
+ class Index extends React.Component{ 
+    componentDidCatch(...arg){
+       console.log(arg)
+    }
+   render(){  
+      return <div>
+          <ErrorTest />
+          <div> hello, my name is alien! </div>
+          <Test />
+      </div>
+   }
+}
+```
+
+造成错误，由于 ErrorTest 不是一个真正的组件但是却用来渲染，结果会造成整个 Index 组件渲染异常，Test 也会受到牵连，UI 都不能正常显示。
+
+为了防止如上的渲染异常情况 React 增加了 componentDidCatch 和 static getDerivedStateFromError() 两个额外的生命周期，去挽救由于渲染阶段出现问题造成 UI 界面无法显示的情况。
+
+### componentDidCatch
+
+componentDidCatch 可以捕获异常，它接受两个参数：
+
+1. error —— 抛出的错误。
+2. info —— 带有 componentStack key 的对象，其中包含有关组件引发错误的栈信息。componentDidCatch 中可以再次触发 setState，来降级UI渲染，componentDidCatch() 会在commit阶段被调用，因此允许执行副作用。
+
+```js
+ class Index extends React.Component{
+   state={
+       hasError:false
+   }  
+   componentDidCatch(...arg){
+       uploadErrorLog(arg)  /* 上传错误日志 */
+       this.setState({  /* 降级UI */
+           hasError:true
+       })
+   }
+   render(){  
+      const { hasError } =this.state
+      return <div>
+          {  hasError ? <div>组件出现错误</div> : <ErrorTest />  }
+          <div> hello, my name is alien! </div>
+          <Test />
+      </div>
+   }
+}
+```
+
+componentDidCatch 作用：
+
+1. 可以调用 setState 促使组件渲染，并做一些错误拦截功能。
+2. 监控组件，发生错误，上报错误日志。
+
+### getDerivedStateFromError
+
+React更期望用 getDerivedStateFromError 代替 componentDidCatch 用于处理渲染异常的情况。getDerivedStateFromError 是静态方法，内部不能调用 setState。getDerivedStateFromError 返回的值可以合并到 state，作为渲染使用。用 getDerivedStateFromError 解决如上的情况。
+
+```js
+ class Index extends React.Component{
+   state={
+       hasError:false
+   }  
+   static getDerivedStateFromError(){
+       return { hasError:true }
+   }
+   render(){  
+      /* 如上 */
+   }
+}
+```
+
+如果存在 getDerivedStateFromError 生命周期钩子，那么将不需要 componentDidCatch 生命周期再降级 ui。
+
+## 从 diff children 看 key 的合理使用
+
+大部分优化环节 React 都自己在内部处理了。但是有一种情况也值得开发者注意，那就是列表中 key 的使用。合理的使用 key 有助于能精准的找到用于新节点复用的老节点。 React 是如何 diff children 的呢。
+
+首先 React 在一次更新中当发现通过 render 得到的 children 如果是一个数组的话。就会调用 reconcileChildrenArray 来调和子代 fiber ，整个对比的流程就是在这个函数中进行的。
+
+### diff children 流程
+
+#### 1. 遍历新 children ，复用 oldFiber
+
+```js
+// react-reconciler/src/ReactChildFiber.js
+function reconcileChildrenArray(){
+    /* 第一步  */
+    for (; oldFiber !== null && newIdx < newChildren.length; newIdx++) {  
+        if (oldFiber.index > newIdx) {
+            nextOldFiber = oldFiber;
+            oldFiber = null;
+        } else {
+            nextOldFiber = oldFiber.sibling;
+        }
+        const newFiber = updateSlot(returnFiber,oldFiber,newChildren[newIdx],expirationTime,);
+        if (newFiber === null) { break }
+        // ..一些其他逻辑
+        }  
+        if (shouldTrackSideEffects) {  // shouldTrackSideEffects 为更新流程。
+            if (oldFiber && newFiber.alternate === null) { /* 找到了与新节点对应的fiber，但是不能复用，那么直接删除老节点 */
+                deleteChild(returnFiber, oldFiber);
+            }
+        }
+    }
+}
+```
+
+- 第一步对于 React.createElement 产生新的 child 组成的数组，首先会遍历数组，因为 fiber 对于同一级兄弟节点是用 sibling 指针指向，所以在遍历children 遍历，sibling 指针同时移动，找到与 child 对应的 oldFiber 。
+- 然后通过调用 updateSlot ，updateSlot 内部会判断当前的 tag 和 key 是否匹配，如果匹配复用老 fiber 形成新的 fiber ，如果不匹配，返回 null ，此时 newFiber 等于 null 。
+- 如果是处于更新流程，找到与新节点对应的老 fiber ，但是不能复用 alternate === null ，那么会删除老 fiber 。
+
+#### 2. 统一删除 oldfiber
+
+```js
+if (newIdx === newChildren.length) {
+    deleteRemainingChildren(returnFiber, oldFiber);
+    return resultingFirstChild;
+}
+```
+
+第二步适用于以下情况，当第一步结束完 newIdx === newChildren.length 此时证明所有 newChild 已经全部被遍历完，那么剩下没有遍历 oldFiber 也就没有用了，那么调用 deleteRemainingChildren 统一删除剩余 oldFiber 。
+
+**节点删除**:
+
+oldChild: A B C D
+newChild: A B A , B 经过第一步遍历复制完成，那么 newChild 遍历完成，此时 C D 已经没有用了，那么统一删除 C D。
+
+#### 3. 统一创建 newFiber
+
+```js
+if(oldFiber === null){
+   for (; newIdx < newChildren.length; newIdx++) {
+       const newFiber = createChild(returnFiber,newChildren[newIdx],expirationTime,)
+       // ...
+   }
+}
+```
+
+**节点增加**
+
+oldChild: A B
+newChild: A B C D A B 经过第一步遍历复制完，oldFiber 没有可以复用的了，那么直接创建 C D
+
+#### 4. 针对发生移动和更复杂的情况
+
+```js
+const existingChildren = mapRemainingChildren(returnFiber, oldFiber);
+for (; newIdx < newChildren.length; newIdx++) {
+    const newFiber = updateFromMap(existingChildren,returnFiber)
+    /* 从mapRemainingChildren删掉已经复用oldFiber */
+}
+```
+
+- mapRemainingChildren 返回一个 map ，map 里存放剩余的老的 fiber 和对应的 key (或 index )的映射关系。
+- 接下来遍历剩下没有处理的 Children ，通过 updateFromMap ，判断 mapRemainingChildren 中有没有可以复用 oldFiber ，如果有，那么复用，如果没有，新创建一个 newFiber 。
+- 复用的 oldFiber 会从 mapRemainingChildren 删掉。
+
+**节点位置改变**:
+
+oldChild: A B C D
+newChild: A B D C 如上 A B 在第一步被有效复用，第二步和第三步不符合，直接进行第四步，C D 被完全复用，existingChildren 为空。
+
+#### 5. 删除剩余没有复用的 oldFiber
+
+```js
+if (shouldTrackSideEffects) {
+    /* 移除没有复用到的oldFiber */
+    existingChildren.forEach(child => deleteChild(returnFiber, child));
+}
+```
+
+最后一步，对于没有复用的 oldFiber ，统一删除处理。
+
+**复杂情况(删除 + 新增 + 移动)**
+
+oldChild: A B C D
+newChild: A E D B
+首先 A 节点，在第一步被复用，接下来直接到第四步，遍历 newChild ，E被创建，D B 从 existingChildren 中被复用，existingChildren 还剩一个 C 在第五步会删除 C ，完成整个流程。
+
+::: tip 关于 dff Child 思考和 key 的使用
+
+- React diffChild 时间复杂度 O(n^3) 优化到 O(n)。
+- React key 最好选择唯一性的 id。如果选择 Index 作为 key ，如果元素发生移动，那么从移动节点开始，接下来的 fiber 都不能做得到合理的复用。 index 拼接其他字段也会造成相同的效果。
+:::
+
+## 模拟异步组件功能
+
+React.lazy + Susponse 来完全模拟实现一个异步组件。
+
+### 实现效果
+
+- 异步请求数据，请求完数据再挂载组件。没有加载完数据显示 loading 效果。
+- 可量化生产。
+
+### 主要思路
+
+可以使用 React.lazy 实现动态加载，那么可以先请求数据，然后再加载组件，这时候以 props 形式将数据传递给目标组件，实现异步效果。
+
+### 模拟实现
+
+```js
+/**
+ * 
+ * @param {*} Component  需要异步数据的component 
+ * @param {*} api        请求数据接口,返回Promise，可以再then中获取与后端交互的数据
+ * @returns 
+ */
+function AysncComponent(Component,api){
+    const AysncComponentPromise = () => new Promise(async (resolve)=>{
+          const data = await api()
+          resolve({
+              default: (props) => <Component rdata={data} { ...props}  />
+          })
+    })
+    return React.lazy(AysncComponentPromise)
+}
+```
+
+- 用 AysncComponent 作为一个 HOC 包装组件，接受两个参数，第一个参数为当前组件，第二个参数为请求数据的 api 。
+- 声明一个函数给 React.lazy 作为回调函数，React.lazy 要求这个函数必须是返回一个 Promise 。在 Promise 里面通过调用 api 请求数据，然后根据返回来的数据 rdata 渲染组件，别忘了接受并传递 props 。
+
+### 使用
+
+```js
+/* 数据模拟 */
+const getData=()=>{
+    return new Promise((resolve)=>{
+        //模拟异步
+        setTimeout(() => {
+             resolve({
+                 name:'alien',
+                 say:'let us learn React!'
+             })
+        }, 1000)
+    })
+}
+/* 测试异步组件 */
+function Test({ rdata  , age}){
+    const { name , say } = rdata
+    console.log('组件渲染')
+    return <div>
+        <div> hello , my name is { name } </div>
+        <div>age : { age } </div>
+        <div> i want to say { say } </div>
+    </div>
+}
+/* 父组件 */
+export default class Index extends React.Component{
+    LazyTest = AysncComponent(Test,getData) /* 需要每一次在组件内部声明，保证每次父组件挂载，都会重新请求数据 ，防止内存泄漏。 */
+    render(){
+        const { LazyTest } = this
+        return <div>
+           <Suspense fallback={<div>loading...</div>} >
+              <LazyTest age={18}  />
+          </Suspense>
+        </div>
+    }
+}
+```
+
+### 小结
+
+1. 需要约定好接受数据格式rdata和数据交互形式api。
+2. 因为数据本质是用闭包缓存的，所以绑定需要在在组件内部，这样才能保证每次父组件挂载，都会重新请求数据，另外也防止内存泄漏情况发生。
+3. 数据源更新维护困难。
+
+## 时间分片
+
+时间分片主要解决，初次加载，一次性渲染大量数据造成的卡顿现象。浏览器执 js 速度要比渲染 DOM 速度快的多。
+
+案例实践：一次性加载 20000 个元素块，元素块的位置和颜色是随机的。
+
+**不做任何优化处理的 Demo**：
+
+```js
+// 父组件在 componentDidMount 模拟数据交互，用ref获取真实的DOM元素容器的宽高，渲染列表。
+class Index extends React.Component{
+    state={
+        dataList:[],                  // 数据源列表
+        renderList:[],                // 渲染列表
+        position:{ width:0,height:0 } // 位置信息
+    }
+    box = React.createRef()
+    componentDidMount(){
+        const { offsetHeight , offsetWidth } = this.box.current
+        const originList = new Array(20000).fill(1)
+        this.setState({
+            position: { height:offsetHeight,width:offsetWidth },
+            dataList:originList,
+            renderList:originList,
+        })
+    }
+    render(){
+        const { renderList, position } = this.state
+        return <div className="bigData_index" ref={this.box}  >
+            {
+                renderList.map((item,index)=><Circle  position={ position } key={index}  /> )
+            }
+        </div>
+    }
+}
+/* 控制展示Index */
+export default ()=>{
+    const [show, setShow] = useState(false)
+    const [ btnShow, setBtnShow ] = useState(true)
+    const handleClick=()=>{
+        setBtnShow(false)
+        setTimeout(()=>{ setShow(true) },[])
+    } 
+    return <div>
+        { btnShow &&  <button onClick={handleClick} >show</button> } 
+        { show && <Index />  }
+    </div>
+}
+
+// 子组件接受父组件的位置范围信息。并通过 useMemo 缓存计算出来随机的颜色，位置，并绘制色块。
+/* 获取随机颜色 */
+function getColor(){
+    const r = Math.floor(Math.random()*255);
+    const g = Math.floor(Math.random()*255);
+    const b = Math.floor(Math.random()*255);
+    return 'rgba('+ r +','+ g +','+ b +',0.8)';
+ }
+/* 获取随机位置 */
+function getPostion(position){
+     const { width , height } = position
+     return { left: Math.ceil( Math.random() * width ) + 'px',top: Math.ceil(  Math.random() * height ) + 'px'}
+}
+/* 色块组件 */
+function Circle({ position }){
+    const style = React.useMemo(()=>{ //用useMemo缓存，计算出来的随机位置和色值。
+         return {  
+            background : getColor(),
+            ...getPostion(position)
+         }
+    },[])
+    return <div style={style} className="circle" />
+}
+```
+
+不做任何渲染优化，一次性加载 20000 个元素块速度特别慢，而且是一次性突然出现，体验不好，所以接下来要用时间分片做性能优化：
+
+```js
+// TODO: 改造方案
+class Index extends React.Component{
+    state={
+        dataList:[],    //数据源列表
+        renderList:[],  //渲染列表
+        position:{ width:0,height:0 }, // 位置信息
+        eachRenderNum:500,  // 每次渲染数量
+    }
+    box = React.createRef() 
+    componentDidMount(){
+        const { offsetHeight , offsetWidth } = this.box.current
+        const originList = new Array(20000).fill(1)
+        const times = Math.ceil(originList.length / this.state.eachRenderNum) /* 计算需要渲染此次数*/
+        let index = 1
+        this.setState({
+            dataList:originList,
+            position: { height:offsetHeight,width:offsetWidth },
+        },()=>{
+            this.toRenderList(index,times)
+        })
+    }
+    toRenderList=(index,times)=>{
+        if(index > times) return /* 如果渲染完成，那么退出 */
+        const { renderList } = this.state
+        renderList.push(this.renderNewList(index)) /* 通过缓存element把所有渲染完成的list缓存下来，下一次更新，直接跳过渲染 */
+        this.setState({
+            renderList,
+        })
+        requestIdleCallback(()=>{ /* 用 requestIdleCallback 代替 setTimeout 浏览器空闲执行下一批渲染 */
+            this.toRenderList(++index,times)
+        })
+    }
+    renderNewList(index){  /* 得到最新的渲染列表 */
+        const { dataList , position , eachRenderNum } = this.state
+        const list = dataList.slice((index-1) * eachRenderNum , index * eachRenderNum  )
+        return <React.Fragment key={index} >
+            {  
+                list.map((item,index) => <Circle key={index} position={position}  />)
+            }
+        </React.Fragment>
+    }
+    render(){
+         return <div className="bigData_index" ref={this.box}  >
+            { this.state.renderList }
+         </div>
+    }
+}
+```
+
+- 第一步：计算时间片，首先用 eachRenderNum 代表一次渲染多少个，那么除以总数据就能得到渲染多少次。
+- 第二步：开始渲染数据，通过 index > times 判断渲染完成，如果没有渲染完成，那么通过 requestIdleCallback 代替 setTimeout 浏览器空闲执行下一帧渲染。
+- 第三步：通过 renderList 把已经渲染的 element 缓存起来，在前面渲染控制一节讲过，这种方式可以直接跳过下一次的渲染。实际每一次渲染的数量仅仅为 demo 中设置的 500 个。
+
+## 虚拟列表
+
+虚拟列表是一种长列表的解决方案。如果没经过处理，加载完成后数据展示的元素，都显示在页面上，如果伴随着数据量越来越大，会使页面中的 DOM 元素越来越多，即便是像 React 可以良好运用 diff 来复用老节点，但也不能保证大量的 diff 带来的性能开销。所以虚拟列表的出现，就是解决大量 DOM 存在，带来的性能问题。
+
+虚拟列表，就是在长列表滚动过程中，只有视图区域显示的是真实 DOM ，滚动过程中，不断截取视图的有效区域，让人视觉上感觉列表是在滚动。达到无限滚动的效果。
+
+虚拟列表划分可以分为三个区域：视图区 + 缓冲区 + 虚拟区：
+
+- 视图区：视图区就是能够直观看到的列表区，此时的元素都是真实的 DOM 元素。
+- 缓冲区：缓冲区是为了防止用户上滑或者下滑过程中，出现白屏等效果。（缓冲区和视图区为渲染真实的 DOM ）
+- 虚拟区：对于用户看不见的区域（除了缓冲区），剩下的区域，不需要渲染真实的 DOM 元素。虚拟列表就是通过这个方式来减少页面上 DOM 元素的数量。
+
+具体实现思路。
+
+- 通过 useRef 获取元素，缓存变量。
+- useEffect 初始化计算容器的高度。截取初始化列表长度。这里需要 div 占位，撑起滚动条。
+- 通过监听滚动容器的 onScroll 事件，根据 scrollTop 来计算渲染区域向上偏移量, 这里需要注意的是，当用户向下滑动的时候，为了渲染区域，能在可视区域内，可视区域要向上滚动；当用户向上滑动的时候，可视区域要向下滚动。
+- 通过重新计算 end 和 start 来重新渲染列表。
+
+```js
+function VirtualList(){
+   const [ dataList,setDataList ] = React.useState([])  /* 保存数据源 */
+   const [ position , setPosition ] = React.useState([0,0]) /* 截取缓冲区 + 视图区索引 */
+   const scroll = React.useRef(null)  /* 获取scroll元素 */
+   const box = React.useRef(null)     /* 获取元素用于容器高度 */
+   const context = React.useRef(null) /* 用于移动视图区域，形成滑动效果。 */
+   const scrollInfo = React.useRef({ 
+       height:500,     /* 容器高度 */
+       bufferCount:8,  /* 缓冲区个数 */
+       itemHeight:60,  /* 每一个item高度 */
+       renderCount:0,  /* 渲染区个数 */ 
+    }) 
+    React.useEffect(()=>{
+        const height = box.current.offsetHeight
+        const { itemHeight , bufferCount } = scrollInfo.current
+        const renderCount =  Math.ceil(height / itemHeight) + bufferCount
+        scrollInfo.current = { renderCount,height,bufferCount,itemHeight }
+        const dataList = new Array(10000).fill(1).map((item,index)=> index + 1 )
+        setDataList(dataList)
+        setPosition([0,renderCount])
+    },[])
+   const handleScroll = () => {
+       const { scrollTop } = scroll.current
+       const { itemHeight , renderCount } = scrollInfo.current
+       const currentOffset = scrollTop - (scrollTop % itemHeight) 
+       const start = Math.floor(scrollTop / itemHeight)
+       context.current.style.transform = `translate3d(0, ${currentOffset}px, 0)` /* 偏移，造成下滑效果 */
+       const end = Math.floor(scrollTop / itemHeight + renderCount + 1)
+       if(end !== position[1] || start !== position[0]  ){ /* 如果render内容发生改变，那么截取  */
+            setPosition([ start , end ])
+       }
+   } 
+   const { itemHeight , height } = scrollInfo.current
+   const [ start ,end ] = position
+   const renderList = dataList.slice(start,end) /* 渲染区间 */
+   console.log('渲染区间',position)
+   return <div className="list_box" ref={box} >
+     <div className="scroll_box" style={{ height: height + 'px'  }}  onScroll={ handleScroll } ref={scroll}  >
+        <div className="scroll_hold" style={{ height: `${dataList.length * itemHeight}px` }}  />
+        <div className="context" ref={context}> 
+            {
+               renderList.map((item,index)=> <div className="list" key={index} >  {item + '' } Item </div>)
+            }  
+        </div>
+     </div>
+   </div>
+}
+```
+
+## React 动画
+
+React 写动画也是一个比较棘手的问题。高频率的 setState 会给应用性能带来挑战。
+
+### 动态添加类名
+
+这种方式是通过 transition，animation 实现动画然后写在 class 类名里面，通过动态切换类名，达到动画的目的。这种方式既不需要频繁 setState ，也不需要改变 DOM。
+
+```js
+export default function Index(){
+    const [ isAnimation , setAnimation ] = useState(false)
+    return <div>
+        <button onClick={ ()=> setAnimation(true)  } >改变颜色</button>
+        <div className={ isAnimation ? 'current animation' : 'current'  } ></div>
+    </div>
+}
+```
+
+### 操纵原生 DOM
+
+如果必须做一些 js 实现复杂的动画效果，那么可以获取原生 DOM ，然后单独操作 DOM 实现动画功能，这样就避免了 setState 改变带来 React Fiber 深度调和渲染的影响。
+
+```js
+export default function Index(){
+    const dom = useRef(null)
+    const changeColor = ()=>{
+        const target =  dom.current
+        target.style.background = '#c00'
+        setTimeout(()=>{
+            target.style.background = 'orange'
+            setTimeout(()=>{
+                target.style.background = 'yellowgreen'
+            },500)
+        },500)
+    }
+    return <div>
+        <button onClick={ changeColor } >改变颜色</button>
+        <div className='current' ref={ dom }  ></div>
+    </div>
+}
+```
+
+### setState + css3
+
+如果上面两种都不能满足要求，一定要使用 setState 实时改变DOM元素状态的话，那么尽量采用 css3 ， css3 开启硬件加速，使 GPU 发挥功能，从而提升性能。比如想要改变元素位置 left ，top 值，可以换一种思路通过改变 transform: translate，transform 是由 GPU 直接控制渲染的，所以不会造成浏览器的重排。
+
+```js
+export default function Index(){
+    const [ position , setPosition ] = useState({ left:0,top:0 })
+    const changePosition = ()=>{
+        let time = 0
+        let timer = setInterval(()=>{
+            if(time === 30) clearInterval(timer)
+            setPosition({ left:time * 10 , top:time * 10 })
+            time++ 
+        },30)
+    }
+    const { left , top } = position
+    return <div>
+         <button onClick={ changePosition } >改变位置</button>
+         <div className='current' style={{ transform:`translate(${ left }px,${ top }px )` }}  ></div>
+    </div>
+}
+```
+
+## 及时清除监听事件
+
+如果在 React 项目中，用到了定时器，延时器和事件监听器，注意要在对应的生命周期，清除它们，不然可能会造成内部泄露的情况。
+
+类组件：在 componentWillUnmount 生命周期及时清除延时器和事件监听器。
+
+```js
+export default class Index extends React.Component{
+    current = null
+    poll=()=>{} /* 轮训 */
+    handleScroll=()=>{} /* 处理滚动事件 */
+    componentDidMount(){
+       this.timer = setInterval(()=>{
+           this.poll() /* 2 秒进行一次轮训事件 */
+       },2000)
+       this.current.addEventListener('scroll',this.handleScroll)
+    }
+    componentWillUnmount(){
+       clearInterval(this.timer) /* 清除定时器 */
+       this.current.removeEventListener('scroll',this.handleScroll)
+    }
+    render(){
+        return <div ref={(node)=>this.current = node  }  >hello,let us learn React!</div>
+    }
+}
+```
+
+函数组件：在 useEffect 或者 useLayoutEffect 第一个参数 create 的返回函数 destory 中，做一些清除定时器/延时器的操作。
+
+```js
+export default function Index(){
+    const dom = React.useRef(null)
+    const poll = ()=>{}
+    const handleScroll = ()=>{}
+    useEffect(()=>{
+        let timer = setInterval(()=>{
+            poll() /* 2 秒进行一次轮训事件 */
+        },2000)
+        dom.current.addEventListener('scroll',handleScroll)
+        return function(){
+            clearInterval(timer)
+            dom.current.removeEventListener('scroll',handleScroll)
+        } 
+    },[])
+    return <div ref={ dom }  >hello,let us learn React!</div>
+}
+```
+
+## 合理使用 state
+
+React 并不像 vue 那样响应式数据流。 在 vue 中有专门的 dep 做依赖收集，可以自动收集字符串模版的依赖项，只要没有引用的 data 数据， 通过 this.aaa = bbb ，在 vue 中是不会更新渲染的。但是在 React 中只要触发 setState 或 useState ，如果没有渲染控制的情况下，组件就会渲染，暴露一个问题就是，如果视图更新不依赖于当前 state ，那么这次渲染也就没有意义。所以对于视图不依赖的状态，就可以考虑不放在 state 中。
+
+打个比方，比如想在滚动条滚动事件中，记录一个 scrollTop 位置，那么在这种情况下，用 state 保存 scrollTop 就没有任何意义而且浪费性能。
+
+```js
+export default class Index extends React.Component{
+    node = null
+    scrollTop = 0
+    handleScroll=()=>{
+        const {  scrollTop } = this.node 
+        this.scrollTop = scrollTop
+    }
+    render(){
+        return <div ref={(node)=> this.node = node } onScroll={this.handleScroll} ></div>
+    }
+}
+```
+
+上述把 scrollTop 直接绑定在 this 上，而不是通过 state 管理，这样好处是滚动条滚动不需要触发 setState ，从而避免了无用的更新。
+
+对于函数组件，因为不存在组件实例，但是函数组件有 hooks ，所以可以通过一个 useRef 实现同样的效果。
+
+```js
+export default function Index(){
+    const dom = useRef(null)
+    const scrollTop = useRef(0)
+    const handleScroll = ()=> {
+        scrollTop.current = dom.current.scrollTop
+    }
+    return   <div ref={ dom } onScroll={handleScroll} ></div>
+}
+```
+
+如上用 useRef ，来记录滚动条滚动时 scrollTop 的值。
+
+## hooks 的参数
+
+建议不要在 hooks 的参数中执行函数或者 new 实例：
+
+```js
+const hook1 = useRef(fn())
+const hook2 = useRef(new Fn())
+```
+
+- 首先函数每次 rerender 都会执行 hooks ，那么在执行 hooks 函数的同时，也会执行函数的参数，比如上面的代码片段中的 fn() 和 new Fn()，也就是每一次 rerender 都会执行 fn 或者是 new 一个实例。这可能不是开发者期望的，而执行函数，或创建实例也成了一种性能浪费，在一些极端情况下，可能会造成内存泄漏，比如在创建新的 dom 元素，但是没有进行有效的回收。
+
+- 函数组件在初始化和更新流程中，会使用不同的 hooks 对象，还是以 useRef 为例子，在初始化阶段用的是 mountRef 函数，在更新阶段用的是 updateRef 函数，开发者眼睛看见的是 useRef，在 React 底层却悄悄的替换成了不同的函数。 更重要的是大部分的 hooks 参数都作为初始化的参数，在更新阶段压根没有用到，那么传入的参数也就没有了意义，回到上述代码片段，fn() 和 new Fn() 在更新阶段根本就没有被 useRef 接收， 无辜的成了流浪者。
+
+初始化：初始化的时候用到了 initialValue ，也就是第一个参数。
+
+```js
+function mountRef(initialValue) {
+  const hook = mountWorkInProgressHook();
+  const ref = {current: initialValue};
+  hook.memoizedState = ref;
+  return ref;
+}
+```
+
+更新阶段：在更新阶段根本没有用到 initialValue
+
+```js
+function updateRef(initialValue) {
+  const hook = updateWorkInProgressHook();
+  return hook.memoizedState;
+}
+```
+
+如果开发者真的想在 hooks 中，以函数组件执行结果或者是实例对象作为参数的话，那么应该怎么处理呢?
+
+```js
+const hook = useRef(null)
+if(!hook.current){
+  hook.current = new Fn()
+}
+```
+
+## 问题
+
+### Q1. useCallback 和 useMemo 有什么区别？
+
+useCallback 第一个参数就是缓存的内容，useMemo 需要执行第一个函数，返回值为缓存的内容，比起 useCallback ， useMemo 更像是缓存了一段逻辑，或者说执行这段逻辑获取的结果。那么对于缓存 element 用 useCallback 可以吗，答案是当然可以了。

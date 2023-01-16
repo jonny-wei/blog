@@ -93,6 +93,9 @@ const sidebar = {
         "warmup/react-css",
         "warmup/react-hoc",
         "warmup/react-render",
+        "warmup/react-router",
+        "warmup/react-redux",
+        "warmup/react-mobx",
       ],
     },
     {
