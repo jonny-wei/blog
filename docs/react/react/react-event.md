@@ -130,7 +130,7 @@ export default function Index(){
 
 对于如上结构，最后 onChange 和 onClick 会保存在对应 DOM 元素类型 fiber 对象（ hostComponent ）的 memoizedProps 属性上，如上结构会变成这样。
 
-![事件系统1](/images/react/事件系统1.png)
+![事件系统1](/blog/images/react/事件系统1.png)
 
 ```js
 // react-dom/src/client/ReactDOMComponent.js
@@ -187,7 +187,7 @@ export default function Index(){
 
 React 在初始化真实 DOM 的时候，用一个随机的 key internalInstanceKey 指针指向了当前 DOM 对应的 fiber 对象，fiber 对象用 stateNode 指向了当前的 DOM 元素。
 
-![事件系统2](/images/react/事件系统2.png)
+![事件系统2](/blog/images/react/事件系统2.png)
 
 接下来就是批量更新环节：
 
@@ -203,13 +203,13 @@ export function batchedEventUpdates(fn,a){
 }
 ```
 
-![事件系统3](/images/react/事件系统3.png)
+![事件系统3](/blog/images/react/事件系统3.png)
 
 ### 第二步：合成事件源
 
 接下来会通过 onClick 找到对应的处理插件 SimpleEventPlugin ，合成新的事件源 e ，里面包含了 preventDefault 和 stopPropagation 等方法。
 
-![事件系统4](/images/react/事件系统4.png)
+![事件系统4](/blog/images/react/事件系统4.png)
 
 ### 第三步：形成事件执行队列
 
@@ -251,7 +251,7 @@ export function batchedEventUpdates(fn,a){
 - 然后接着向上收集，遇到父级，收集父级 div 上的事件，handleClick3 冒泡事件 push 处理，handleClick4 捕获事件 unshift 处理。[handleClick4, handleClick2 , handleClick1,handleClick3 ]
 - 依次执行数组里面的事件，所以打印 4 2 1 3。
 
-![事件系统5](/images/react/事件系统5.png)
+![事件系统5](/blog/images/react/事件系统5.png)
 
 ## 阻止事件冒泡
 
@@ -505,7 +505,7 @@ if (inCapturePhase) {
 
 ## 小结
 
-![事件系统6](/images/react/事件系统6.png)
+![事件系统6](/blog/images/react/事件系统6.png)
 
 ## 问题
 

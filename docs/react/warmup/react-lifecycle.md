@@ -101,7 +101,7 @@ function commitLifeCycles(finishedRoot,current,finishedWork){
 
 执行顺序：`constructor -> getDerivedStateFromProps / componentWillMount -> render -> componentDidMount`
 
-![类组件生命周期过程](/images/react/类组件生命周期过程.png)
+![类组件生命周期过程](/blog/images/react/类组件生命周期过程.png)
 
 ### 更新阶段
 
@@ -174,7 +174,7 @@ function commitBeforeMutationLifeCycles(current,finishedWork){
 
 接下来执行生命周期 componentDidUpdate ，此时 DOM 已经修改完成。可以操作修改之后的 DOM 。到此为止更新阶段的生命周期执行完毕。
 
-![类组件更新生命周期](/images/react/类组件更新生命周期.png)
+![类组件更新生命周期](/blog/images/react/类组件更新生命周期.png)
 
 更新阶段对应的生命周期的执行顺序：
 
@@ -194,7 +194,7 @@ function callComponentWillUnmountWithTimer(){
 
 ### 类组件生命周期总览
 
-![生命周期总览](/images/react/生命周期总览.png)
+![生命周期总览](/blog/images/react/生命周期总览.png)
 
 ## 各阶段生命周期的功能
 

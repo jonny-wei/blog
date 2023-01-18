@@ -4,7 +4,7 @@
 
 弄清楚 Router 原理之前，用一幅图表示 History ，React-Router ， React-Router-Dom 三者的关系。
 
-![reactRouter1](/images/react/reactRouter1.png)
+![reactRouter1](/blog/images/react/reactRouter1.png)
 
 - history： history 是整个 React-router 的核心，里面包括两种路由模式下改变路由的方法，和监听路由变化方法等。
 - react-router：既然有了 history 路由监听/改变的核心，那么需要调度组件负责派发这些路由的更新，也需要容器组件通过路由更新，来渲染视图。所以说 React-router 在 history 核心基础上，增加了 Router ，Switch ，Route 等组件来处理视图渲染。
@@ -129,7 +129,7 @@ Switch 包裹的 Redirect 要放在最下面，否则会被 Switch 优先渲染 
 
 ### 跳转流程图
 
-![reactRouter2](/images/react/reactRouter2.png)
+![reactRouter2](/blog/images/react/reactRouter2.png)
 
 ## 使用指南
 

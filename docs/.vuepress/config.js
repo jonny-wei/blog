@@ -227,7 +227,12 @@ const sidebar = {
         "webpack/abstract",
         "webpack/configuration",
         "webpack/application",
-        "webpack/FM",
+        "webpack/building",
+        "webpack/compile",
+        "webpack/hmr",
+        "webpack/loader",
+        "webpack/plugin",
+        "webpack/module-federation",
       ],
     },
     {
@@ -297,7 +302,7 @@ const sidebar = {
   ],
   framework: [
     {
-      title: "架构&解决方案",
+      title: "架构&方案",
       collapsable: false,
       sidebarDepth: 1,
       children: [
@@ -309,6 +314,14 @@ const sidebar = {
         "experience",
         "friendship-link",
       ],
+    },
+  ],
+  code: [
+    {
+      title: "算法&编程",
+      collapsable: false,
+      sidebarDepth: 1,
+      children: [""],
     },
   ],
 };
@@ -355,7 +368,8 @@ module.exports = {
       { text: "Node", link: "/node/" },
       { text: "前端工程化", link: "/devops/" },
       { text: "泛客户端", link: "/mobile/" },
-      { text: "架构&解决方案", link: "/framework/" },
+      { text: "架构&方案", link: "/framework/" },
+      { text: "算法&编程", link: "/code/" },
       {
         text: "GitHub",
         items: [{ text: "GitHub地址", link: "https://github.com/jonny-wei" }],
@@ -370,6 +384,7 @@ module.exports = {
       "/devops/": sidebar.devops,
       "/mobile/": sidebar.mobile,
       "/framework/": sidebar.framework,
+      "/code/": sidebar.code,
     },
   },
   markdown: {

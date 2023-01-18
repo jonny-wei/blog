@@ -18,7 +18,6 @@ CSS 被视为 **渲染阻塞资源**(包括JS)，这意味着浏览器将不会�
 
 存在阻塞的 CSS 资源时，浏览器会延迟 JavaScript 的执行和 DOM 构建。另外：当浏览器遇到一个 script 标记时，DOM 构建将暂停，直至脚本完成执行。JavaScript 可以查询和修改 DOM 与 CSSOM。CSSOM 构建时，JavaScript 执行将暂停，直至 CSSOM 就绪。
 
-
 关于CSS加载的阻塞情况：
 
 - css 加载不会阻塞 DOM 树的解析，但会阻塞 DOM 树的渲染
@@ -30,7 +29,6 @@ CSS 被视为 **渲染阻塞资源**(包括JS)，这意味着浏览器将不会�
 
 由于 JavaScript 是可操纵 DOM 的，如果在修改这些元素属性同时渲染界面（即 JavaScript 线程和 UI 线程同时运行），那么渲染线程前后获得的元素数据就可能不一致了。
 因此为了防止渲染出现不可预期的结果，浏览器设置 **GUI 渲染线程与 JavaScript 引擎为互斥的关系**。当 JavaScript 引擎执行时 GUI 线程会被挂起，GUI 更新会被保存在一个队列中等到引擎线程空闲时立即被执行。因此如果 JS 执行的时间过长，这样就会造成页面的渲染不连贯，导致页面渲染加载阻塞的感觉。
-
 
 JavaScript 被认为是 **解释器阻塞资源**，浏览器解析文档，当遇到 `<script>` 标签的时候，会立即交给 JS 引擎解析脚本，停止解析 DOM 与 CSSOM（因为JS可能会改动 DOM 和 CSS，所以继续解析会造成浪费）。如果脚本是外部的，会等待脚本下载完毕，再继续解析文档。现在可以在 script 标签上增加属性 defer 或者 async。脚本解析会将脚本中改变 DOM 和 CSS 的地方分别解析出来，追加到 DOM Tree 和 Style Rules 上。
 
@@ -86,7 +84,6 @@ DOMContentLoaded -> load。
 
 [图解 script 标签中的 async 和 defer 属性](https://juejin.cn/post/6894629999215640583)
 
-
 ## 阻塞渲染的因素
 
 ### 外部样式表
@@ -132,9 +129,9 @@ dynamicScript.onload = function(){...}
 
 ## 关键渲染路径优化
 
-![浏览器渲染过程](/blog/images/optimization/浏览器渲染过程.png)
+![浏览器渲染过程](/blog/images/devops/浏览器渲染过程.png)
 
-![渲染流水线](/blog/images/optimization/渲染流水线.png)
+![渲染流水线](/blog/images/devops/渲染流水线.png)
 
 为尽快完成首次渲染，我们需要最大限度减小以下三种可变因素:
 
@@ -154,7 +151,7 @@ dynamicScript.onload = function(){...}
 
 总的优化原则就是 **减少关键资源个数，降低关键资源大小，降低关键资源的 RTT 次数**：
 
-###  优化 CSS
+### 优化 CSS
 
 样式表会阻塞渲染，在加载完毕之前是不会显示的，为了让用户以最快的速度看到页面上的内容，可以将页面的某一部分的样式抽离出来，单独放在一个样式表中或者内联在页面中，这样的样式称为 **关键样式**，这部分样式会优先它可以是页面的骨架屏或者是用户刚加载进页面时看到的首屏的内容。
 
@@ -169,7 +166,6 @@ dynamicScript.onload = function(){...}
 - **preload 优先加载**。会提升资源的优先级因为它标明这个资源是本页肯定会用到 —— **本页优先**。使用 preload 来提升资源加载的优先级。 preload 最大的作用就是将下载与执行分离，并且将下载的优先级提到了一个很高的地步，再由我们去控制资源执行的位置。
 
 - **prefetch 预加载**。会降低这个资源的优先级因为它标明这个资源是下一页可能用到的 —— **为下一页提前加载**。
-
 
 PreloadWebpackPlugin 用于预加载资源。 匹配其他页面可能用到的资源进行预先加载，从而达到无 loading，用户无感知的跳转。
 
@@ -188,6 +184,7 @@ new PreloadWebpackPlugin({
     fileBlackList: [/\index.css|index.js|vendors.js]/,/\.whatever/]
 })
 ```
+
 #### 加速样式表下载
 
 样式表是阻塞页面呈现的（注意是呈现，不是解析），正常通过 link 加载的外部样式表要等下载，构建 CSSOM 树才会让页面呈现完成，但是 preload 能够让样式表的下载和呈现分离。
@@ -198,6 +195,7 @@ new PreloadWebpackPlugin({
 <link href="critial.css" rel="stylesheet" />
 <link href="non-critial.css" rel="stylesheet" />
 ```
+
 第一个是关键 CSS，第二个不是关键 CSS，当页面解析了这两个 link 标签后开始下载，但是即使 critical.css 下载解析完毕也不会呈现页面，因为页面还要下载和解析 non-critical.css。
 
 这时候，就要将 non-critial.css 作为预加载，当样式表作为被 preload 后，他就不会再阻塞页面的呈现，也就是所谓的异步下载，修改后的代码如下：
@@ -253,6 +251,7 @@ preload 的功能听起来很像被 defer 的脚本，但是：
 ```html
 <link rel="preload" as="font" href="https://at.alicdn.com/t/font_zck90zmlh7hf47vi.woff">
 ```
+
 但是要注意，preload 字体不带 `crossorigin` 也将会二次获取！ 确保你对 preload 的字体添加 `crossorigin` 属性，否则他会被下载两次，这个请求使用匿名的跨域模式。这个建议也适用于字体文件在相同域名下，也适用于其他域名的获取(比如说默认的异步获取)。preload 如果不带 `crossorigin meta` ，默认情况下 （即未指定 crossorigin 属性时）, CORS 根本不会使用，这样 http 的 request header 中就不会有 origin，默认不去跨域，但是 @font-face 中去加载字体是默认跨域请求的，所以会造成两次的 request header 不同，无法命中缓存，造成重复请求。
 
 解决方法就是带上 `crossorigin`，空关键字和无效关键字都会被当做 `anonymous`
@@ -276,6 +275,7 @@ link.rel = "preload";
 link.as = "script";
 document.head.appendChild(link);
 ```
+
 ```js
 var script = document.createElement("script");
 script.src = "myscript.js";
@@ -286,7 +286,7 @@ document.body.appendChild(script);
 
 现在的页面基本上都具有响应式设计，即针对移动端或桌面端会采用 media 进行媒体查询，有两种包含媒体查询的 CSS 代码的方法：
 
-1. 将需要媒体查询的代码和基础样式代码放在同一文件中，使用 @media 来使媒体查询生效。 
+1. 将需要媒体查询的代码和基础样式代码放在同一文件中，使用 @media 来使媒体查询生效。
 2. 将需要媒体查询的代码放在单独的一个外部样式表中，使用 media meta 对需要媒体查询的 link 进行控制。
 
 这两种方法各有好处，如果需要媒体查询的代码量很小，那么和基础样式放在一起也没有关系，可以节省一次 HTTP 请求。如果比较大的话，那么就会让样式表的体积增加，造成 FOUC 的时间变长，这时候更适合使用第二种。
@@ -375,7 +375,6 @@ Chromium 的官方文档中很详细的介绍了 pre-fetch：
 
 对于一些体验要求较高的关键动画，比如一些交互复杂的玩法页面，存在持续变化位置的 animation 元素，我们最好是使用 transform 来实现而不是通过改变 left/top 的方式。这样做的原因是，如果使用 left/top 来实现位置变化，animation 节点和 Document 将被放到了同一个 GraphicsLayer 中进行渲染，持续的动画效果将导致整个 Document 不断地执行重绘，而使用 transform 的话，能够让 animation 节点被放置到一个独立合成层中进行渲染绘制，动画发生时不会影响到其它层。并且另一方面，动画会完全运行在 GPU 上，相比起 CPU 处理图层后再发送给显卡进行显示绘制来说，这样的动画往往更加流畅。
 
-
 ### 减少隐式合成
 
 虽然隐式合成从根本上来说是为了保证正确的图层重叠顺序，但具体到实际开发中，隐式合成很容易就导致一些无意义的合成层生成，归根结底其实就要求我们在开发时约束自己的布局习惯，避免踩坑。
@@ -438,12 +437,12 @@ Chromium 的官方文档中很详细的介绍了 pre-fetch：
 
 服务端渲染，服务端直出页面。在客户端将标签渲染成的整个 html 片段的工作在服务端完成，服务端形成的 html 片段直接返回给客户端这个过程就叫做服务端渲染。
 
-#### 服务端渲染的优点：
+#### 服务端渲染的优点
 
 - 更好的 SEO： 因为 SPA 页面的内容是通过 Ajax 获取，而搜索引擎爬取工具并不会等待 Ajax 异步完成后再抓取页面内容，所以在 SPA 中是抓取不到页面通过 Ajax 获取到的内容；而 SSR 是直接由服务端返回已经渲染好的页面（数据已经包含在页面中），所以搜索引擎爬取工具可以抓取渲染好的页面；
 - 更快的内容到达时间（首屏加载更快）： SPA 会等待所有 Vue 编译后的 js 文件都下载完成后，才开始进行页面的渲染，文件下载等需要一定的时间等，所以首屏渲染需要一定的时间；SSR 直接由服务端渲染好页面直接返回显示，无需等待下载 js 文件及再去渲染等，所以 SSR 有更快的内容到达时间；
 
-#### 服务端渲染的缺点：
+#### 服务端渲染的缺点
 
 - 更多的开发条件限制： 例如服务端渲染只支持 beforCreate 和 created 两个钩子函数，这会导致一些外部扩展库需要特殊处理，才能在服务端渲染应用程序中运行；并且与可以部署在任何静态文件服务器上的完全静态单页面应用程序 SPA 不同，服务端渲染应用程序，需要处于 Node.js server 运行环境；
 -更多的服务器负载：在 Node.js  中渲染完整的应用程序，显然会比仅仅提供静态文件的  server 更加大量占用CPU 资源 (CPU-intensive - CPU 密集)，因此如果
@@ -464,8 +463,6 @@ Chromium 的官方文档中很详细的介绍了 pre-fetch：
 ### 骨架屏
 
 骨架屏的实现原理和预加载类似，都是利用了 Puppeteer 爬取页面的功能，Puppeteer 是 chrome 出的一个 headlessChromenode 库，提供了 API 可以抓取 SPA 并生成预渲染内容，和预加载不太一样的是骨架屏技术会在 Puppeteer 生成内容后，利用算法将生成的内容进行替换，生成骨架页面，`page-skeleton-webpack-plugin` 是一个用来生成骨架屏的 webpack 插件。
-
-
 
 - CSS 属性读写分离：浏览器每次对元素样式进行读操作时，都必须进行一次重新渲染（重排 + 重绘），所以我们在使用 JS 对元素样式进行读写操作时，最好将两者分离开，先读后写，避免出现两者交叉使用的情况。最最最客观的解决方案，就是不用 JS 去操作元素样式，这也是我最推荐的。
 
@@ -508,4 +505,3 @@ Chromium 的官方文档中很详细的介绍了 pre-fetch：
 
 [今日头条品质优化 - 图文详情页秒开实践](https://juejin.cn/post/6876011410061852680)
 :::
-

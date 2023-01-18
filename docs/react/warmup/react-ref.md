@@ -93,7 +93,7 @@ export default class Index extends React.Component{
 }
 ```
 
-![ref1](/images/react/ref1.png)
+![ref1](/blog/images/react/ref1.png)
 
 用一个字符串 ref 标记一个 DOM 元素，一个类组件(函数组件没有实例，不能被 Ref 标记)。React 在底层逻辑，会判断类型，如果是 DOM 元素，会把真实 DOM 绑定在组件 this.refs (组件实例下的 refs )属性上，如果是类组件，会把子组件的实例绑定在 this.refs 上。
 
@@ -118,7 +118,7 @@ export default class Index extends React.Component{
 }
 ```
 
-![ref2](/images/react/ref2.png)
+![ref2](/blog/images/react/ref2.png)
 
 当用一个函数来标记 Ref 的时候，将作为 callback 形式，等到真实 DOM 创建阶段，执行 callback ，获取的 DOM 元素或组件实例，将以回调函数第一个参数形式传入，所以可以像上述代码片段中，用组件实例下的属性 currentDom和 currentComponentInstance 来接收真实 DOM 和组件实例。
 
@@ -142,7 +142,7 @@ export default class Index extends React.Component{
 }
 ```
 
-![ref3](/images/react/ref3.png)
+![ref3](/blog/images/react/ref3.png)
 
 ## ref 高阶用法
 
@@ -341,7 +341,7 @@ useImperativeHandle 接受三个参数：
 
 forwardRef + useImperativeHandle 可以完全让函数组件也能流畅的使用 Ref 通信。其原理图如下所示：
 
-![ref4](/images/react/ref4.png)
+![ref4](/blog/images/react/ref4.png)
 
 ```js
 // 子组件

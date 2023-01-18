@@ -20,7 +20,7 @@ features:
   details: NodeJS、Serverless等的基础知识和实践。
 - title: 泛客户端
   details: H5开发指南，RN，小程序，uni-app，Taro，Flutter。
-- title: 架构&解决方案
+- title: 架构&方案
   details: 组件库，低代码，微前端，BFF，SSG，SSR，场景解决方案。
 - title: 算法&编程
   details: 数据结构与算法，工具函数，设计模式，LeetCode。

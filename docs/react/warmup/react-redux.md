@@ -2,7 +2,7 @@
 
 ## 三者关系
 
-![redux1](/images/react/redux1.png)
+![redux1](/blog/images/react/redux1.png)
 
 ## 设计思想
 
@@ -12,7 +12,7 @@
 
 整个 redux ，数据流向都是单向的
 
-![redux2](/images/react/redux2.png)
+![redux2](/blog/images/react/redux2.png)
 
 2. state 只读
 
@@ -377,7 +377,7 @@ React-Redux 采用了层层订阅的思想，上述内容讲到 Provider 里面�
 2. 父 Subscription -> 子 Subscription 这种模式，可以逐层管理 connect 的状态派发，不会因为 state 的改变而导致更新的混乱。
 :::
 
-![redux3](/images/react/redux3.png)
+![redux3](/blog/images/react/redux3.png)
 
 ### connect 控制更新
 

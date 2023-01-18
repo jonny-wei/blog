@@ -8,7 +8,7 @@
 - **减少网络请求次数**。通过压缩文件及合并小文件为大文件，减少网络请求次数，但需要找到合理的平衡点。
 - **使用 http2 协议**。多路复用，基于帧的解析速度，优先级与流量控制，服务器推送与 server worker 线程。
 
-##  使用 CDN 加速
+## 使用 CDN 加速
 
 使用 CDN 加速下载静态资源
 
@@ -20,7 +20,7 @@
 - 静态的 JS、CSS、图片等资源：开启 CDN 和缓存，同时文件名带上由内容计算出的 Hash 值，这样只要内容变化 hash 就会变化，文件名就会变化，就会被重新下载而不论缓存时间多长。
 
 ::: tip 减少 DNS 查询次数与解析时间
-HTTP1.x 版本的协议下，浏览器会对于向同一域名并行发起的请求数限制在 4~8 个。那么把所有静态资源放在同一域名下的 CDN 服务上就会遇到这种限制，所以可以把他们分散放在不同的 CDN 服务上，例如 JS 文件放在 js.cdn.com 下，将 CSS 文件放在 css.cdn.com 下等。这样又会带来一个新的问题：增加了域名解析时间，这个可以通过 `dns-prefetch`(**DNS 预解析**) 来解决 `<link rel='dns-prefetch' href='//js.cdn.com'>` 来缩减域名解析的时间。形如 `//xx.com` 这样的 URL 省略了协议，这样做的好处是，浏览器在访问资源时会自动根据当前 URL 采用的模式来决定使用 HTTP 还是 HTTPS 协议。 
+HTTP1.x 版本的协议下，浏览器会对于向同一域名并行发起的请求数限制在 4~8 个。那么把所有静态资源放在同一域名下的 CDN 服务上就会遇到这种限制，所以可以把他们分散放在不同的 CDN 服务上，例如 JS 文件放在 js.cdn.com 下，将 CSS 文件放在 css.cdn.com 下等。这样又会带来一个新的问题：增加了域名解析时间，这个可以通过 `dns-prefetch`(**DNS 预解析**) 来解决 `<link rel='dns-prefetch' href='//js.cdn.com'>` 来缩减域名解析的时间。形如 `//xx.com` 这样的 URL 省略了协议，这样做的好处是，浏览器在访问资源时会自动根据当前 URL 采用的模式来决定使用 HTTP 还是 HTTPS 协议。
 :::
 
 总之，**构建需要满足以下几点**：
@@ -97,17 +97,17 @@ module.exports = {
 
 ### CDN 原理
 
-#### 1. 没有的 CDN 网路请求过程：
+#### 1. 没有的 CDN 网路请求过程
 
-![CDN原理](/blog/images/optimization/CDN原理1.png)
+![CDN原理](/blog/images/devops/CDN原理1.png)
 
 - 浏览器要将域名解析为 IP 地址，所以需要向本地 DNS 发出请求。
 - 本地 DNS 依次向根服务器、顶级域名服务器、权限服务器发出请求，得到网站服务器的 IP 地址。
 - 本地 DNS 将 IP 地址发回给浏览器，浏览器向网站服务器 IP 地址发出请求并得到资源。
 
-#### 2. 有 CDN 服务器网路请求过程：
+#### 2. 有 CDN 服务器网路请求过程
 
-![CDN原理](/blog/images/optimization/CDN原理2.png)
+![CDN原理](/blog/images/devops/CDN原理2.png)
 
 - 浏览器要将域名解析为 IP 地址，所以需要向本地 DNS 发出请求。
 - 本地 DNS 依次向根服务器、顶级域名服务器、权限服务器发出请求，得到全局负载均衡系统（GSLB）的 IP 地址。
@@ -135,6 +135,7 @@ DNS 预解析具体用法：
 // 在页面header中使用 link 标签来强制对 DNS 预解析: 
 <link rel="dns-prefetch" href="//www.zhix.net">
 ```
+
 注意：dns-prefetch 需慎用，多页面重复 DNS 预解析会增加重复 DNS 查询次数，因为有开发者指出 禁用 DNS 预读取能节省每月100亿的DNS查询。
 
 ```html
@@ -147,7 +148,6 @@ DNS 预解析具体用法：
 gzip 编码是改进 web  应用程序性能的技术，web 服务器和客户端(浏览器)必须同时支持 gzip。gzip 压缩效率非常高，通常可达 70% 压缩率。
 
 response header 中 `Content-Encoding: gzip`
-
 
 webpack 中使用 `CompressionWebpackPlugin` 插件进行压缩
 
@@ -176,6 +176,7 @@ gzip_types text/plain application/javascript application/x-javascript text/css a
 gzip_vary off;
 gzip_disable "MSIE [1-6]\.";
 ```
+
 ## 浏览器缓存设置
 
 主要使用 **强缓存** 与 **协商缓存** 机制，具体参考 [浏览器缓存](/javascript/browser/browser-cache.md)
@@ -206,10 +207,10 @@ Cache-Control 是http1.1中新增的字段。由于Expires设置的是资源的�
 Last-Modified 是 http1.0 中的响应头字段，代表请求的资源最后一次的改变时间。If-Modified-Since 是 http1.0 的请求头，If-Modified-Since 的值是上次请求服务器返回的Last-Modified 的值。浏览器第一次请求资源时，服务器返回 Last-Modified,浏览器缓存该值。浏览器第二次请求资源时，用于缓存的 Last-Modified 赋值给 If-Modified-Since，发送给服务器。服务器判断 If-Modified-Since 和服务器本地的 Last-Modified 是否相等。如果相等，说明资源未发生改变，命中协商缓存；如果不相等，说明资源发生改变，未命中协商缓存。
 
 #### Etag、If-None-Match
+
 Last-Modified、If-Modified-Since 使用的都是服务器提供的时间，所以相对来说还是很可靠的。但是由于修改时间的精确级别或者定期生成文件这种情况，会造成一定的错误。所以 http1.1 添加 Etag、If-None-Match 字段，完善协商缓存的判断。Etag 是根据资源文件内容生成的资源唯一标识符，一旦资源内容发生改变，Etag 就会发生改变。基于内容的标识符比基于修改时间的更可靠。If-None-Match 的值是上次请求服务器返回的 Etag 的值。Etag、If-None-Match 的判断过程和 Last-Modified、If-Modified-Since一致，Etag、If-None-Match 的优先级更高。
 
 强缓存的优势很明显，无需向服务器发送请求，节省了大量的时间和带宽。但是有一个问题，缓存有效期内想更新资源怎么办？如何使强缓存失效，是问题的关键。通常的解决方法是通过 webpack 文件指纹策略添加占位符，更新文件名，文件名不一样的话，浏览器就会重新请求资源。
-
 
 下面以 Nginx 为例配置缓存，Nginx 可配置的缓存又有 2 种：
 
@@ -230,7 +231,6 @@ Last-Modified、If-Modified-Since 使用的都是服务器提供的时间，所�
 - 使用字体图标
 - 浏览器缓存(强缓存与协商缓存)
 
-
 ## 使用 HTTP2 协议
 
 - 解析速度快
@@ -240,7 +240,6 @@ Last-Modified、If-Modified-Since 使用的都是服务器提供的时间，所�
 - 多路复用
 
     HTTP1.1 如果要同时发起多个请求，就得建立多个 TCP 连接，因为一个 TCP 连接同时只能处理一个 HTTP1.1 的请求。在 HTTP2 上，多个请求可以共用一个 TCP 连接，这称为多路复用。同一个请求和响应用一个流来表示，并有唯一的流 ID 来标识。多个请求和响应在 TCP 连接中可以乱序发送，到达目的地后再通过流 ID 重新组建。
-
 
 - 首部压缩
 
@@ -269,4 +268,3 @@ Last-Modified、If-Modified-Since 使用的都是服务器提供的时间，所�
 
 [前端性能优化指南[8]--页面呈现过程之网络加载篇](https://juejin.cn/post/6930890886616350734#heading-39)
 :::
-

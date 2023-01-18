@@ -140,7 +140,7 @@ export default class index extends React.Component{
 // 0, 0, 0, callback1 1 ,callback2 1 ,callback3 1
 ```
 
-![setState1](/images/react/setState1.png)
+![setState1](/blog/images/react/setState1.png)
 
 那么，为什么异步操作里面的批量更新规则会被打破呢？比如用 promise 或者 setTimeout 在 handleClick 中这么写：
 
@@ -159,7 +159,7 @@ setTimeout(()=>{
 
 那么在整个 React 上下文执行栈中就会变成如下图这样:
 
-![setState2](/images/react/setState2.png)
+![setState2](/blog/images/react/setState2.png)
 
 所以批量更新规则被打破。
 
@@ -345,10 +345,7 @@ export default function Index(){
 
 解决问题： 把上述的 dispatchState 改成 dispatchState({...state}) 根本解决了问题，浅拷贝了对象，重新申请了一个内存空间。
 
-
 ### useState 原理
-
-
 
 ## 问题
 
