@@ -1,4 +1,4 @@
-# 核心原理
+# 构建流程与原理
 
 Webpack 的核心能力就是**静态模块打包能力**。Webpack 能够将各种类型的资源 —— 包括图片、音视频、CSS、JavaScript 代码等，通通转译、组合、拼接、生成标准的、能够在不同版本浏览器兼容执行的 JavaScript 代码文件，这一特性能够轻易抹平开发 Web 应用时处理不同资源的逻辑差异，使得开发者以一致的心智模型开发、消费这些不同的资源文件。
 
@@ -185,6 +185,10 @@ compile(callback) {
 9. 最后，[调用](https://link.juejin.cn/?target=https%3A%2F%2Fgithub1s.com%2Fwebpack%2Fwebpack%2Fblob%2FHEAD%2Flib%2FCompiler.js%23L466-L467) compiler 对象的 [emitAssets](https://link.juejin.cn/?target=https%3A%2F%2Fgithub1s.com%2Fwebpack%2Fwebpack%2Fblob%2FHEAD%2Flib%2FCompiler.js%23L592-L593) 方法，输出资产文件。
 
 seal 过程中会不断调用 compilation.emitAssets 提交资产记录，而直到 seal 结束后则调用 compiler.emitAssets 函数，函数内部调用 compiler.outputFileSystem.writeFile 方法将 assets 集合写入文件系统，Webpack 完成从源码到资产文件的转换，构建工作至此结束。
+
+::: tip seal
+seal 很复杂，重点在于将 Module 按入口组织成多个 Chunk 对象，之后暴露 optimizeXXX 钩子，交由插件根据不同需求对 Chunk 做进一步修剪、整形、优化，最后按 Chunk 为单位做好代码合并与转换，输出为资产文件。optimizeXXX 钩子常被用于优化最终产物代码，例如 SplitChunksPlugin 就可以在这里分析 Chunk、Module 关系，将使用率较高的 Module 封装进新的 Chunk，实现 Common Chunk 效果。
+:::
 
 ## 资源形态流转
 

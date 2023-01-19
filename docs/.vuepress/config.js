@@ -228,6 +228,8 @@ const sidebar = {
         "webpack/configuration",
         "webpack/application",
         "webpack/building",
+        "webpack/dependency-graph",
+        "webpack/chunk",
         "webpack/compile",
         "webpack/hmr",
         "webpack/loader",
