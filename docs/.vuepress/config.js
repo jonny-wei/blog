@@ -224,9 +224,6 @@ const sidebar = {
       sidebarDepth: 1,
       children: [
         "",
-        "webpack/abstract",
-        "webpack/configuration",
-        "webpack/application",
         "webpack/building",
         "webpack/dependency-graph",
         "webpack/chunk",
@@ -234,6 +231,7 @@ const sidebar = {
         "webpack/hmr",
         "webpack/loader",
         "webpack/plugin",
+        "webpack/tree-shaking",
         "webpack/module-federation",
       ],
     },

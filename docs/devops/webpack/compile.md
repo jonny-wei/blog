@@ -327,3 +327,163 @@ Webpack 在处理上述代码 AST 时，会相应生成多个依赖对象，比�
 - 最后，一个包裹了 `entry` 代码的 IIFE 函数。
 
 **模块转译** 是将 `module` 转译为可以在宿主环境如浏览器上运行的代码形式；**收集运行时模块** 负责决定整个 Bundle 需要的骨架代码；而 **模块合并** 操作则串联这些 `modules` ，使之整体符合开发预期，能够正常运行整个应用逻辑。接下来，我们揭晓这部分代码的生成原理。
+
+**模块合并主流程：**
+
+在 `compilation.codeGeneration` 执行完毕，即所有用户代码模块做完转译，运行时模块都收集完毕作后，`seal` 函数调用 `compilation.createChunkAssets` 函数，触发 `renderManifest` 钩子，`JavascriptModulesPlugin` 插件监听到这个钩子消息后开始组装 bundle，伪代码：
+
+```js
+// Webpack 5
+// lib/Compilation.js
+class Compilation {
+  seal() {
+    // 先把所有模块的代码都转译，准备好
+    this.codeGenerationResults = this.codeGeneration(this.modules);
+    // 1. 调用 createChunkAssets
+    this.createChunkAssets();
+  }
+
+  createChunkAssets() {
+    // 遍历 chunks ，为每个 chunk 执行 render 操作
+    for (const chunk of this.chunks) {
+      // 2. 触发 renderManifest 钩子
+      const res = this.hooks.renderManifest.call([], {
+        chunk,
+        codeGenerationResults: this.codeGenerationResults,
+        ...others,
+      });
+      // 提交组装结果
+      this.emitAsset(res.render(), ...others);
+    }
+  }
+}
+
+// lib/javascript/JavascriptModulesPlugin.js
+class JavascriptModulesPlugin {
+  apply() {
+    compiler.hooks.compilation.tap("JavascriptModulesPlugin", (compilation) => {
+      compilation.hooks.renderManifest.tap("JavascriptModulesPlugin", (result, options) => {
+          // JavascriptModulesPlugin 插件中通过 renderManifest 钩子返回组装函数 render
+          const render = () =>
+            // render 内部根据 chunk 内容，选择使用模板 `renderMain` 或 `renderChunk`
+            // 3. 监听钩子，返回打包函数
+            this.renderMain(options);
+
+          result.push({ render /* arguments */ });
+          return result;
+        }
+      );
+    });
+  }
+
+  renderMain() {/*  */}
+
+  renderChunk() {/*  */}
+}
+```
+
+这里的核心逻辑是，`compilation` 以 `renderManifest` 钩子方式对外发布 bundle 打包需求； `JavascriptModulesPlugin` 监听这个钩子，按照 chunk 的内容特性，调用不同的打包函数。
+
+`JavascriptModulesPlugin` 内置的打包函数有：
+
+- `renderMain`：打包主 chunk 时使用；
+- `renderChunk`：打包子 chunk ，如异步模块 chunk 时使用。
+
+两个打包函数实现的逻辑接近，都是按顺序拼接各个模块，下面简单介绍下 `renderMain` 的实现。
+
+**`JavascriptModulesPlugin.renderMain` 函数：**`renderMain` 函数涉及比较多场景判断，伪代码如下：
+
+```js
+class JavascriptModulesPlugin {
+  renderMain(renderContext, hooks, compilation) {
+    const { chunk, chunkGraph, runtimeTemplate } = renderContext;
+
+    const source = new ConcatSource();
+    // ...
+    // 1. 先计算出 bundle CMD 核心代码，包含：
+    //      - "var __webpack_module_cache__ = {};" 语句
+    //      - "__webpack_require__" 函数
+    const bootstrap = this.renderBootstrap(renderContext, hooks);
+
+    // 2. 计算出当前 chunk 下，除 entry 外其它模块的代码
+    const chunkModules = Template.renderChunkModules(
+      renderContext,
+      inlinedModules
+        ? allModules.filter((m) => !inlinedModules.has(m))
+        : allModules,
+      (module) =>
+        this.renderModule(
+          module,
+          renderContext,
+          hooks,
+          allStrict ? "strict" : true
+        ),
+      prefix
+    );
+
+    // 3. 计算出运行时模块代码
+    const runtimeModules =
+      renderContext.chunkGraph.getChunkRuntimeModulesInOrder(chunk);
+
+    // 4. 重点来了，开始拼接 bundle
+    // 4.1 首先，合并核心 CMD 实现，即上述 bootstrap 代码
+    const beforeStartup = Template.asString(bootstrap.beforeStartup) + "\n";
+    source.add(
+      new PrefixSource(
+        prefix,
+        useSourceMap
+          ? new OriginalSource(beforeStartup, "webpack/before-startup")
+          : new RawSource(beforeStartup)
+      )
+    );
+
+    // 4.2 合并 runtime 模块代码
+    if (runtimeModules.length > 0) {
+      for (const module of runtimeModules) {
+        compilation.codeGeneratedModules.add(module);
+      }
+    }
+    // 4.3 合并除 entry 外其它模块代码
+    for (const m of chunkModules) {
+      const renderedModule = this.renderModule(m, renderContext, hooks, false);
+      source.add(renderedModule)
+    }
+
+    // 4.4 合并 entry 模块代码
+    if (
+      hasEntryModules &&
+      runtimeRequirements.has(RuntimeGlobals.returnExportsFromRuntime)
+    ) {
+      source.add(`${prefix}return __webpack_exports__;\n`);
+    }
+
+    return source;
+  }
+}
+```
+
+核心逻辑为：
+
+- 先计算出 bundle CMD 代码，即 `__webpack_require__` 函数；
+- 计算出当前 chunk 下，除 entry 外其它模块代码 `chunkModules`；
+- 计算出运行时模块代码；
+- 开始执行合并操作，子步骤有：
+  - 合并 CMD 代码；
+  - 合并 runtime 模块代码；
+  - 遍历 `chunkModules` 变量，合并除 entry 外其它模块代码；
+  - 合并 entry 模块代码。
+- 返回结果。
+
+总结：先计算出不同组成部分的产物形态，之后按顺序拼接打包，输出合并后的版本。
+
+至此，Webpack 完成 bundle 的转译、打包流程，后续调用 `compilation.emitAsset`，将产物内容输出到 `output` 指定的路径即可，Webpack 单次编译打包过程就结束了。
+
+## 小结
+
+- Webpack 构建过程可以简单划分为 Init、Make、Seal 三个阶段；
+- Init 阶段负责初始化 Webpack 内部若干插件与状态，逻辑比较简单；
+- Make 阶段解决资源读入问题，这个阶段会从 Entry —— 入口模块开始，递归读入、解析所有模块内容，并根据模块之间的依赖关系构建 ModuleGraph —— 模块关系图对象；
+- Seal 阶段更复杂：
+  - 一方面，根据 ModuleGraph 构建 ChunkGraph；
+  - 另一方面，开始遍历 ChunkGraph，转译每一个模块代码；
+  - 最后，将所有模块与模块运行时依赖合并为最终输出的 Bundle —— 资产文件。
