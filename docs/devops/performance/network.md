@@ -231,6 +231,18 @@ Last-Modified、If-Modified-Since 使用的都是服务器提供的时间，所�
 - 使用字体图标
 - 浏览器缓存(强缓存与协商缓存)
 
+Webpack 只是一个工程化构建工具，没有能力决定应用最终在网络分发时的缓存规则，但我们可以调整产物文件的名称(通过 Hash)与内容(通过 [Code Splitting](https://link.juejin.cn/?target=https%3A%2F%2Fwebpack.js.org%2Fguides%2Fcode-splitting%2F))，使其更适配 HTTP 持久化缓存策略。Webpack 提供了一种模板字符串([Template String](https://link.juejin.cn/?target=https%3A%2F%2Fwebpack.js.org%2Fconfiguration%2Foutput%2F%23template-strings))能力，用于根据构建情况动态拼接产物文件名称([output.filename](https://link.juejin.cn/?target=https%3A%2F%2Fwebpack.js.org%2Fconfiguration%2Foutput%2F%23outputfilename))，规则稍微有点复杂，但从性能角度看，比较值得关注的是其中的几个 Hash 占位符，包括：
+
+- `[fullhash]`：整个项目的内容 Hash 值，项目中任意模块变化都会产生新的 `fullhash`；
+- `[chunkhash]`：产物对应 Chunk 的 Hash，Chunk 中任意模块变化都会产生新的 `chunkhash`；
+- `[contenthash]`：产物内容 Hash 值，仅当产物内容发生变化时才会产生新的 `contenthash`，因此实用性较高。
+
+每个产物文件名都会带上一段由产物内容计算出的唯一 Hash 值，文件内容不变，Hash 也不会变化，这就很适合用作 HTTP [持久缓存](https://link.juejin.cn/?target=https%3A%2F%2Fdeveloper.mozilla.org%2Fen-US%2Fdocs%2FWeb%2FHTTP%2FCaching%23expires_or_max-age) 资源。此时，产物文件不会被重复下载，一直到文件内容发生变化，引起 Hash 变化生成不同 URL 路径之后，才需要请求新的资源文件，能有效提升网络性能，因此，生产环境下应尽量使用 `[contenthash]` 生成有版本意义的文件名。
+
+Hash 规则很好用，不过有一个边际 Case 需要注意：**异步模块变化会引起主 Chunk Hash 同步发生变化。**因为在 **主 Chunk** 中需要记录异步 Chunk 的真实路径。异步 Chunk 的路径变化自然也就导致了父级 Chunk 内容变化，此时可以用 `optimization.runtimeChunk` 将这部分代码抽取为单独的 `Runtime Chunk`。
+
+建议至少为生成环境启动 `[contenthash]` 功能，并搭配 `optimization.runtimeChunk` 将运行时代码抽离为单独产物文件。
+
 ## 使用 HTTP2 协议
 
 - 解析速度快

@@ -1,12 +1,11 @@
 const sidebar = {
   vue: [
     {
-      title: "Vue秘籍",
+      title: "Vue",
       collapsable: false,
       sidebarDepth: 1,
       children: [
         "",
-        "interview/vue-communication",
         "interview/vue-symbols",
         "interview/vue-test",
         "interview/vue-router",
@@ -78,12 +77,11 @@ const sidebar = {
   ],
   react: [
     {
-      title: "React秘籍",
+      title: "React",
       collapsable: false,
       sidebarDepth: 1,
       children: [
         "",
-        "warmup/react-jsx",
         "warmup/react-component",
         "warmup/react-state",
         "warmup/react-props",
@@ -231,8 +229,12 @@ const sidebar = {
         "webpack/hmr",
         "webpack/loader",
         "webpack/plugin",
-        "webpack/tree-shaking",
         "webpack/module-federation",
+        "webpack/cache",
+        "webpack/parallel",
+        "webpack/split-chunks",
+        "webpack/compress",
+        "webpack/tree-shaking",
       ],
     },
     {
@@ -248,28 +250,18 @@ const sidebar = {
       ],
     },
     {
-      title: "错误定位",
+      title: "Vite",
       sidebarDepth: 1,
       collapsable: false,
-      children: ["error/capture", "error/monitor"],
-    },
-    {
-      title: "文件处理",
-      sidebarDepth: 1,
-      collapsable: false,
-      children: ["files/reference"],
-    },
-    {
-      title: "图片处理",
-      sidebarDepth: 1,
-      collapsable: false,
-      children: ["images/reference"],
-    },
-    {
-      title: "换肤",
-      sidebarDepth: 1,
-      collapsable: false,
-      children: [],
+      children: [
+        "vite/esm",
+        "vite/css",
+        "vite/prebuild",
+        "vite/engines",
+        "vite/rollup",
+        "vite/plugin",
+        // "vite/hmr",
+      ],
     },
   ],
   mobile: [
