@@ -102,8 +102,8 @@ const sidebar = {
       sidebarDepth: 1,
       children: [
         "react/react-version",
-        "react/react-reconciler",
         "react/react-scheduler",
+        "react/react-reconciler",
         "react/react-priority",
         "react/react-fiber",
         "react/react-diff",
