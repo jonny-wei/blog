@@ -109,6 +109,7 @@ const sidebar = {
         "react/react-diff",
         "react/react-hooks",
         "react/react-lifecycle",
+        "react/react-context",
         "react/react-event",
       ],
     },

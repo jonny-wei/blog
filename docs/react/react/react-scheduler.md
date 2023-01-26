@@ -318,3 +318,11 @@ function unstable_shouldYield() {
 ```
 
 - 如果存在第一个任务，并且已经超时了，那么 shouldYield 会返回 true，那么会中止 fiber 的 workloop。
+
+## 调度整体流程
+
+![scheduler1](/blog/images/react/scheduler1.png)
+
+## 异步调度流程
+
+![scheduler2](/blog/images/react/scheduler2.png)
