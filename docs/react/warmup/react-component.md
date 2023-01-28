@@ -1,6 +1,6 @@
 # React 组件及通信
 
-**React 组件本质**：UI + update + 常规的类和函数 = React 组件。组件承载了渲染视图的 UI 和更新视图的 setState 、 useState 等方法。React 在底层逻辑上会像正常实例化类和正常执行函数那样处理的组件。Component 加入updater, 通过 updater 控制 state 和更新视图。
+**React 组件本质**：UI + update + 常规的类和函数 = React 组件。组件承载了渲染视图的 UI 和更新视图的 setState 、 useState 等方法。React 在底层逻辑上会像正常实例化类和正常执行函数那样处理的组件。Component 加入updater, 通过 updater 控制 state 和更新视图。组件的数据结构本质是一个函数或者类，当你使用元素标签的方式进行调用时，函数或者类会被执行，最终返回一个 React 元素。
 
 ## React 组件
 
@@ -178,15 +178,125 @@ export default Programmer
 
 在 HOC 章节，会详细介绍高阶组件 HOC 。
 
+## 组件自定义内容处理
+
+举个例子，我们实现了一个 Modal 组件，有确定按钮，有取消按钮，但 Modal 展示的内容为了更加灵活，我们提供了一个 props 属性，用户可以自定义一个组件传入其中，用户提供什么，Modal 就展示什么，Modal 相当于一个容器，那么，我们该怎么实现这个功能呢？
+
+### props 方式
+
+```jsx
+function Modal({content}) {
+  return (
+    <div>
+      {content}
+      <button>确定</button>
+      <button>取消</button>
+    </div>
+  )
+}
+
+function CustomContent({text}) {
+  return <div>{text}</div>
+}
+
+<Modal content={<CustomContent text="content" />} />
+```
+
+根据前面的知识，我们可以知道，`content` 属性这里传入的其实是一个 React 元素，所以 Modal 组件的内部是用 `{}` 进行渲染。
+
+### function 方式
+
+但第一种方式，并不总能解决需求。有的时候，我们可能会用到组件内部的值。就比如一个倒计时组件 `Timer`，依然提供了一个属性 `content`，用于自定义时间的展示样式，时间由 `Timer` 组件内部处理，展示样式则完全由用户自定义，在这种时候，我们就可以选择传入一个组件：
+
+```javascript
+function Timer({content: Content}) {
+    const [time, changeTime] = useState('0');
+
+    useEffect(() => {
+        setTimeout(() => {
+            changeTime((new Date).toLocaleTimeString())
+ }, 1000)
+    }, [time])
+
+    return (
+        <div>
+          <Content time={time} />
+        </div>
+    )
+}
+
+function CustomContent({time}) {
+    return <div style={{border: '1px solid #ccc'}}>{time}</div>
+}
+
+
+<Timer content={CustomContent} />
+```
+
+在这个示例中，我们可以看到 `content` 属性传入的是一个 React 组件 CustomContent，而 CustomContent 组件会被传入 time 属性，我们正是基于这个约定进行的 CustomContent 组件的开发。而 Timer 组件内部，因为传入的是组件，所以使用的是 `<Content time={time}/>`进行的渲染。
+
+### render props 方式
+
+在面对第二种实现方式的需求时，除了上面这种实现方式，还有一种称为 `render props` 的技巧，比第二种方式更常见一些，我们依然以 Timer 组件为例：
+
+```javascript
+function Timer({renderContent}) {
+    const [time, changeTime] = useState('0');
+
+    useEffect(() => {
+        setTimeout(() => {
+            changeTime((new Date).toLocaleTimeString())
+ }, 1000)
+    }, [time])
+
+  // 这里直接调用传入的 renderContent 函数
+    return (
+        <div>
+          {renderContent(time)}
+        </div>
+    )
+}
+
+function CustomContent({time}) {
+    return <div style={{border: '1px solid #ccc'}}>{time}</div>
+}
+
+root.render(<Timer renderContent={(time) => {
+    return <CustomContent time={time} />
+}} />);
+```
+
+鉴于我们传入的是一个函数，我们把 `content` 属性名改为了 `renderContent`，其实叫什么都可以。`renderContent` 传入了一个函数，该函数接收 `time` 作为参数，返回一个 React 元素，而在 `Timer` 内部，我们直接执行了 renderContent 函数，并传入内部处理好的 time 参数，由此实现了用户使用组件内部值自定义渲染内容。
+
+多说一句，除了放到属性里，我们也可以放到 children 里，是一样的：
+
+```javascript
+function Timer({children}) {
+   // ...
+    return (
+        <div>
+          {children(time)}
+        </div>
+    )
+}
+
+
+<Timer>
+  {(time) => {
+    return <CustomContent time={time} />
+  }}
+</Timer>
+```
+
 ## 组件通信
 
 React 一共有 5 种主流的通信方式：
 
 - props 和 callback 方式
-- ref 方式。
-- React-redux 或 React-mobx 状态管理方式。
-- context 上下文方式。
-- event bus 事件总线。
+- event bus 事件总线
+- ref 方式
+- React-redux 或 React-mobx 等状态管理方式
+- context 上下文方式
 
 ### props 和 callback 方式
 
@@ -262,3 +372,130 @@ function Father(){
 - 需要手动绑定和解绑。
 - 对于小型项目还好，但是对于中大型项目，这种方式的组件通信，会造成牵一发动全身的影响，而且后期难以维护，组件之间的状态也是未知的。
 - 一定程度上违背了 React 数据流向原则。
+
+### ref 实现组件通信
+
+如果有种场景不想通过父组件 render 改变 props 的方式，来触发子组件的更新，也就是子组件通过 state 单独管理数据层，针对这种情况父组件可以通过 ref 模式标记子组件实例，从而操纵子组件方法，这种情况通常发生在一些数据层托管的组件上，比如 `<Form/>` 表单，经典案例可以参考 antd 里面的 form 表单，暴露出对外的 resetFields ， setFieldsValue 等接口，可以通过表单实例调用这些 API 。
+
+1. 类组件 ref
+2. 函数组件 forwardRef + useImperativeHandle
+
+#### 1. 类组件 ref
+
+对于类组件可以通过 ref 直接获取组件实例，实现组件通信。
+
+```js
+/* 子组件 */
+class Son extends React.PureComponent{
+    state={
+       fatherMes:'',
+       sonMes:''
+    }
+    fatherSay=(fatherMes)=> this.setState({ fatherMes  }) /* 提供给父组件的API */
+    render(){
+        const { fatherMes, sonMes } = this.state
+        return <div className="sonbox" >
+            <div className="title" >子组件</div>
+            <p>父组件对我说：{ fatherMes }</p>
+            <div className="label" >对父组件说</div> <input  onChange={(e)=>this.setState({ sonMes:e.target.value })}   className="input"  /> 
+            <button className="searchbtn" onClick={ ()=> this.props.toFather(sonMes) }  >to father</button>
+        </div>
+    }
+}
+/* 父组件 */
+export default function Father(){
+    const [ sonMes , setSonMes ] = React.useState('') 
+    const sonInstance = React.useRef(null) /* 用来获取子组件实例 */
+    const [ fatherMes , setFatherMes ] = React.useState('')
+    const toSon =()=> sonInstance.current.fatherSay(fatherMes) /* 调用子组件实例方法，改变子组件state */
+    return <div className="box" >
+        <div className="title" >父组件</div>
+        <p>子组件对我说：{ sonMes }</p>
+        <div className="label" >对子组件说</div> <input onChange={ (e) => setFatherMes(e.target.value) }  className="input"  /> 
+        <button className="searchbtn"  onClick={toSon}  >to son</button>
+        <Son ref={sonInstance} toFather={setSonMes} />
+    </div>
+}
+```
+
+1. 子组件暴露方法 fatherSay 供父组件使用，父组件通过调用方法可以设置子组件展示内容。
+2. 父组件提供给子组件 toFather，子组件调用，改变父组件展示内容，实现父 <-> 子 双向通信。
+
+#### 2. 函数组件 forwardRef + useImperativeHandle
+
+对于函数组件，本身是没有实例的，但是 React Hooks 提供了，useImperativeHandle 一方面第一个参数接受父组件传递的 ref 对象，另一方面第二个参数是一个函数，函数返回值，作为 ref 对象获取的内容。一起看一下 useImperativeHandle 的基本使用。
+
+useImperativeHandle 接受三个参数：
+
+- 第一个参数 ref : 接受 forWardRef 传递过来的 ref 。
+- 第二个参数 createHandle ：处理函数，返回值作为暴露给父组件的 ref 对象。
+- 第三个参数 deps :依赖项 deps，依赖项更改形成新的 ref 对象。
+
+forwardRef + useImperativeHandle 可以完全让函数组件也能流畅的使用 Ref 通信。其原理图如下所示：
+
+![ref4](/blog/images/react/ref4.png)
+
+```js
+// 子组件
+function Son (props,ref) {
+    const inputRef = useRef(null)
+    const [ inputValue , setInputValue ] = useState('')
+    useImperativeHandle(ref,()=>{
+       const handleRefs = {
+           onFocus(){              /* 声明方法用于聚焦input框 */
+              inputRef.current.focus()
+           },
+           onChangeValue(value){   /* 声明方法用于改变input的值 */
+               setInputValue(value)
+           }
+       }
+       return handleRefs
+    },[])
+    return <div>
+        <input placeholder="请输入内容"  ref={inputRef}  value={inputValue} />
+    </div>
+}
+
+const ForwarSon = forwardRef(Son)
+// 父组件
+class Index extends React.Component{
+    cur = null
+    handerClick(){
+       const { onFocus , onChangeValue } =this.cur
+       onFocus() // 让子组件的输入框获取焦点
+       onChangeValue('let us learn React!') // 让子组件input  
+    }
+    render(){
+        return <div style={{ marginTop:'50px' }} >
+            <ForwarSon ref={cur => (this.cur = cur)} />
+            <button onClick={this.handerClick.bind(this)} >操控子组件</button>
+        </div>
+    }
+}
+```
+
+- 父组件用 ref 标记子组件，由于子组件 Son 是函数组件没有实例，所以用 forwardRef 转发 ref。
+- 子组件 Son 用 useImperativeHandle 接收父组件 ref，将让 input 聚焦的方法 onFocus 和 改变 input 输入框的值的方法 onChangeValue 传递给 ref 。
+- 父组件可以通过调用 ref 下的 onFocus 和 onChangeValue 控制子组件中 input 赋值和聚焦。
+
+## 问题
+
+### Q1. 无状态组件和有状态组件
+
+#### 无状态组件
+
+无状态组件（Stateless Component）是最基础的组件形式，由于没有状态的影响所以就是纯静态展示的作用。一般来说，各种 UI 库里也是最开始会开发的组件类别。如按钮、标签、输入框等。它的基本组成结构就是属性（props）加上一个渲染函数（render）。由于不涉及到状态的更新，所以这种组件的复用性也最强。
+
+这类组件有以下几个特点：
+
+- 只负责接收 `props`，渲染 DOM
+- 没有 `state`
+- 不能访问生命周期方法
+- 不需要声明类：可以避免 `extends` 或 `constructor` 之类的代码，语法上更加简洁。
+- 不会被实例化：因此不能直接传 `ref`（可以使用 `React.forwardRef` 包装后再传 `ref`）。
+- 不需要显示声明 `this` 关键字：在 ES6 的类声明中往往需要将函数的 `this` 关键字绑定到当前作用域，而因为函数式声明的特性，我们不需要再强制绑定。
+- 更好的性能表现：因为函数式组件中并不需要进行生命周期的管理与状态管理，因此React并不需要进行某些特定的检查或者内存分配，从而保证了更好地性能表现。
+
+#### 有状态组件
+
+在无状态组件的基础上，如果组件内部包含状态（state）且状态随着事件或者外部的消息而发生改变的时候，这就构成了有状态组件（Stateful Component）。有状态组件通常会带有生命周期（Lifecycle），用以在不同的时刻触发状态的更新。这种组件也是通常在写业务逻辑中最经常使用到的，根据不同的业务场景组件的状态数量以及生命周期机制也不尽相同。

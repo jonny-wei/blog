@@ -1,4 +1,4 @@
-# Context 原理
+# React Context 原理
 
 - Provder 如何传递 context？
 - 三种获取 context 原理 （ `Consumer`， `useContext`，`contextType` ）？
@@ -6,9 +6,307 @@
 - context 更新，如何避免 `pureComponent` ， `shouldComponentUpdate` 渲染控制策略的影响。
 - 如何实现的 context 嵌套传递 （ 多个 Povider ）?
 
-## context 对象
+## Context 对象
 
 老版本 context 就是 Legacy Context 模式下的 context ，老版本的 context 是采用约定式的使用规则，于是有了 `getChildContext` 和 `childContextTypes` 协商的属性和方法，这种方式不仅不够灵活，而且对于函数组件也存在局限性，所以在 `v16.3` 推出了新版本的 `context`，开发者能够更加灵活的运用 Context。新版本引入 context 对象的概念，而且 context 对象上除了保留了传递的信息 `value` 外 ， 还有提供者 `Provder` 和消费者 `Consumer`。
+
+### 回顾老版本 Context API
+
+```js
+class Child extends React.Component {
+  render() {
+    // 4. 这里使用 this.context.value 获取
+    return <p>{this.context.value}</p>
+  }
+}
+
+// 3. 子组件添加 contextTypes 静态属性
+Child.contextTypes = {
+  value: PropTypes.string
+};
+
+class Parent extends React.Component {
+
+  state = {
+    value: 'foo'
+  }
+
+  // 1. 当 state 或者 props 改变的时候，getChildContext 函数就会被调用
+  getChildContext() {
+    return {value: this.state.value}
+  }
+
+  render() {
+    return (
+      <div>
+        <Child />
+      </div>
+    )
+  }
+}
+
+// 2. 父组件添加 childContextTypes 静态属性
+Parent.childContextTypes = {
+  value: PropTypes.string
+};
+```
+
+### Context 中断问题
+
+对于这个 API，React 官方并不建议使用，对于可能会出现的问题，React 文档给出的介绍为：
+
+> 问题是，如果组件提供的一个 context 发生了变化，而中间父组件的 shouldComponentUpdate 返回 false，那么使用到该值的后代组件不会进行更新。使用了 context 的组件则完全失控，所以基本上没有办法能够可靠的更新 context。
+
+对于这个问题，我们写个示例代码：
+
+```jsx
+// 1. Child 组件使用 PureComponent
+class Child extends React.Component {
+  render() {
+    return <GrandChild />
+  }
+}
+
+class GrandChild extends React.Component {
+  render() {
+    return <p>{this.context.theme}</p>
+  }
+}
+
+GrandChild.contextTypes = {
+  theme: PropTypes.string
+};
+
+class Parent extends React.Component {
+
+  state = {
+    theme: 'red'
+  }
+
+  getChildContext() {
+    return {theme: this.state.theme}
+  }
+
+  render() {
+    return (
+      <div onClick={() => {
+        this.setState({
+          theme: 'blue'
+        })
+      }}>
+        <Child />
+        <Child />
+      </div>
+    )
+  }
+}
+
+Parent.childContextTypes = {
+  theme: PropTypes.string
+};
+```
+
+在这个示例代码中，当点击文字 `red` 的时候，文字并不会修改为 `blue`，如果我们把 Child 改为 `extends Component`，则能正常修改
+
+这说明当中间组件的 `shouldComponentUpdate` 为 `false` 时，会中断  Context 的传递。
+
+PureComponent 的存在是为了减少不必要的渲染，但我们又想 Context 能正常传递，有办法可以解决吗？既然 PureComponent 的存在导致了 Context 无法再更新，那就干脆不更新了，Context 不更新，GrandChild 就无法更新吗？
+
+#### 解决方案
+
+```jsx
+// 1. 建立一个订阅发布器，当然你也可以称呼它为依赖注入系统（dependency injection system），简称 DI
+class Theme {
+  constructor(value) {
+    this.value = value
+    this.subscriptions = []
+  }
+
+  setValue(value) {
+    this.value = value
+    this.subscriptions.forEach(f => f())
+  }
+
+  subscribe(f) {
+    this.subscriptions.push(f)
+  }
+}
+
+
+class Child extends React.PureComponent {
+    render() {
+        return <GrandChild />
+    }
+}
+
+
+class GrandChild extends React.Component {
+    componentDidMount() {
+      // 4. GrandChild 获取 store 后，进行订阅
+        this.context.theme.subscribe(() => this.forceUpdate())
+    }
+
+    // 5. GrandChild 从 store 中获取所需要的值
+    render() {
+        return <p>{this.context.theme.value}</p>
+    }
+}
+
+GrandChild.contextTypes = {
+  theme: PropTypes.object
+};
+
+class Parent extends React.Component {
+    constructor(p, c) {
+      super(p, c)
+      // 2. 我们实例化一个 store（想想 redux 的 store），并存到实例属性中
+      this.theme = new Theme('blue')
+    }
+
+    // 3. 通过 context 传递给 GrandChild 组件
+    getChildContext() {
+        return {theme: this.theme}
+    }
+
+    render() {
+        // 6. 通过 store 进行发布
+        return (
+            <div onClick={() => {
+                this.theme.setValue('red')
+            }}>
+              <Child />
+              <Child />
+            </div>
+        )
+    }
+}
+
+Parent.childContextTypes = {
+  theme: PropTypes.object
+};
+```
+
+为了管理我们的 theme ，我们建立了一个依赖注入系统（DI），并通过 Context 向下传递 store，需要用到 store 数据的组件进行订阅，传入一个 forceUpdate 函数，当 store 进行发布的时候，依赖 theme 的各个组件执行 forceUpdate，由此实现了在 Context 不更新的情况下实现了各个依赖组件的更新。
+
+你可能也发现了，这有了一点 react-redux 的味道。
+
+## 新的 Context API
+
+```jsx
+// 1. 创建 Provider 和 Consumer
+const {Provider, Consumer} = React.createContext('dark');
+
+class Child extends React.Component {
+  // 3. Consumer 组件接收一个函数作为子元素。这个函数接收当前的 context 值，并返回一个 React 节点。
+  render() {
+    return (
+      <Consumer>
+        {(theme) => (
+        <button>
+          {theme}
+        </button>
+      )}
+      </Consumer>
+    )
+  }
+}
+
+class Parent extends React.Component {
+
+  state = {
+    theme: 'dark',
+  };
+
+  componentDidMount() {
+    setTimeout(() => {
+      this.setState({
+        theme: 'light'
+      })
+    }, 2000)
+  }
+
+
+  render() {
+    // 2. 通过 Provider 的 value 传递值
+    return (
+      <Provider value={this.state.theme}>
+        <Child />
+      </Provider>
+    )
+  }
+}
+复制代码
+```
+
+当 Provider 的 value 值发生变化时，它内部的所有 consumer 组件都会重新渲染。
+
+新 API 的好处就在于从 Provider 到其内部 consumer 组件（包括 .contextType 和 useContext）的传播不受制于 shouldComponentUpdate 函数，因此当 consumer 组件在其祖先组件跳过更新的情况下也能更新。
+
+#### createContext 模拟实现
+
+```jsx
+class Store {
+    constructor() {
+        this.subscriptions = []
+    }
+
+    publish(value) {
+        this.subscriptions.forEach(f => f(value))
+    }
+
+    subscribe(f) {
+        this.subscriptions.push(f)
+    }
+}
+
+function createContext(defaultValue) {
+    const store = new Store();
+
+    // Provider
+    class Provider extends React.PureComponent {
+        componentDidUpdate() {
+            store.publish(this.props.value);
+        }
+
+        componentDidMount() {
+            store.publish(this.props.value);
+        }
+
+        render() {
+            return this.props.children;
+        }
+    }
+
+    // Consumer
+    class Consumer extends React.PureComponent {
+        constructor(props) {
+            super(props);
+            this.state = {
+                value: defaultValue
+            };
+
+            store.subscribe(value => {
+                this.setState({
+                        value
+                });
+            });
+        }
+
+        render() {
+            return this.props.children(this.state.value);
+        }
+    }
+
+    return {
+            Provider,
+            Consumer
+    };
+}
+```
+
+用我们写的 createContext 替换 React.createContext 方法，你会发现，同样可以运行。它其实跟解决老 Context API 问题的方法是一样的，只不过是做了一层封装。Consumer 组件构建的时候进行订阅，当 Provider 有更新的时候进行发布，这样就跳过了 PureComponent  的限制，实现 Consumer 组件的更新。
+
+### createContext 源码
 
 要想吃透 context ，首先要研究一下 Context 对象是什么。上述讲到可以通过 `createContext` 创建一个 context 。那么万物之源就是这个 API :
 

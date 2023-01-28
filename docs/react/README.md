@@ -48,11 +48,13 @@ React.createElement(
 )
 ```
 
-- 第一个参数：如果是组件类型，会传入组件对应的类或函数；如果是 dom 元素类型，传入 div 或者 span 之类的字符串。
-- 第二个参数：一个对象，在 dom 类型中为标签属性，在组件类型中为 props 。
-- 其他参数：依次为 children，根据顺序排列。
+- 第一个参数：如果是组件类型，会传入组件对应的类或函数；如果是 dom 元素类型，传入 div 或者 span 之类的字符串 - **元素类型**。
+- 第二个参数：一个对象，在 dom 类型中为标签属性，在组件类型中为 props - **元素属性**。
+- 其他参数：依次为 children，根据顺序排列 - **子元素**。
 
 最终，在调和阶段，上述 React element 对象的每一个子节点都会形成一个与之对应的 fiber 对象，然后通过 sibling、return、child 将每一个 fiber 对象联系起来。
+
+本质上来说，JSX 只是为 `React.createElement(component, props, ...children)` 提供的一种语法糖。如果在 JSX 中往 DOM 元素中传入自定义属性，React 是不会渲染的（因为 React 无法识别）。
 
 React 针对不同 React element 对象会产生不同 tag (种类) 的fiber 对象。首先，来看一下 tag 与 element 的对应关系：
 
@@ -206,7 +208,7 @@ function Index() {
 }
 ```
 
-plugin-syntax-jsx 已经向文件中提前注入了 `_jsxRuntime api`。不过这种模式下需要我们在 .babelrc 设置 runtime: automatic 。
+`plugin-syntax-jsx` 已经向文件中提前注入了 `_jsxRuntime api`。不过这种模式下需要我们在 `.babelrc` 设置 runtime: automatic 。
 
 ```js
 "presets": [    
@@ -283,8 +285,123 @@ function Index(){
 }
 ```
 
-因为 jsx 在被 babel 编译后，写的 jsx 会变成 React.createElement 形式，所以需要引入 React，防止找不到 React 引起报错。@babel/plugin-syntax-jsx ,在编译的过程中注入 `_jsxRuntime api` ，使得新版本 React 已经不需要引入 createElement
+因为 jsx 在被 babel 编译后，写的 jsx 会变成 React.createElement 形式，所以需要引入 React，防止找不到 React 引起报错。@babel/plugin-syntax-jsx ,在编译的过程中注入 `_jsxRuntime api` ，使得新版本 React 已经不需要引入 createElement。
 
 ### Q2. `React.createElement` 和 `React.cloneElement` 到底有什么区别?
 
 一个是用来创建 element 。另一个是用来修改 element，并返回一个新的 `React.element` 对象。
+
+### Q3. createElement 做了什么？
+
+```js
+const RESERVED_PROPS = {
+  key: true,
+  ref: true,
+  __self: true,
+  __source: true,
+};
+
+export function createElement(type, config, ...children) {
+  let propName;
+
+  // Reserved names are extracted
+  const props = {};
+
+  // 第一段
+  let key = '' + config.key;
+  let ref = config.ref;
+  let self = config.__self;
+  let source = config.__source;
+
+  // 第二段
+  for (propName in config) {
+    if (config.hasOwnProperty(propName) && !RESERVED_PROPS.hasOwnProperty(propName)) {
+      props[propName] = config[propName];
+    }
+  }
+
+  // 第三段
+  props.children = children;
+
+  // 第四段
+  if (type && type.defaultProps) {
+    const defaultProps = type.defaultProps;
+    for (propName in defaultProps) {
+      if (props[propName] === undefined) {
+        props[propName] = defaultProps[propName];
+      }
+    }
+  }
+
+  // 第五段
+  return ReactElement(
+    type,
+    key,
+    ref,
+    self,
+    source,
+    ReactCurrentOwner.current,
+    props,
+  );
+}
+```
+
+createElement 函数主要是做了一个预处理，然后将处理好的数据传入 ReactElement 函数中。ReactElement  函数，代码精简后如下：
+
+```javascript
+const ReactElement = function(type, key, ref, self, source, owner, props) {
+  const element = {
+    // This tag allows us to uniquely identify this as a React Element
+    $$typeof: REACT_ELEMENT_TYPE,
+
+    // Built-in properties that belong on the element
+    type: type,
+    key: key,
+    ref: ref,
+    props: props,
+
+    // Record the component responsible for creating this element.
+    _owner: owner,
+  };
+
+  return element;
+};
+```
+
+React.createElement() 会预先执行一些检查，以帮助你编写无错代码，并创建一个描述页面内容的 "react元素" 对象。 本质上来说，JSX 只是为 `React.createElement(component, props, ...children)` 提供的一种语法糖。
+
+### Q4. JSX 安全性
+
+#### 字符串转义
+
+React 会将所有要显示到 DOM 的字符串转义，防止 XSS。所以，如果 JSX 中含有转义后的实体字符，比如 `©`（©），则最后 DOM 中不会正确显示，因为 React 自动把 `©` 中的特殊字符转义了。
+
+有几种解决方案：
+
+- 直接使用 UTF-8 字符
+- 使用对应字符的 Unicode 编码查询编码
+- 使用数组组装 `<div>{['cc ', <span>©</span>, ' 2015']}</div>`
+- 直接插入原始的 HTML
+
+此外，React 提供了 `dangerouslySetInnerHTML` 属性。正如其名，它的作用就是避免 React 转义字符，在确定必要的情况下可以使用它。
+
+```jsx
+<div dangerouslySetInnerHTML={{ __html: 'cc &copy; 2015' }} />
+```
+
+#### **避免 XSS 注入攻击**
+
+React 中 JSX 能够帮我们自动防护部分 XSS 攻击，譬如我们常见的需要将用户输入的内容再呈现出来：
+
+```jsx
+const title = response.potentiallyMaliciousInput;
+// This is safe:
+const element = <h1>{title}</h1>;
+```
+
+在标准的 HTML 中，如果我们不对用户输入作任何的过滤，那么当用户输入 `<script>alert(1)<script/>` 这样的可执行代码之后，就存在被 XSS 攻击的危险。而 React 在实际渲染之前会帮我们自动过滤掉嵌入在 JSX 中的危险代码，将所有的输入进行编码，保证其为纯字符串之后再进行渲染。不过这种安全过滤有时候也会对我们造成不便，譬如如果我们需要使用 `©` 这样的实体字符时，React 会自动将其转移最后导致无法正确渲染，上面提及的字符串转义就起到作用了。
+
+```jsx
+function createMarkup() {  return { __html: 'First &middot; Second' };}
+function MyComponent() {  return <div dangerouslySetInnerHTML={createMarkup()} />;}
+```

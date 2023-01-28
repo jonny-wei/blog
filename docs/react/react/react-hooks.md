@@ -369,3 +369,1002 @@ function updateMemo(nextCreate,nextDeps){
 ```
 
 - useMemo 更新流程就是对比两次的 dep 是否发生变化，如果没有发生变化，直接返回缓存值，如果发生变化，执行第一个参数函数，重新生成缓存值，缓存下来，供开发者使用。
+
+## 自定义 hooks
+
+### 基本概念
+
+自定义 hooks 是在 React Hooks 基础上的一个拓展，可以根据业务需求制定满足业务需要的组合 hooks ，更注重的是逻辑单元。通过业务场景不同，到底需要React Hooks 做什么，怎么样把一段逻辑封装起来，做到复用，这是自定义 hooks 产生的初衷。
+
+自定义 hooks 参数可能是以下内容：
+
+- hooks 初始化值。
+- 一些副作用或事件的回调函数。
+- 可以是 useRef 获取的 DOM 元素或者组件实例。
+- 不需要参数
+
+自定义 hooks 返回值可能是以下内容：
+
+- 负责渲染视图获取的状态。
+- 更新函数组件方法，本质上是 useState 或者 useReducer。
+- 一些传递给子孙组件的状态。
+- 没有返回值。
+
+### 特性
+
+上述讲到了自定义 hooks 基本概念，接下来分析一下它的特性。
+
+#### 驱动条件
+
+**自定义 hooks 驱动本质上就是函数组件的执行**。
+
+自定义 hooks 驱动条件：
+
+- props 改变带来的函数组件执行。
+- useState | useReducer 改变 state 引起函数组件的更新。
+
+#### 顺序原则
+
+自定义 hooks 内部至少有一个 React Hooks ，那么自定义 hooks 也要遵循 hooks 的规则，**不能放在条件语句中，而且要保持执行顺序的一致性。**
+
+#### 条件限定
+
+在自定义 hooks 中，条件限定**特别重要**。因为考虑 hooks 的限定条件，是一个出色的自定义 hooks 重要因素。
+
+比如在一个自定义这里写：
+
+```js
+function useXXX(){
+    const value = React.useContext(defaultContext)
+    /* .....用上下文中 value 一段初始化逻辑  */
+    const newValue = initValueFunction(value) /* 初始化 value 得到新的 newValue  */
+    /* ...... */
+    return newValue
+}
+```
+
+比如上述一个非常简单自定义 hooks ，从 `context` 取出状态 value ，通过 `initValueFunction` 加工 value ，得到并返回最新的 newValue 。如果直接按照上述这么写，会导致什么发生呢？
+
+首先每一次函数组件更新，就会执行此自定义 hooks ，那么就会重复执行初始化逻辑，重复执行`initValueFunction` ，每一次都会得到一个最新的 newValue 。 如果 newValue 作为 `useMemo` 和 `useEffect` 的 deps ，或者作为子组件的 props ，那么子组件的浅比较 props 将失去作用，那么会带来一串麻烦。
+
+那么如何解决这个问题呢？答案很简单，可以通过 useRef 对 newValue 缓存，然后每次执行自定义 hooks 判断有无缓存值。如下：
+
+```js
+function useXXX(){
+    const newValue =  React.useRef(null)  /* 创建一个 value 保存状态。  */
+    const value = React.useContext(defaultContext)
+    if(!newValue.current){  /* 如果 newValue 不存在 */
+          newValue.current = initValueFunction(value)
+    }
+    return newValue.current
+}
+```
+
+- 用一个 useRef 保存初始化过程中产生的 value 值 。
+- 判断如果 value 不存在，那么通过 initValueFunction 创建，如果存在直接返回 newValue.current 。
+
+如上加了条件判断之后，会让自定义 hooks 内部按照期望的方向发展。条件限定是编写出色的 hooks 重要的因素。
+
+#### 考虑可变性
+
+在编写自定义 hooks 的时候，可变性也是一个非常重要的 hooks 特性。什么叫做可变性，**就是考虑一些状态值发生变化，是否有依赖于当前值变化的执行逻辑或执行副作用。**
+
+比如上面的例子中，如果 defaultContext 中的 value 是可变的，那么如果还像上述用 useRef 这么写，就会造成 context 变化，得不到最新的 value 值的情况发生。
+
+所以为了解决上述可变性的问题：
+
+- 对于依赖于可变性状态的执行逻辑，可以用 `useMemo` 来处理。
+- 对于可变性状态的执行副作用，可以用 `useEffect` 来处理。
+- 对于依赖可变性状态的函数或者属性，可以用`useCallback`来处理。 于是需要把上述自定义 hooks 改版。
+
+```js
+function useXXX(){
+    const value = React.useContext(defaultContext)
+    const newValue = React.useMemo(()=> initValueFunction(value) ,[  value  ] )  
+    return  newValue
+}
+```
+
+- 用 React.useMemo 来对 initValueFunction 初始化逻辑做缓存，当上下文 value 改变的时候，重新生成新的 newValue 。
+
+#### 闭包效应
+
+闭包也是自定义 hooks 应该注意的问题。这个问题和 [考虑可变性] 本质一样。首先函数组件更新就是函数本身执行，一次更新所有含有状态的 hooks （ `useState` 和 `useReducer` ）产生的状态 state 是重新声明的。但是如果像 `useEffect` ， `useMemo` ，`useCallback` 等，它们内部如果引用了 state 或 props 的值，而且这些状态最后保存在了函数组件对应的 fiber 上，那么此次函数组件执行完毕后，这些状态就不会被垃圾回收机制回收释放。这样造成的影响是，上述 hooks 如果没有把内部使用的 state 或 props 作为依赖项，那么内部就一直无法使用最新的 props 或者 state 。
+
+比如我举个简单的例子。
+
+```js
+function useTest(){
+    const [ number ] = React.useState(0)
+    const value = React.useMemo(()=>{
+         // 内部引用了 number 进行计算
+    },[])
+}
+```
+
+- 如上 useMemo 内部使用了 state 中的 number 进行计算，当 number 改变但是无法得到最新的 value 。这就是上面我说到的闭包问题。解决方法就是 useMemo 的 deps 中加入 number。
+
+但是有的时候这种依赖关系往往是更复杂的。我将如上 demo 修改。
+
+```js
+function useTest(){
+    const [ number ] = React.useState(0)
+    const value = React.useMemo(()=>{
+         // 内部引用了 number 进行计算
+    },[ number ])
+    const callback = React.useCallback(function(){
+         // 内部引用了 useEffect
+    },[ value ])
+    
+}
+```
+
+- 如上，在之前的基础上，又加了 useCallback 而且内部引用了 useMemo 生成的 value。 这个时候如果 useCallback 执行，内部想要获取新的状态值 value，那么就需要把 value 放在 useCallback 的 deps 中。
+
+**如何分清楚依赖关系呢？**
+
+- **第一步**：找到 hooks 内部可能发生变化的状态 ， 这个状态可以是 state 或者 props。
+- **第二步**：分析 useMemo 或者 useCallback 内部是否使用上述状态，或者是否**关联使用** useMemo 或者 useCallback 派生出来的状态（ 比如上述的 value ，就是 useMemo 派生的状态 ） ，如果有使用，那么加入到 deps 。
+- **第三步**：分析 useEffect ，useLayoutEffect ，useImperativeHandle 内部是否使用上述两个步骤产生的值，而且还要这些值做一些副作用，如果有，那么加入到 deps 。
+
+## 自定义 hooks 设计
+
+上述介绍了自定义 hooks 的概念和特性，接下来重点分析一下，如何去设计一个自定义 hooks 。首先明确的一点是，自定义 hooks 解决逻辑复用的问题，那么在正常的业务开发过程中，要明白哪些逻辑是重复性强的逻辑，这段逻辑主要功能是什么。下面我把自定义 hooks 能实现的功能化整为零，在实际开发中，可能是下面一种或者几种的结合。
+
+### 接收状态
+
+自定义 hooks ，可以通过函数参数来直接接收组件传递过来的状态，也可以通过 useContext ，来隐式获取上下文中的状态。比如 React Router 中最简单的一个自定义 hooks —— useHistory ，用于获取 history 对象。
+
+```js
+export default function useHistory() {
+    return useContext(RouterContext).history
+}
+```
+
+注意：**如果使用了内部含有 useContext 的自定义 hooks ，那么当 context 上下文改变，会让使用自定义 hooks 的组件自动渲染。**
+
+### 存储｜管理状态
+
+**储存状态**
+
+自定义 hooks 也可以用来储存和管理状态。本质上应用 useRef 保存原始对象的特性。
+
+比如 `rc-form` 中的 `useForm` 里面就是用 useRef 来保存表单状态管理 Store 的。简化流程如下
+
+```js
+function useForm(){
+    const formCurrent = React.useRef(null)
+    if(!formCurrent.current){
+        formCurrent.current = new FormStore()
+    }
+    return formCurrent.current
+}
+```
+
+**记录状态**
+
+当然 useRef 和 useEffect 可以配合记录函数组件的内部的状态。举个例子，我编写一个自定义 hooks 用于记录函数组件执行次数，和是否第一次渲染。
+
+```js
+function useRenderCount(){
+    const isFirstRender = React.useRef(true) /* 记录是否是第一次渲染 */
+    const renderCount = React.useRef(1)      /* 记录渲染次数 */
+    useEffect(()=>{
+        isFirstRender.current = false        /* 第一次渲染完成，改变状态 */
+    },[])
+    useEffect(()=>{
+        if(!isFirstRender.current) renderCount.current++ /* 如果不是第一次渲染，那么添加渲染次数  */
+    })  
+    return [ renderCount.current , isFirstRender.current ]
+} 
+```
+
+- 如上用 isFirstRender 记录是否是第一次渲染 ，用 renderCount 记录渲染次数，第一个 useEffect 依赖项为空，只执行一次，第二个 useEffect 没有依赖项，每一次函数组件执行，都会执行，统计渲染次数。
+
+### 更新状态
+
+**改变状态**
+
+自定义 hooks 内部可以保存状态，可以把更新状态的方法暴露出去，来改变 hooks 内部状态。而更新状态的方法可以是组合多态的。
+
+比如实现一个防抖节流的自定义 hooks ：
+
+```js
+export function debounce(fn, time) {
+    let timer = null;
+    return function(...arg) {
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(() => {
+        fn.apply(this, arg);
+      }, time);
+    };
+}
+
+function useDebounceState(defauleValue,time){
+    const [ value , changeValue ] = useState(defauleValue)
+    /* 对 changeValue 做防抖处理   */
+    const newChange = React.useMemo(()=> debounce(changeValue,time) ,[ time ])
+    return [ value , newChange ]
+}
+```
+
+使用：
+
+```js
+export default function Index(){
+    const [ value , setValue ] = useDebounceState('',300)
+    console.log(value)
+    return <div style={{ marginTop:'50px' }} >
+        《React 进阶实践指南》
+        <input placeholder="" onChange={(e)=>setValue(e.target.value)}  />
+    </div>
+}
+```
+
+**组合state**
+
+自定义 hooks 可以维护多个 state ，然后可以组合更新函数。我这么说可能很多同学不理解，下面我来举一个例子，比如控制数据加载和loading效果，
+
+```js
+function useControlData(){
+    const [ isLoading , setLoading ] = React.useState(false)
+    const [ data,  setData ] = React.useState([])
+    const getData = (data)=> { /* 获取到数据，清空 loading 效果  */
+        setLoading(false)
+        setData(data)
+    }  
+    // ... 其他逻辑
+    const resetData = () =>{  /* 请求数据之前，添加 loading 效果 */
+        setLoading(true)
+        setData([])
+    }
+    return [ getData , resetData , ...  ] 
+}
+```
+
+**合理state**
+
+useState 和 useRef 都可以保存状态：
+
+- useRef 只要组件不销毁，一直存在，而且可以随时访问最新状态值。
+- useState 可以让组件更新，但是 state 需要在下一次函数组件执行的时候才更新，而且如果想让 useEffect 或者 useMemo 访问最新的 state 值，需要将 state 添加到 deps 依赖项中。
+
+自定义 hooks 可以通过 useState + useRef 的特性，取其精华，更合理的管理 state。比如如下实现一个**同步的state**
+
+```js
+function useSyncState(defaultValue){
+   const value = React.useRef(defaultValue)        /* useRef 用于保存状态 */
+   const [ ,forceUpdate ] = React.useState(null)   /* useState 用于更新组件 */
+   const dispatch = (fn) => {                      /* 模拟一个更新函数 */
+       let newValue
+       if( typeof fn === 'function' ){
+            newValue = fn(value.current)           /* 当参数为函数的情况 */
+       }else{
+           newValue = fn                           /* 当参数为其他的情况 */
+       }
+       value.current = newValue
+       forceUpdate({})                             /* 强制更新 */
+   } 
+   return [  value , dispatch  ]                   /* 返回和 useState 一样的格式 */
+}
+```
+
+- useRef 用于保存状态 ，useState 用于更新组件。
+- 做一个 `dispatch` 处理参数为函数的情况。在 dispatch 内部用 forceUpdate 触发真正的更新。
+- 返回的结构和 useState 结构相同。不过注意的是使用的时候要用 value.current 。
+
+使用：
+
+```js
+export default function Index(){
+    const [ data , setData  ] = useSyncState(0)
+    return <div style={{ marginTop:'50px' }} >
+        《React 进阶实践指南》 点赞 👍 { data.current }
+       <button onClick={ ()=> {
+           setData(num => num + 1)
+           console.log(data.current) //打印到最新的值
+       } } >点击</button>
+    </div>
+}
+```
+
+### 操纵 DOM / 组件实例
+
+自定义 hooks 也可以设计成对原生 DOM 的操纵控制。究其原理用 useRef 获取元素， 在 useEffect 中做元素的监听。
+
+比如如下场景，用一个自定义 hooks 做一些基于 DOM 的操作 。
+
+```js
+/* TODO: 操纵原生dom  */
+function useGetDOM(){
+    const dom = React.useRef()
+    React.useEffect(()=>{
+       /* 做一些基于 dom 的操作 */
+       console.log(dom.current)
+    },[])
+    return dom
+}
+```
+
+- 自定义 useGetDOM ，用 useRef 获取 DOM 元素，在 useEffect 中做一些基于 DOM 的操作。
+
+使用：
+
+```js
+export default function Index(){
+    const dom = useGetDOM()
+    return <div ref={ dom } >
+        《React进阶实践指南》
+        <button >点赞</button>
+    </div>
+}
+```
+
+### 执行副作用
+
+自定义 hooks 也可以执行一些副作用，比如说监听一些 props 或 state 变化而带来的副作用。比如如下监听，当 `value` 改变的时候，执行 `cb`。
+
+```js
+function useEffectProps(value,cb){
+    const isMounted = React.useRef(false)
+    React.useEffect(()=>{
+         /* 防止第一次执行 */
+        isMounted.current && cb && cb()
+    },[ value ])
+    React.useEffect(()=>{
+          /* 第一次挂载 */
+         isMounted.current = true
+    },[])
+}
+```
+
+- 用 useRef 保存是否第一次的状态。然后在一个 useEffect 改变加载完成状态。
+- 只有当不是第一次加载且 value 改变的时候，执行回调函数 cb 。
+- 当使用这个自定义 hooks 就可以监听，props 或者 state 变化。接下来尝试一下。
+
+使用组件和父组件：
+
+```js
+function Index(props){
+    useEffectProps( props.a ,()=>{/* 监听 a 变化 */
+        console.log('props a 变化:', props.a  )
+    } )
+    return <div>子组件</div>
+}
+export default function Home(){
+    const [ a , setA ] = React.useState(0)
+    const [ b , setB ] = React.useState(0)
+    return <div>
+        <Index a={a}  b={b} />
+        <button onClick={()=> setA(a+1)} >改变 props a  </button>
+        <button onClick={()=> setB(b+1)} >改变 props b  </button>
+    </div>
+}
+```
+
+## 自定义 hooks 实践
+
+### useLog
+
+自动上报 pv/click 的埋点 hooks
+
+实现一个能够自动上报 点击事件 | pv 的自定义 hooks 。通过这个自定义 hooks ，将带来的收获是：
+
+- 通过自定义 hooks 控制监听 DOM 元素。
+- 分清自定义 hooks 依赖关系。
+
+**编写**
+
+```js
+export const LogContext = React.createContext({})
+
+export default function useLog(){
+    /* 一些公共参数 */
+    const message = React.useContext(LogContext)
+    const listenDOM = React.useRef(null)
+
+    /* 分清依赖关系 -> message 改变，   */
+    const reportMessage = React.useCallback(function(data,type){
+        if(type==='pv'){ // pv 上报
+            console.log('组件 pv 上报',message)
+        }else if(type === 'click'){  // 点击上报
+            console.log('组件 click 上报',message,data)
+        }
+    },[ message ])
+
+    React.useEffect(()=>{
+        const handleClick = function (e){
+            reportMessage(e.target,'click')
+        }
+        if(listenDOM.current){
+            listenDOM.current.addEventListener('click',handleClick)
+        }
+
+        return function (){
+            listenDOM.current && listenDOM.current.removeEventListener('click',handleClick)
+        }
+    },[ reportMessage  ])
+
+    return [ listenDOM , reportMessage  ]
+}
+```
+
+- 用 `useContext` 获取埋点的公共信息。当公共信息改变，会统一更新。
+- 用 `useRef` 获取 DOM 元素。
+- 用 `useCallback` 缓存上报信息 reportMessage 方法，里面获取 useContext 内容。把 context 作为依赖项。当依赖项改变，重新声明 reportMessage 函数。
+- 用 `useEffect`监听 DOM 事件，把 reportMessage 作为依赖项，在 useEffect 中进行事件绑定，返回的销毁函数用于解除绑定。
+
+**依赖关系：** context 改变 -> 让引入 context 的 reportMessage 重新声明 -> 让绑定 DOM 事件监听的 useEffect 里面能够绑定最新的 reportMessage 。
+
+如果上述没有分清楚依赖项关系，那么 context 改变，会让 reportMessage 打印不到最新的 context 值。
+
+**使用**
+
+```js
+ function Home(){
+    const [ dom , reportMessage  ] = useLog()
+    return <div>
+        {/* 监听内部点击 */}
+        <div ref={dom} >
+            <p> 《React进阶实践指南》</p>
+            <button> 按钮 one   (内部点击) </button>
+            <button> 按钮 two   (内部点击) </button>
+            <button> 按钮 three (内部点击)  </button>
+        </div>
+        {/* 外部点击 */}
+        <button  onClick={()=>{ console.log(reportMessage)  }} > 外部点击 </button>
+    </div>
+}
+const Index = React.memo(Home) /*  阻断 useState 的更新效应  */
+export default function Root(){
+    const [ value , setValue ] = useState({})
+    return  <LogContext.Provider value={value} >
+        <Index />
+        <button onClick={()=> setValue({ name:'《React进阶实践指南》' , author:'我不是外星人'  })} >点击</button>
+    </LogContext.Provider>
+}
+```
+
+如上当 context 改变，能够达到正常上报的效果。有一个小细节，就是用 `React.memo` 来阻断 Root 组件改变 state 给 Home 组件带来的更新效应。
+
+## useQueryTable
+
+带查询的分页加载长列表
+
+useQueryTable 的设计主要分为两部分，分别为表格和查询表单。
+
+- 表格设计：表格的数据状态层，改变分页方法，请求数据的方法。
+- 表单设计：表单的状态层，以及改变表单单元项的方法，重置表单重新请求数据。
+
+**编写：**
+
+```js
+/**
+ *
+ * @param {*} defaultQuery  表单查询默认参数
+ * @param {*} api           biaog
+ */
+function useQueryTable(defaultQuery = {},api){
+   /* 保存查询表格表单信息 */
+   const formData = React.useRef({})
+   /* 保存查询表格分页信息 */
+   const pagination = React.useRef({
+       page:defaultQuery.page || 1,
+       pageSize:defaultQuery.pageSize || 10
+   })
+
+   /* 强制更新 */
+   const [, forceUpdate] = React.useState(null)
+
+   /* 请求表格数据 */
+   const [tableData, setTableData] = React.useState({
+     data: [],
+     total: 0,
+     current: 1
+  })
+
+   /* 请求列表数据 */
+   const getList = React.useCallback(async function(payload={}){
+        if(!api) return
+        const data = await api({ ...defaultQuery, ...payload, ...pagination.current,...formData.current}) || {}
+        if (data.code == 200) {
+            setTableData({ list:data.list,current:data.current,total:data.total })
+        } else {}
+   },[ api ]) /* 以api作为依赖项，当api改变，重新声明getList */
+
+    /* 改变表单单元项 */
+    const setFormItem = React.useCallback(function (key,value){
+        const form = formData.current
+        form[key] = value
+        forceUpdate({}) /* forceUpdate 每一次都能更新，不会造成 state 相等的情况 */
+   },[])
+
+   /* 重置表单 */
+   const reset = React.useCallback(function(){
+        const current = formData.current
+        for (let name in current) {
+            current[name] = ''
+        }
+        pagination.current.page = defaultQuery.page || 1
+        pagination.current.pageSize = defaultQuery.pageSize || 10
+        /* 请求数据  */
+        getList()
+   },[ getList ]) /* getList 作为 reset 的依赖项  */
+
+   /* 处理分页逻辑 */
+   const handerChange = React.useCallback(async function(page,pageSize){
+        pagination.current = {
+            page,
+            pageSize
+        }
+        getList()
+   },[ getList ]) /* getList 作为 handerChange 的依赖项  */
+
+   /* 初始化请求数据 */
+   React.useEffect(()=>{
+       getList()
+   },[])
+
+   /* 组合暴露参数 */
+   return [
+        {  /* 组合表格状态 */
+           tableData,
+           handerChange,
+           getList,
+           pagination:pagination.current
+        },
+        {  /* 组合搜索表单状态 */
+            formData:formData.current,
+            setFormItem,
+            reset
+        }
+    ]
+}
+```
+
+**设计分析：**
+
+接收参数 ：编写的自定义 hooks 接收两个参数。
+
+- `defaultQuery`：表格的默认参数，有些业务表格，除了查询和分页之外，有一些独立的请求参数。
+- `api` ： api 为请求数据方法，内部用 `Promise` 封装处理。
+
+数据层：
+
+- 用第一个 useRef 保存查询表单信息 formData 。 第二个 useRef 保存表格的分页信息 pagination 。
+- 用第一个 useState 做**受控表单组件更新视图**的渲染函数。第二个 useState 保存并负责更新表格的状态。
+
+控制层：控制层为**控制表单表格整体联动**的方法。
+
+- 编写内部和对外公共方法 `getList`，方法内部使用 api 函数发起请求，通过 `setTableData` 改变表格数据层状态，用 `useCallback` 做优化缓存处理 。
+- 编写改变表单单元项的方法 `setFormItem`，这个方法主要给查询表单控件使用，内部改变 formData 属性，并通过 useState 更新组件，改变表单控件视图，用 `useCallback` 做优化缓存处理。
+- 编写重置表单的方法 `reset` ，reset 会清空 formData 属性和重置分页的信息。然后重新调用 getList 请求数据，用 `useCallback` 做优化缓存处理。
+- 编写给表格分页器提供的接口 `handerChange` 内部改变分页信息，然后重新请求数据，用 `useCallback` 做优化缓存处理。。
+- 用 useEffect 作为初始化请求表格数据的副作用。
+
+返回状态：
+
+- 通过数组把表单和表格的聚合状态暴露出去。
+
+注意事项：
+
+- 请求方法要与后端进行对齐，包括返回的参数结构，成功状态码等。
+- 属性的声明要与 UI 组件对齐，这里统一用的是 antd 里面的表格和表单控件。
+
+**使用：**
+
+```js
+/* 模拟数据请求 */
+function getTableData(payload){
+    return new Promise((resolve)=>{
+        Promise.resolve().then(()=>{
+            const { list } = listData
+            const arr = threeNumberRandom()  // 生成三个随机数 模拟数据交互
+            console.log('请求参数：',payload)
+            resolve({
+                ...listData,
+                list:[ list[arr[0]],list[arr[1]],list[arr[2]] ],
+                total:list.length,
+                current:payload.page || 1
+            })
+        })
+    })
+}
+function Index (){
+    const [ table,form ] = useQueryTable({ pageSize:3 },getTableData)
+    const { formData ,setFormItem , reset  } = form
+    const { pagination , tableData , getList  , handerChange } = table
+    return <div style={{ margin:'30px' }} >
+        <div style={{ marginBottom:'24px' }} >
+            <Input onChange={(e)=> setFormItem('name',e.target.value)}
+                placeholder="请输入名称"
+                style={inputStyle}
+                value={formData.name || ''}
+            />
+             <Input onChange={(e)=> setFormItem('price',e.target.value)}
+                 placeholder="请输入价格"
+                 style={inputStyle}
+                 value={formData.price || ''}
+             />
+             <Select onChange={(value) => setFormItem('type',value)}
+                 placeholder="请选择"
+                 style={inputStyle}
+                 value={formData.type}
+             >
+                 <Option value="1" >家电</Option>
+                 <Option value="2" >生活用品</Option>
+             </Select>
+            <button className="searchbtn"
+                onClick={() => getList()}
+            >提交</button>
+             <button className="concellbtn"
+                 onClick={reset}
+             >重置</button>
+        </div>
+        {useCallback( <Table
+            columns={columns}
+            dataSource={tableData.list}
+            height="300px"
+            onChange={(res)=>{ handerChange(res.current,res.pageSize) }}
+            pagination={{ ...pagination, total: tableData.total ,current:tableData.current }}
+            rowKey="id"
+            />,[tableData])}
+    </div>
+}
+```
+
+- 整个查询表格逻辑层基本就一个自定义 hooks —— `useQueryTable` 就搞定了。
+- `getTableData` 模拟了数据交互过程 ，其内部的代码逻辑不必纠结 。
+- `useCallback` 对 Table 的 React element 做缓存处理，这样频繁的表单控件更新，不会让 Table 组件重新渲染。
+
+## useCreateStore | useConnect
+
+用**两个自定义 hooks 实现 `React-Redux` 基本功能**。 一个是注入 Store 的 `useCreateStore` ，另外一个是负责订阅更新的 `useConnect` ，通过这个实践 demo ，将收获以下知识点：
+
+- 如何将不同组件的自定义 hooks 建立通信，共享状态。
+- 合理编写自定义 hooks ， 分析 hooks 之间的依赖关系。
+
+首先，看一下要实现的两个自定义 hooks 具体功能。
+
+- `useCreateStore` 用于产生一个状态 Store ，通过 context 上下文传递 ，为了让每一个自定义 hooks `useConnect` 都能获取 context 里面的状态属性。
+- `useConnect` 使用这个自定义 hooks 的组件，可以获取改变状态的 dispatch 方法，还可以订阅 state ，被订阅的 state 发生变化，组件更新。
+
+**如何让不同组件的自定义 hooks 共享状态并实现通信呢？**
+
+首先不同组件的自定义 hooks ，可以通过 `useContext` 获得共有状态，而且还需要实现状态管理和组件通信，那么就需要一个状态调度中心来统一做这些事，可以称之为 `ReduxHooksStore` ，它具体做的事情如下：
+
+- 全局管理 state， state 变化，通知对应组件更新。
+- 收集使用 `useConnect` 组件的信息。组件销毁还要清除这些信息。
+- 维护并传递负责更新的 `dispatch` 方法。
+- 一些重要 api 要暴露给 context 上下文，传递给每一个 `useConnect`。
+
+#### useCreateStore 设计
+
+首先 `useCreateStore` 是在靠近根部组件的位置的， 而且全局只需要一个，目的就是创建一个 `Store` ，并通过 `Provider` 传递下去。
+
+使用：
+
+```js
+const store = useCreateStore( reducer , initState )
+```
+
+参数：
+
+- `reducer` ：全局 reducer，纯函数，传入 state 和 action ，返回新的 state 。
+- `initState` ： 初始化 state 。
+
+返回值：为 store 暴露的主要功能函数。
+
+#### Store设计
+
+Store 为上述所说的调度中心，接收全局 reducer ，内部维护状态 state ，负责通知更新 ，收集用 useConnect 的组件。
+
+```js
+const Store = new ReduxHooksStore(reducer,initState).exportStore()
+```
+
+参数：接收两个参数，透传 useCreateStore 的参数。
+
+#### useConnect设计
+
+使用 useConnect 的组件，将获得 dispatch 函数，用于更新 state ，还可以通过第一个参数订阅 state ，被订阅的 state 改变 ，会让组件更新。
+
+```js
+// 订阅 state 中的 number 
+const mapStoreToState = (state)=>({ number: state.number  })
+const [ state , dispatch ] = useConnect(mapStoreToState)
+```
+
+参数：
+
+- `mapStoreToState`：将 Store 中 state ，映射到组件的 state 中，可以做视图渲染使用。
+- 如果没有第一个参数，那么只提供 `dispatch` 函数，不会订阅 state 变化带来的更新。
+
+返回值：返回值是一个数组。
+
+- 数组第一项：为映射的 state 的值。
+- 数组第二项：为改变 state 的 `dispatch` 函数。
+
+### useCreateStore
+
+```js
+export const ReduxContext = React.createContext(null)
+/* 用于产生 reduxHooks 的 store */
+export function useCreateStore(reducer,initState){
+   const store = React.useRef(null)
+   /* 如果存在——不需要重新实例化 Store */
+   if(!store.current){
+       store.current  = new ReduxHooksStore(reducer,initState).exportStore()
+   }
+   return store.current
+}
+```
+
+`useCreateStore` 主要做的是：
+
+- 接收 `reducer` 和 `initState` ，通过 ReduxHooksStore 产生一个 store ，不期望把 store 全部暴露给使用者，只需要暴露核心的方法，所以调用实例下的 `exportStore`抽离出核心方法。
+- 使用一个 `useRef` 保存核心方法，传递给 `Provider` 。
+
+### 3 状态管理者 —— ReduxHooksStore
+
+接下来看一下核心状态 ReduxHooksStore 。
+
+```js
+import { unstable_batchedUpdates } from 'react-dom'
+class ReduxHooksStore {
+    constructor(reducer,initState){
+       this.name = '__ReduxHooksStore__'
+       this.id = 0
+       this.reducer = reducer
+       this.state = initState
+       this.mapConnects = {}
+    }
+    /* 需要对外传递的接口 */
+    exportStore=()=>{
+        return {
+            dispatch:this.dispatch.bind(this),
+            subscribe:this.subscribe.bind(this),
+            unSubscribe:this.unSubscribe.bind(this),
+            getInitState:this.getInitState.bind(this)
+        }
+    }
+    /* 获取初始化 state */
+    getInitState=(mapStoreToState)=>{
+        return mapStoreToState(this.state)
+    }
+    /* 更新需要更新的组件 */
+    publicRender=()=>{
+        unstable_batchedUpdates(()=>{ /* 批量更新 */
+            Object.keys(this.mapConnects).forEach(name=>{
+                const { update } = this.mapConnects[name]
+                update(this.state)
+            })
+        })
+    }
+    /* 更新 state  */
+    dispatch=(action)=>{
+       this.state = this.reducer(this.state,action)
+       // 批量更新
+       this.publicRender()
+    }
+    /* 注册每个 connect  */
+    subscribe=(connectCurrent)=>{
+        const connectName = this.name + (++this.id)
+        this.mapConnects[connectName] =  connectCurrent
+        return connectName
+    }
+    /* 解除绑定 */
+    unSubscribe=(connectName)=>{
+        delete this.mapConnects[connectName]
+    }
+}
+```
+
+#### 状态
+
+- `reducer`：这个 reducer 为全局的 reducer ，由 useCreateStore 传入。
+- `state`：全局保存的状态 state ，每次执行 reducer 会得到新的 state 。
+- `mapConnects`：里面保存每一个 useConnect 组件的更新函数。用于派发 state 改变带来的更新。
+
+#### 方法
+
+**负责初始化：**
+
+- `getInitState`：这个方法给自定义 hooks 的 useConnect 使用，用于获取初始化的 state 。
+- `exportStore`：这个方法用于把 ReduxHooksStore 提供的核心方法传递给每一个 useConnect 。
+
+**负责绑定｜解绑：**
+
+- `subscribe`： 绑定每一个自定义 hooks useConnect 。
+- `unSubscribe`：解除绑定每一个 hooks 。
+
+**负责更新：**
+
+- `dispatch`：这个方法提供给业务组件层，每一个使用 useConnect 的组件可以通过 dispatch 方法改变 state ，内部原理是通过调用 reducer 产生一个新的 state 。
+- `publicRender`：当 state 改变需要通知每一个使用 useConnect 的组件，这个方法就是通知更新，至于组件需不需要更新，那是 useConnect 内部需要处理的事情，这里还有一个细节，就是考虑到 dispatch 的触发场景可以是异步状态下，所以用 React-DOM 中 unstable_batchedUpdates 开启批量更新原则。
+
+### useConnect
+
+useConnect 是整个功能的核心部分，它要做的事情是获取最新的 `state` ，然后通过订阅函数 `mapStoreToState` 得到订阅的 state ，判断订阅的 state 是否发生变化。如果发生变化渲染最新的 state 。
+
+```js
+export function useConnect(mapStoreToState=()=>{}){
+    /* 获取 Store 内部的重要函数 */
+   const contextValue = React.useContext(ReduxContext)
+   const { getInitState , subscribe ,unSubscribe , dispatch } = contextValue
+   /* 用于传递给业务组件的 state  */
+   const stateValue = React.useRef(getInitState(mapStoreToState))
+
+   /* 渲染函数 */
+   const [ , forceUpdate ] = React.useState()
+   /* 产生 */
+   const connectValue = React.useMemo(()=>{
+       const state =  {
+           /* 用于比较一次 dispatch 中，新的 state 和 之前的state 是否发生变化  */
+           cacheState: stateValue.current,
+           /* 更新函数 */
+           update:function (newState) {
+               /* 获取订阅的 state */
+               const selectState = mapStoreToState(newState)
+               /* 浅比较 state 是否发生变化，如果发生变化， */
+               const isEqual = shallowEqual(state.cacheState,selectState)
+               state.cacheState = selectState
+               stateValue.current  = selectState
+               if(!isEqual){
+                   /* 更新 */
+                   forceUpdate({})
+               }
+           }
+       }
+       return state
+   },[ contextValue ]) // 将 contextValue 作为依赖项。
+
+   React.useEffect(()=>{
+       /* 组件挂载——注册 connect */
+       const name =  subscribe(connectValue)
+       return function (){
+            /* 组件卸载 —— 解绑 connect */
+           unSubscribe(name)
+       }
+   },[ connectValue ]) /* 将 connectValue 作为 useEffect 的依赖项 */
+
+   return [ stateValue.current , dispatch ]
+}
+```
+
+**初始化**
+
+- 用 useContext 获取上下文中， ReduxHooksStore 提供的核心函数。
+- 用 useRef 来保存得到的最新的 state 。
+- 用 useState 产生一个更新函数 `forceUpdate` ，这个函数只是更新组件。
+
+**注册｜解绑流程**
+
+- 注册： 通过 `useEffect` 来向 ReduxHooksStore 中注册当前 useConnect 产生的 connectValue ，connectValue 是什么马上会讲到。subscribe 用于注册，会返回当前 connectValue 的唯一标识 name 。
+- 解绑：在 useEffect 的销毁函数中，可以用调用 unSubscribe 传入 name 来解绑当前的 connectValue
+
+**connectValue是否更新组件**
+
+- connectValue ：真正地向 ReduxHooksStore 注册的状态，首先用 `useMemo` 来对 connectValue 做缓存，connectValue 为一个对象，里面的 cacheState 保留了上一次的 mapStoreToState 产生的 state ，还有一个负责更新的 update 函数。
+- **更新流程** ： 当触发 `dispatch` 在 ReduxHooksStore 中，会让每一个 connectValue 的 update 都执行， update 会触发映射函数 `mapStoreToState` 来得到当前组件想要的 state 内容。然后通过 `shallowEqual` 浅比较新老 state 是否发生变化，如果发生变化，那么更新组件。完成整个流程。
+- shallowEqual ： 这个浅比较就是 React 里面的浅比较，在第 11 章已经讲了其流程，这里就不讲了。
+
+**分清依赖关系**
+
+- 首先自定义 hooks useConnect 的依赖关系是上下文 contextValue 改变，那么说明 store 发生变化，所以重新通过 useMemo 产生新的 connectValue 。**所以 useMemo 依赖 contextValue。**
+- connectValue 改变，那么需要解除原来的绑定关系，重新绑定。**useEffect 依赖 connectValue。**
+
+**局限性**
+
+整个 useConnect 有一些局限性，比如：
+
+- 没有考虑 mapStoreToState 可变性，无法动态传入 mapStoreToState 。
+- 浅比较，不能深层次比较引用数据类型。
+
+### 使用与验证效果
+
+接下来就是验证效果环节，我模拟了组件通信的场景。
+
+#### 根部组件注入 Store
+
+```js
+import { ReduxContext , useConnect , useCreateStore } from './hooks/useRedux'
+function  Index(){
+    const [ isShow , setShow ] =  React.useState(true)
+    console.log('index 渲染')
+    return <div>
+        <CompA />
+        <CompB />
+        <CompC />
+        {isShow &&  <CompD />}
+        <button onClick={() => setShow(!isShow)} >点击</button>
+    </div>
+}
+
+function Root(){
+    const store = useCreateStore(function(state,action){
+        const { type , payload } =action
+        if(type === 'setA' ){
+            return {
+                ...state,
+                mesA:payload
+            }
+        }else if(type === 'setB'){
+            return {
+                ...state,
+                mesB:payload
+            }
+        }else if(type === 'clear'){ //清空
+            return  { mesA:'',mesB:'' }
+        }
+        else{
+            return state
+        }
+    },
+    { mesA:'111',mesB:'111' })
+    return <div>
+        <ReduxContext.Provider value={store} >
+            <Index/>
+        </ReduxContext.Provider>
+    </div>
+}
+```
+
+**Root根组件**
+
+- 通过 useCreateStore 创建一个 store ，传入 reducer 和 初始化的值 `{ mesA:'111',mesB:'111' }`
+- 用 Provider 传递 store。
+
+**Index组件**
+
+- 有四个子组件 CompA ， CompB ，CompC ，CompD 。其中 CompD 是 动态挂载的。
+
+#### 业务组件使用
+
+```js
+function CompA(){
+    const [ value ,setValue ] = useState('')
+    const [state ,dispatch ] = useConnect((state)=> ({ mesB : state.mesB }) )
+    return <div className="component_box" >
+        <p> 组件A</p>
+        <p>组件B对我说 ： {state.mesB} </p>
+        <input onChange={(e)=>setValue(e.target.value)}
+            placeholder="对B组件说"
+        />
+        <button onClick={()=> dispatch({ type:'setA' ,payload:value })} >确定</button>
+    </div>
+}
+
+function CompB(){
+    const [ value ,setValue ] = useState('')
+    const [state ,dispatch ] = useConnect((state)=> ({ mesA : state.mesA }) )
+    return <div className="component_box" >
+        <p> 组件B</p>
+        <p>组件A对我说 ： {state.mesA} </p>
+        <input onChange={(e)=>setValue(e.target.value)}
+            placeholder="对A组件说"
+        />
+        <button onClick={()=> dispatch({ type:'setB' ,payload:value })} >确定</button>
+    </div>
+}
+
+function CompC(){
+    const [state  ] = useConnect((state)=> ({ mes1 : state.mesA,mes2 : state.mesB }) )
+    return <div className="component_box" >
+        <p>组件A ： {state.mes1} </p>
+        <p>组件B ： {state.mes2} </p>
+    </div>
+}
+
+function CompD(){
+    const [ ,dispatch  ] = useConnect( )
+    console.log('D 组件更新')
+    return <div className="component_box" >
+        <button onClick={()=> dispatch({ type:'clear' })} > 清空 </button>
+    </div>
+}
+```
+
+- CompA 和 CompB 模拟组件双向通信。
+- CompC 组件接收 CompA 和 CompB 通信内容，并映射到 `mes1 ，mes2` 属性上。
+- CompD 没有 mapStoreToState ，没有订阅 state ，state 变化组件不会更新，只是用 dispatch 清空状态。

@@ -6,10 +6,10 @@ const sidebar = {
       sidebarDepth: 1,
       children: [
         "",
-        "interview/vue-symbols",
-        "interview/vue-test",
-        "interview/vue-router",
-        "interview/vue-vuex",
+        "warmup/vue-symbols",
+        "warmup/vue-test",
+        "warmup/vue-router",
+        "warmup/vue-vuex",
       ],
     },
     {
@@ -74,6 +74,14 @@ const sidebar = {
         "vue3.x/performance",
       ],
     },
+    {
+      title: "Vue3源码解析",
+      sidebarDepth: 2,
+      collapsable: false,
+      children: [
+        "vue3/warmup",
+      ],
+    },
   ],
   react: [
     {
@@ -94,6 +102,10 @@ const sidebar = {
         "warmup/react-router",
         "warmup/react-redux",
         "warmup/react-mobx",
+        "warmup/react-transition",
+        "warmup/react-suspense",
+        "warmup/react-useMutableSource",
+        "warmup/react-keepalive",
       ],
     },
     {
@@ -202,18 +214,6 @@ const sidebar = {
       sidebarDepth: 2,
       collapsable: false,
       children: [""],
-    },
-    {
-      title: "性能调优",
-      sidebarDepth: 2,
-      collapsable: false,
-      children: [],
-    },
-    {
-      title: "框架与工程化",
-      sidebarDepth: 2,
-      collapsable: false,
-      children: [],
     },
   ],
   devops: [

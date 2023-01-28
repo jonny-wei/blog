@@ -1,5 +1,7 @@
 # React State
 
+State 的主要作用是用于组件保存、控制、修改自身的可变状态。State 在组件内部初始化，可以被组件自身修改，而外部不能访问也不能修改。你可以认为 State 是一个局部的、只能被组件自身控制的数据源。State 中状态可以通过 setState 方法进行更新，数据的更新会导致组件的重新渲染。并不是组件中用到的所有变量都是组件的状态！当存在多个组件共同依赖一个状态时，一般的做法是状态提升，将这个状态放到这几个组件的公共父组件中。
+
 state 很“玄”，不同的执行环境下，或者不同的 React 模式下，State 更新流程都是不同的。React 是有多种模式的，基本平时用的都是 legacy 模式下的 React，除了 legacy 模式，还有 blocking 模式和 concurrent 模式， blocking 可以视为 concurrent 的优雅降级版本和过渡版本，React 最终目的是在不久的未来以 concurrent 模式作为默认版本，这个模式下会开启一些新功能。对于 concurrent 模式会采用不同的 State 更新逻辑。
 
 本文主要围绕 legacy 模式下的 state 。了解 React 更新流程，以及类组件 setState 和函数组件 useState 的诸多细节问题。
@@ -362,3 +364,9 @@ export default function Index(){
 - setState 有专门监听 state 变化的回调函数 callback，可以获取最新state；但是在函数组件中，只能通过 useEffect 来执行 state 变化引起的副作用。
 
 - setState 在底层处理逻辑上主要是和老 state 进行合并处理，而 useState 更倾向于重新赋值。
+
+### Q2. 为什么 React 推荐组件的状态是不可变对象呢？
+
+- 一方面是因为不可变对象方便管理和调试。
+
+- 另一方面是出于性能考虑，当对象组件状态都是不可变对象时，我们在组件的 shouldComponentUpdate 方法中，仅需要比较状态的引用就可以判断状态是否真的改变，从而避免不必要的 render() 调用。当我们使用 React 提供的 PureComponent 时，更是要保证组件状态是不可变对象，否则在组件的 shouldComponentUpdate 方法中，状态比较就可能出现错误，因为 PureComponent 执行的是浅比较（也就是比较对象的引用）。

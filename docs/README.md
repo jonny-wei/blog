@@ -7,9 +7,9 @@ actionText: 阅读文章
 actionLink: /vue/vue/vue-render.html
 features:
 - title: Vue 全家桶
-  details: Vue，VueRouter，Vuex 等底层源码解析，Vue相关知识点总结。
+  details: Vue，VueRouter，Vuex 等底层源码解析，Vue 相关知识点总结。
 - title: React 全家桶
-  details: React，Redux，Mobx 等底层源码解析，React相关知识点总结 。
+  details: React，Redux，Mobx 等底层源码解析，React 相关知识点总结 。
 - title: JS & TS
   details: JavaScript，TypeScript等基础与进阶知识，网络与浏览器渲染原理。
 - title: CSS 
@@ -21,7 +21,7 @@ features:
 - title: 泛客户端
   details: H5开发指南，RN，小程序，uni-app，Taro，Flutter。
 - title: 架构&方案
-  details: 组件库，低代码，微前端，BFF，SSG，SSR，场景解决方案。
+  details: 前端框架、组件库，低代码，微前端，BFF，SSG，SSR，场景解决方案。
 - title: 算法&编程
   details: 数据结构与算法，工具函数，设计模式，LeetCode。
 footer: MIT Licensed | Copyright © 2019-present 花帽子 

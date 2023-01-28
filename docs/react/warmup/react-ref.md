@@ -202,7 +202,23 @@ class GrandFather extends React.Component{
 }
 ```
 
-forwardRef 把 ref 变成了可以通过 props 传递和转发
+forwardRef 把 ref 变成了可以通过 props 传递和转发。forwardRef 实现如下：
+
+```js
+// 简化后
+const REACT_FORWARD_REF_TYPE = Symbol.for('react.forward_ref');
+
+export function forwardRef(render) {
+  const elementType = {
+    $$typeof: REACT_FORWARD_REF_TYPE,
+    render,
+  };
+
+  return elementType;
+}
+```
+
+注意这里的 `$$typeof`，尽管这里是 `REACT_FORWARD_REF_TYPE`，但最终创建的 React 元素的 `$$typeof` 依然为 `REACT_ELEMENT_TYPE`。
 
 #### 2. 合并转发 ref
 
@@ -636,4 +652,4 @@ function safelyDetachRef(current) {
 对于字符串 `ref="dom"` 和函数类型 `ref={(node)=> this.node = node }` 的 ref，会执行传入 null 置空 ref 。
 对于 ref 对象类型，会清空 ref 对象上的 current 属性。
 
-![ref5](images/react/ref5.png)
+![ref5](/blog/images/react/ref5.png)
