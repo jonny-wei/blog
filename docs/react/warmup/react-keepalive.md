@@ -1,4 +1,4 @@
-# 实现 keepAlive
+# 实现 KeepAlive
 
 目前 React v18 offScreen 还是处于测试开发阶段，仍然不确定未来 offScreen 将以何种形式出现，但是至少在新特性还没出现之前，可以手动去实现一下类似 Vue 中的 keepalive 功能。
 
@@ -124,7 +124,7 @@ function Index(){
 
 那么 KeepaliveItem 组件也会被卸载的，这个是在所难免的，如果 Content 是 KeepaliveItem 的子元素节点，那么 KeepaliveItem 的卸载，所有的子元素也会被卸载，这样的话保持 Content 的存活也就不可能实现了。
 
-![keepalive2](/blog/images/react/keepalive12.png)
+![keepalive2](/blog/images/react/keepalive2.png)
 
 如何解决这个问题呢？答案实际很简单，就是让 Content 组件在 KeepaliveItem 之外渲染，那么在 KeepaliveItem 之外渲染，具体在哪里呢？上面提到在整个应用外层通过有一个缓存状态的作用域 KeepaliveScope ，把 context 交给 KeepaliveScope 去渲染挂载，就不会担心 KeepaliveItem 被卸载导致 context 也被卸载的情况。本质上的结构如下所示:
 

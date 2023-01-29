@@ -171,6 +171,8 @@ React.Children.toArray 可以扁平化、规范化 React.element 的 children �
 
 ## Babel 解析 JSX 流程
 
+`JSX`并不是只能被编译为 `React.createElement` 方法，你可以通过[@babel/plugin-transform-react-jsx (opens new window)](https://babeljs.io/docs/en/babel-plugin-transform-react-jsx)插件显式告诉 `Babel` 编译时需要将`JSX`编译为什么函数的调用（默认为`React.createElement`）
+
 ### babel 插件
 
 JSX 语法实现来源于这两个 babel 插件：
@@ -289,7 +291,7 @@ function Index(){
 
 ### Q2. `React.createElement` 和 `React.cloneElement` 到底有什么区别?
 
-一个是用来创建 element 。另一个是用来修改 element，并返回一个新的 `React.element` 对象。
+一个是用来创建 element 。另一个是用来修改 element，并返回一个新的 `React.element` 对象。在`React`中，所有`JSX`在运行时的返回结果（即`React.createElement()`的返回值）都是`React Element`。
 
 ### Q3. createElement 做了什么？
 
@@ -405,3 +407,19 @@ const element = <h1>{title}</h1>;
 function createMarkup() {  return { __html: 'First &middot; Second' };}
 function MyComponent() {  return <div dangerouslySetInnerHTML={createMarkup()} />;}
 ```
+
+### Q5. JSX 与 Fiber 节点间的关系
+
+`JSX`是一种描述当前组件内容的数据结构，他不包含组件**schedule**、**reconcile**、**render**所需的相关信息。
+
+比如如下信息就不包括在`JSX`中：
+
+- 组件在更新中的`优先级`
+- 组件的`state`
+- 组件被打上的用于**Renderer**的`标记`
+
+这些内容都包含在`Fiber节点`中。
+
+所以，在组件`mount`时，`Reconciler`根据`JSX`描述的组件内容生成组件对应的`Fiber节点`。
+
+在`update`时，`Reconciler`将`JSX`与`Fiber节点`保存的数据对比，生成组件对应的`Fiber节点`，并根据对比结果为`Fiber节点`打上`标记`。

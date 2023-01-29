@@ -102,10 +102,10 @@ const sidebar = {
         "warmup/react-router",
         "warmup/react-redux",
         "warmup/react-mobx",
+        "warmup/react-keepalive",
         "warmup/react-transition",
         "warmup/react-suspense",
         "warmup/react-useMutableSource",
-        "warmup/react-keepalive",
       ],
     },
     {
@@ -116,6 +116,8 @@ const sidebar = {
         "react/react-version",
         "react/react-scheduler",
         "react/react-reconciler",
+        "react/react-render",
+        "react/react-commit",
         "react/react-priority",
         "react/react-fiber",
         "react/react-diff",
@@ -254,6 +256,7 @@ const sidebar = {
         "vite/ssr",
         "vite/legacy",
         "vite/split-code",
+        "vite/vite-news",
       ],
     },
     {
