@@ -78,9 +78,7 @@ const sidebar = {
       title: "Vue3源码解析",
       sidebarDepth: 2,
       collapsable: false,
-      children: [
-        "vue3/warmup",
-      ],
+      children: ["vue3/warmup"],
     },
   ],
   react: [
@@ -277,28 +275,29 @@ const sidebar = {
       title: "H5",
       collapsable: false,
       sidebarDepth: 1,
-      children: ["", "h5/mobile-fit"],
-    },
-    {
-      title: "RN",
-      collapsable: false,
-      children: [],
-    },
-    {
-      title: "Hybrid",
-      collapsable: false,
-      children: [],
-    },
-    {
-      title: "多端统一",
-      collapsable: false,
-      children: [],
+      children: ["", "h5/jsbridge", "h5/webview", "h5/mobile-fit"],
     },
     {
       title: "小程序",
       collapsable: false,
-      children: [],
+      sidebarDepth: 1,
+      children: ["mini/framework", "mini/render", "mini/page", "mini/security"],
     },
+    // {
+    //   title: "RN",
+    //   collapsable: false,
+    //   children: [],
+    // },
+    // {
+    //   title: "Hybrid",
+    //   collapsable: false,
+    //   children: [],
+    // },
+    // {
+    //   title: "多端统一",
+    //   collapsable: false,
+    //   children: [],
+    // },
   ],
   framework: [
     {
