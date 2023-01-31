@@ -126,8 +126,152 @@ native 调用 webview 注册的 jsb 的逻辑是相似的，不过就不是通�
 - 优点：桥的版本很容易与 Native 保持一致，Native 端不用对不同版本的 JSBridge 进行兼容。
 - 缺点：注入时机不确定，需要实现注入失败后重试的机制，保证注入的成功率，同时 JavaScript 端在调用接口时，需要优先判断 JSBridge 是否已经注入成功。
 
+
+## 最佳实践
+
+最佳实践的 JSBridge 要求做到以下几点：
+
+- 官方认可，符合规范
+- 跨平台通用
+- APP 内和 APP 外规范通用
+- 安全可靠
+- 约定大于配置的原则
+
+综合上文介绍的内容，JSBridge 的最佳实践是：
+
+1. 协议规范都使用：`hybrid://action/method?arg1=xxx&arg2=xxx`
+2. iOS 使用 Universal Link 和 UIWebview 的 `delegate`
+3. 安卓使用 `shouldOverrideUrlLoading` 和 Applink
+
+### 规范和约定
+
+先理解下 URL scheme的组成部分：
+
+```js
+yourappscheme://module/action?arg1=x&arg2=x&ios_version=xxx&andr_version=xxx&upgrade=1/0&callback=xxx&sendlog=1/0
+```
+
+- 整体小写
+- `yourappscheme`：就是你的 scheme，可辨识，别冲突，通过这个可以进行 Universal Link 和 Applink 的分发
+- `module` 和 `action`：某个模块组件的某个方法
+- `?`后面是 `querystring`，这里预定了几个特殊的参数：
+  - `ios_version/andr_version`：非必须，iOS 和安卓的最小版本，即本协议从哪个版本开始支持的，低版本不支持则忽略，配合 upgrade 使用进行 APP 升级
+  - `upgrade`：是否强制升级，即当版本低于设置的 ios/andr_version 是否弹出提示用户升级的对话框（yourappscheme 已经可以调起 app，只不过功能可能因为版本低不支持，这时候可以引导用户升级）
+  - `callback`：异步回调函数，下面详细树下 callback 的最佳实践
+  - `sendlog`：调起后是否打点发送日志
+  示例：
+
+```js
+// 账号相关
+// 打开用户个人主页
+fb://account/userprofile?id=xxx
+
+// 打开登录界面
+fb://account/login?callback=xxx
+
+// 工具类
+// 获取定位
+fb://utils/getgeolocation?callback=xx
+```
+
+### 回调方法设计
+
+当 Native 操作成功之后，会将处理结束后的结果或者数据通过 `callback` 回调传给 Web，当然有成果就又失败，`callback` 的参数设计有两种方式：
+
+#### 错误优先
+
+即下面的回调方法格式：
+
+```js
+function callback(error, data) {
+  if (error) {
+    throw error;
+  }
+  console.log(data);
+}
+```
+
+#### JSON 结构
+
+即回调方法只接收一个 JSON 对象，JSON 格式如下：
+
+```json
+{
+  "error_code": 0,
+  "data": {}
+}
+```
+
+### 预留升级/日志能力
+
+做 APP 开发经常会遇见下面的问题：
+
+1. 功能/端能力是从某个版本开始的，低版本用不了，但是 `scheme` 还是会调起 APP。
+2. 对于低版本，PM 希望提示用户升级
+3. 统计调起成功率，分发次数之类的统计需求
+
+`scheme` 的 `querystring` 部分由 `ios_version/andr_version` 和 `upgrade` 这三个成对的参数，可以解决升级问题，`sendlog` 解决日志统计问题。
+
+- `ios_version/andr_version`：是标示该协议的最低支持版本，如果低于这个版本可能因为功能并未实现而能识别。
+- `upgrade`：是是否强制低版本弹出升级对话框
+- `sendlog`：当为 1 的时候，则发送调起成功失败之类的统计需求
+
+### 简易代码实现
+
+简单封装下 JSBridge 调用的方法，参数如下：
+
+- `module`：类名称，如果 `account`
+- `action`：具体操作方法，如 `login`
+- `args`：非必须，协议参数，支持 `string` 和对象
+- `callback`：非必须，回调单独提出来，方便全局方法命名
+
+具体代码如下
+
+```js
+function invoke(module, action, args, callback) {
+  let scheme = `yourappscheme://${module}/${action}?`;
+  if (isFunction(args)) {
+    callback = args;
+    args = null;
+  }
+  // 处理下参数
+  if (isString(args)) {
+    scheme += args;
+  } else if (isObject(args)) {
+    each(args, (k, v) => {
+      if (isObject(v) || isArray(v)) {
+        v = JSON.stringify(v);
+      }
+      scheme += `${k}=${v}`;
+    });
+  }
+  // callback 独立传，方便全局函数名命名
+  if (isFunction(callback)) {
+    var funcName = '_jsbridge_cb_' + getId();
+    window[funcName] = function() {
+      callback.apply(window, [].slice.call(arguments, 0));
+    };
+    scheme += (!~scheme.indexOf('?') ? '&' : '?') + `callback=${funcName}`;
+  }
+
+  if (os.ios && versionCompare(os.version, '9.0') >= 0) {
+    window.location.href = scheme;
+  } else {
+    var $node = document.createElement('iframe');
+    $node.style.display = 'none';
+    $node.src = scheme;
+    var body = document.body || document.getElementsByTagName('body')[0];
+    body.appendChild($node);
+    setTimeout(function() {
+      body.removeChild($node);
+      $node = null;
+    }, 10);
+  }
+}
+```
+
 [JSBridge 初探](https://juejin.cn/post/6844904070881214471#heading-8)
 
 [App实现JSBridge的最佳方案](https://juejin.cn/post/7177407635317063735)
 
-[H5 与 Native 交互之 JSBridge 技术](https://juejin.cn/post/6844903491970793480#heading-1)
+[H5与Native交互之JSBridge技术](https://juejin.cn/post/6844903491970793480#heading-1)
