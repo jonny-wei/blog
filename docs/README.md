@@ -21,8 +21,8 @@ features:
 - title: 架构&方案
   details: 前端框架、组件库，低代码，微前端，智能化，业务场景解决方案。
 - title: 算法&编程
-  details: 数据结构与算法，工具函数，设计模式，LeetCode
+  details: 数据结构与算法，工具函数，设计模式，LeetCode。
 - title: 前端周刊
-  details: weekly news - 前端花边新闻。
+  details: weekly news - 前端花边新闻，周刊、月刊、好文收藏。
 footer: MIT Licensed | Copyright © 2019-present 花帽子 （jonny-wei）
 ---

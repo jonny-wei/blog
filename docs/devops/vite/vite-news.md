@@ -106,7 +106,7 @@ Vite 3 现在正确支持 **Relative Base**（使用base: ''），允许将构�
 
 ### Rollup 3
 
-Vite 现在正在使用 [Rollup 3](https://www.zhihu.com/search?q=Rollup 3&search_source=Entity&hybrid_search_source=Entity&hybrid_search_extra={"sourceType"%3A"article"%2C"sourceId"%3A"590754497"})，这使我们能够简化 Vite 的内部资源处理并有许多改进。
+Vite 现在正在使用 **Rollup 3**，这使我们能够简化 Vite 的内部资源处理并有许多改进。
 
 ### **Vite core monorepo 框架插件**
 
@@ -120,11 +120,11 @@ SWC 现在是 Babel 的成熟替代品，尤其是在 React 项目中。SWC 的 
 
 - `@vitejs/plugin-react` 是一个使用 esbuild 和 Babel 的插件，以较小的包占用空间和能够使用 babel transform pipeline 的灵活性实现快速 HMR。
 
-- `@vitejs/plugin-react-swc` 是一个新的插件，在构建过程中使用 esbuild，但在开发过程中将 Babel 替换为 SWC。 对于不需要非标准 React 扩展的[大型项目](https://www.zhihu.com/search?q=大型项目&search_source=Entity&hybrid_search_source=Entity&hybrid_search_extra={"sourceType"%3A"article"%2C"sourceId"%3A"590754497"})，冷启动和热更新 (HMR) 会加快。
+- `@vitejs/plugin-react-swc` 是一个新的插件，在构建过程中使用 esbuild，但在开发过程中将 Babel 替换为 SWC。 对于不需要非标准 React 扩展的大型项目，冷启动和热更新 (HMR) 会加快。
 
 ### **兼容性**
 
-[现代浏览器](https://www.zhihu.com/search?q=现代浏览器&search_source=Entity&hybrid_search_source=Entity&hybrid_search_extra={"sourceType"%3A"article"%2C"sourceId"%3A"590754497"})构建现在默认以 Safari 14 为目标，以实现更广泛的 ES2020 兼容性。这意味着现代构建现在可以使用 BigInt，并且不再转译[空值合并运算符](https://www.zhihu.com/search?q=空值合并运算符&search_source=Entity&hybrid_search_source=Entity&hybrid_search_extra={"sourceType"%3A"article"%2C"sourceId"%3A"590754497"})。如果需要支持旧的浏览器，可以像往常一样添加`@vitejs/plugin-legacy`。
+现代浏览器构建现在默认以 Safari 14 为目标，以实现更广泛的 ES2020 兼容性。这意味着现代构建现在可以使用 BigInt，并且不再转译空值合并运算符。如果需要支持旧的浏览器，可以像往常一样添加`@vitejs/plugin-legacy`。
 
 ### **将 CSS 作为字符串导入**
 
@@ -143,5 +143,5 @@ import stuff from './global.css?inline'
 ### **其它功能**
 
 - 预打包依赖项时支持 patch-package；
-- 更简洁的构建日志输出并切换到 kB 以与浏览器[开发工具](https://www.zhihu.com/search?q=开发工具&search_source=Entity&hybrid_search_source=Entity&hybrid_search_extra={"sourceType"%3A"article"%2C"sourceId"%3A"590754497"})保持一致；
+- 更简洁的构建日志输出并切换到 kB 以与浏览器开发工具保持一致；
 - 改进 SSR 期间的错误消息。

@@ -371,3 +371,12 @@ useDeferredValue 处理流程是这样的。
 - 然后在 useEffect 中通过 `transition` 模式来更新 value 。 这样保证了 DeferredValue 滞后于 state 的更新，并且满足 `transition` 过渡更新原则。
 
 ![transition3](/blog/images/react/transition3.png)
+
+`useDeferredValue` 与 `useTransition` 其实挺相似的：
+
+- 相同：`useDeferredValue` 本质上和内部实现与 `useTransition` 一样都是标记成了非紧急更新任务。
+- 不同：`useTransition` 是把更新任务变成了延迟更新任务，而 `useDeferredValue` 是产生一个新的值，这个值作为延时状态。
+
+同 `debounce` 的区别：
+
+`debounce` 即 `setTimeout` 总是会有一个固定的延迟，而 `useDeferredValue` 的值只会在渲染耗费的时间下滞后，在性能好的机器上，延迟会变少，反之则变长。

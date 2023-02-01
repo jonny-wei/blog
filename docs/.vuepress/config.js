@@ -188,6 +188,7 @@ const sidebar = {
         "warmup/react-transition",
         "warmup/react-suspense",
         "warmup/react-useMutableSource",
+        "warmup/react-ssr",
       ],
     },
     {
@@ -286,13 +287,14 @@ const sidebar = {
       children: ["mini/framework", "mini/render", "mini/page", "mini/security"],
     },
   ],
-  framework: [
+  architecture: [
     {
-      title: "架构&方案",
+      title: "前端框架",
       collapsable: false,
       sidebarDepth: 1,
       children: [
         "",
+        "framework/Islands",
         "micro-frontend",
         "BFF",
         "pwa",
@@ -305,6 +307,14 @@ const sidebar = {
   code: [
     {
       title: "算法&编程",
+      collapsable: false,
+      sidebarDepth: 1,
+      children: [""],
+    },
+  ],
+  weekly: [
+    {
+      title: "文渊阁",
       collapsable: false,
       sidebarDepth: 1,
       children: [""],
@@ -353,8 +363,9 @@ module.exports = {
       { text: "Node", link: "/node/" },
       { text: "前端工程化", link: "/devops/" },
       { text: "泛客户端", link: "/mobile/" },
-      { text: "架构&方案", link: "/framework/" },
+      { text: "架构&方案", link: "/architecture/" },
       { text: "算法&编程", link: "/code/" },
+      { text: "前端周刊", link: "/weekly/" },
       {
         text: "GitHub",
         items: [{ text: "GitHub地址", link: "https://github.com/jonny-wei" }],
@@ -367,8 +378,9 @@ module.exports = {
       "/node/": sidebar.node,
       "/devops/": sidebar.devops,
       "/mobile/": sidebar.mobile,
-      "/framework/": sidebar.framework,
+      "/architecture/": sidebar.architecture,
       "/code/": sidebar.code,
+      "/weekly/": sidebar.weekly,
     },
   },
   markdown: {
