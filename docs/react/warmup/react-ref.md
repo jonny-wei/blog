@@ -653,3 +653,11 @@ function safelyDetachRef(current) {
 对于 ref 对象类型，会清空 ref 对象上的 current 属性。
 
 ![ref5](/blog/images/react/ref5.png)
+
+[一文弄懂 React ref](https://juejin.cn/post/7175174485534834749)
+
+[React 之 Refs 的使用和 forwardRef 的源码解读](https://juejin.cn/post/7161719602652086308)
+
+[从 React 源码彻底搞懂 Ref 的全部 api](https://juejin.cn/post/7166224289383841823)
+
+[精读《useRef 与 createRef 的区别》](https://juejin.cn/post/6844904079164964878)

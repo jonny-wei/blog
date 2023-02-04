@@ -380,3 +380,5 @@ useDeferredValue 处理流程是这样的。
 同 `debounce` 的区别：
 
 `debounce` 即 `setTimeout` 总是会有一个固定的延迟，而 `useDeferredValue` 的值只会在渲染耗费的时间下滞后，在性能好的机器上，延迟会变少，反之则变长。
+
+[深入浅出用户体验大师—transition](https://juejin.cn/post/7027995169211285512)

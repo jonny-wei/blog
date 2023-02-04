@@ -115,7 +115,7 @@ props + children 模式 在 React 中非常常用，尤其对一些优秀开源�
 </Container>
 ```
 
-Container 中， props.children 属性访问到是函数，并不是 React element 对象，针对这种情况，像下面这种情况下 children 是不能直接渲染的，直接渲染会报错。改成如下方式:
+Container 中， props.children 属性访问到是函数，而不是 React element 对象，针对这种情况，像下面这种情况下 children 是不能直接渲染的，直接渲染会报错。改成如下方式:
 
 ```js
 function  Container(props) {

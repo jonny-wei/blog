@@ -172,11 +172,11 @@ export default Programmer
 
 ### 函数组件自定义 Hooks
 
-在 React hooks 章节，会详细介绍自定义 hooks 的原理。
+在 React hooks 章节，会详细介绍自定义 hooks 的原理。[React Hooks 理解](/react/react/react-hooks.html)
 
 ### HOC高阶组件
 
-在 HOC 章节，会详细介绍高阶组件 HOC 。
+在 HOC 章节，会详细介绍高阶组件 HOC 。[React HOC](/react/warmup/react-hoc.html)
 
 ## 组件自定义内容处理
 
@@ -478,6 +478,22 @@ class Index extends React.Component{
 - 子组件 Son 用 useImperativeHandle 接收父组件 ref，将让 input 聚焦的方法 onFocus 和 改变 input 输入框的值的方法 onChangeValue 传递给 ref 。
 - 父组件可以通过调用 ref 下的 onFocus 和 onChangeValue 控制子组件中 input 赋值和聚焦。
 
+关于 React Ref 的其他用法和原理详见 [React Ref 章节](/react/warmup/react-ref.html)
+
+### 状态管理库通信
+
+关于状态管理库的组件通信方式及其原理详见以下章节：
+
+- [React Rudex](/react/warmup/react-redux.html)
+- [React Mobx](/react/warmup/react-mobx.html)
+
+### Context 通信
+
+关于 context 的组件通信方式及其原理详见以下章节：
+
+- [React Context](/react/warmup/react-context.html)
+- [React Context 原理](/react/react/react-context.html)
+
 ## 问题
 
 ### Q1. 无状态组件和有状态组件
@@ -486,16 +502,109 @@ class Index extends React.Component{
 
 无状态组件（Stateless Component）是最基础的组件形式，由于没有状态的影响所以就是纯静态展示的作用。一般来说，各种 UI 库里也是最开始会开发的组件类别。如按钮、标签、输入框等。它的基本组成结构就是属性（props）加上一个渲染函数（render）。由于不涉及到状态的更新，所以这种组件的复用性也最强。
 
-这类组件有以下几个特点：
+**特点：**
 
-- 只负责接收 `props`，渲染 DOM
-- 没有 `state`
+- 只负责接收 `props`，渲染 DOM，可以是类组件或者函数组件。组件内部不维护 state ，只根据外部组件传入的 props 进行渲染的组件，当 props 改变时，组件重新渲染。
+- 没有 `state`，不依赖自身的状态 state。
 - 不能访问生命周期方法
 - 不需要声明类：可以避免 `extends` 或 `constructor` 之类的代码，语法上更加简洁。
 - 不会被实例化：因此不能直接传 `ref`（可以使用 `React.forwardRef` 包装后再传 `ref`）。
-- 不需要显示声明 `this` 关键字：在 ES6 的类声明中往往需要将函数的 `this` 关键字绑定到当前作用域，而因为函数式声明的特性，我们不需要再强制绑定。
-- 更好的性能表现：因为函数式组件中并不需要进行生命周期的管理与状态管理，因此React并不需要进行某些特定的检查或者内存分配，从而保证了更好地性能表现。
+- 不需要显示声明 `this` 关键字：在 ES6 的类声明中往往需要将函数的 `this` 关键字绑定到当前作用域，而因为函数式声明的特性，我们不需要再强制绑定。可以完全避免使用 this 关键字。（由于使用的是箭头函数事件无需绑定）。
+- 更好的性能表现：因为函数式组件中并不需要进行生命周期的管理与状态管理，因此React并不需要进行某些特定的检查或者内存分配，从而保证了更好地性能表现。当不需要使用生命周期钩子时，应该首先使用无状态函数组件。
+
+**使用场景：**
+
+- 组件不需要管理 state，纯展示
+
+**优点：**
+
+- 简化代码、专注于 render
+- 组件不需要被实例化，无生命周期，提升性能。 输出（渲染）只取决于输入（属性），无副作用
+- 视图和数据的解耦分离
+
+**缺点：**
+
+- 无法使用 ref
+- 无生命周期方法
+- 无法控制组件的重渲染，因为无法使用 `shouldComponentUpdate` 方法，当组件接受到新的属性时则会重渲染
+
+**总结：** 组件内部状态且与外部无关的组件，可以考虑用状态组件，这样状态树就不会过于复杂，易于理解和管理。当一个组件不需要管理自身状态时，也就是无状态组件，应该优先设计为函数组件。比如自定义的 `<Button/>`、 `<Input />` 等组件。
 
 #### 有状态组件
 
 在无状态组件的基础上，如果组件内部包含状态（state）且状态随着事件或者外部的消息而发生改变的时候，这就构成了有状态组件（Stateful Component）。有状态组件通常会带有生命周期（Lifecycle），用以在不同的时刻触发状态的更新。这种组件也是通常在写业务逻辑中最经常使用到的，根据不同的业务场景组件的状态数量以及生命周期机制也不尽相同。
+
+**特点：**
+
+- 是类组件
+- 有继承
+- 可以使用this
+- 可以使用react的生命周期
+- 使用较多，容易频繁触发生命周期钩子函数，影响性能
+- 内部使用 state，维护自身状态的变化，有状态组件根据外部组件传入的 props 和自身的 state进行渲染。
+
+**使用场景：**
+
+- 需要使用到状态的。
+- 需要使用状态操作组件的（无状态组件的也可以实现新版本react hooks也可实现）
+
+**总结：** 类组件可以维护自身的状态变量，即组件的 state ，类组件还有不同的生命周期方法，可以让开发者能够在组件的不同阶段（挂载、更新、卸载），对组件做更多的控制。类组件则既可以充当无状态组件，也可以充当有状态组件。当一个类组件不需要管理自身状态时，也可称为无状态组件。
+
+### Q2. 受控组件和非控组件
+
+#### 受控组件
+
+在使用表单来收集用户输入时，例如`<input><select><textearea>`等元素都要绑定一个 `change` 事件，当表单的状态发生变化，就会触发 `onChange` 事件，更新组件的 `state`。这种组件在 React 中被称为**受控组件**。在受控组件中，组件渲染出的状态与它的`value`或 `checked` 等属性相对应，react 通过这种方式消除了组件的局部状态，使整个状态可控。react 官方推荐使用受控表单组件。
+
+受控组件更新 `state` 的流程：
+
+- 可以通过初始 `state` 中设置表单的默认值
+- 每当表单的值发生变化时，调用 `onChange` 事件处理器
+- 事件处理器通过事件对象`e` 拿到改变后的状态，并更新组件的 `state`
+- 一旦通过 `setState` 方法更新 `state`，就会触发视图的重新渲染，完成表单组件的更新
+
+受控组件**缺陷**：表单元素的值都是由 React 组件进行管理，当有多个输入框，或者多个这种组件时，如果想同时获取到全部的值就必须每个都要编写事件处理函数，这会让代码看着很臃肿，所以为了解决这种情况，出现了非受控组件。
+
+#### 非受控组件
+
+如果一个表单组件没有 `value props`（单选和复选按钮对应的是`checked props`）时，就可以称为**非受控组件**。在非受控组件中，可以使用一个 `ref`来从 `DOM` 获得表单值。而不是为每个状态更新编写一个事件处理程序。
+
+React官方的解释：
+
+> 要编写一个非受控组件，而不是为每个状态更新都编写数据处理函数，你可以使用 ref 来从 DOM 节点中获取表单数据。 因为非受控组件将真实数据储存在 DOM 节点中，所以在使用非受控组件时，有时候反而更容易同时集成 React 和非 React 代码。如果你不介意代码美观性，并且希望快速编写代码，使用非受控组件往往可以减少你的代码量。否则，你应该使用受控组件。
+
+例如，下面的代码在非受控组件中接收单个属性：
+
+```javascript
+class NameForm extends React.Component {
+  constructor(props) {
+    super(props);
+    this.handleSubmit = this.handleSubmit.bind(this);
+  }
+  handleSubmit(event) {
+    alert('A name was submitted: ' + this.input.value);
+    event.preventDefault();
+  }
+  render() {
+    return (
+      <form onSubmit={this.handleSubmit}>
+        <label>
+          Name:
+          <input type="text" ref={(input) => this.input = input} />
+        </label>
+        <input type="submit" value="Submit" />
+      </form>
+    );
+  }
+}
+```
+
+**总结：** 页面中所有输入类的 DOM 如果是现用现取的称为**非受控组件**，而通过 `setState` 将输入的值维护到了 `state` 中，需要时再从`state` 中取出，这里的数据就受到了 `state` 的控制，称为**受控组件**。
+
+### Q3. React 组件的通信方式有哪些？
+
+- 父子通信：`props/props callback`，`context`，`ref`，`event bus`，`状态管理库`。
+- 兄弟通信：`event bus`，`公共父组件 context`，`状态管理库`
+- 隔代（跨级）通信：`event bus`，`context`,`状态管理库`
+
+[React 组件通信](https://juejin.cn/post/6914464070506643470#heading-14)

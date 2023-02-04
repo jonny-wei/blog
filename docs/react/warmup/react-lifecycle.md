@@ -227,7 +227,7 @@ constructor 作用：
 
 - 初始化 state ，比如可以用来截取路由中的参数，赋值给 state 。
 - 对类组件的事件做一些处理，比如绑定 this ， 节流，防抖等。
-- 对类组件进行一些必要生命周期的劫持，渲染劫持，这个功能更适合反向继承的HOC ，在 HOC 环节，会详细讲解反向继承这种模式。
+- 对类组件进行一些必要生命周期的劫持，渲染劫持，这个功能更适合反向继承的 HOC ，在 HOC 环节，会详细讲解反向继承这种模式。[React HOC](/react/warmup/react-hoc.html)
 
 ### getDerivedStateFromProps
 
@@ -269,19 +269,19 @@ getDerivedStateFromProps 作用：
 
 ### componentWillMount 和 UNSAFE_componentWillMount
 
-在 React V16.3 componentWillMount ，componentWillReceiveProps ， componentWillUpdate 三个生命周期加上了不安全的标识符 UNSAFE，变成了如下形式，在目前最新的版本React V17.0.2 也没有废弃这三个生命周期。可能不久之后更高级的版本会被废除吧，首先先来看一下为什么要加UNSAFE，首先根据源码，大家有没有发现一个问题，就是这三个生命周期，都是在 render 之前执行的，React 对于执行 render 函数有着像 shouldUpdate 等条件制约，但是对于执行在 render 之前生命周期没有限制，存在一定隐匿风险，如果 updateClassInstance 执行多次，React 开发者滥用这几个生命周期，可能导致生命周期内的上下文多次被执行。
+在 React V16.3 `componentWillMount` ，`componentWillReceiveProps` ， `componentWillUpdate` 三个生命周期加上了不安全的标识符 `UNSAFE`，变成了如下形式，在目前最新的版本 `React V17.0.2` 也没有废弃这三个生命周期。可能不久之后更高级的版本会被废除吧，首先先来看一下为什么要加 `UNSAFE`，首先根据源码，大家有没有发现一个问题，就是这三个生命周期，都是在 render 之前执行的，React 对于执行 render 函数有着像 shouldUpdate 等条件制约，但是对于执行在 render 之前生命周期没有限制，存在一定隐匿风险，如果 `updateClassInstance` 执行多次，React 开发者滥用这几个生命周期，可能导致生命周期内的上下文多次被执行。
 
 - UNSAFE_componentWillMount
 - UNSAFE_componentWillReceiveProps
 - UNSAFE_componentWillUpdate
 
-UNSAFE_componentWillMount 的作用还是做一些初始化操作，但是不建议在这个生命周期写，毕竟未来 React 可能完全取缔它。
+`UNSAFE_componentWillMount` 的作用还是做一些初始化操作，但是不建议在这个生命周期写，毕竟未来 React 可能完全取缔它。
 
 ### omponentWillReceiveProps 和 UNSAFE_componentWillReceiveProps
 
-UNSAFE_componentWillReceiveProps 函数的执行是在更新组件阶段，该生命周期执行驱动是因为父组件更新带来的 props 修改，但是只要父组件触发 render 函数，调用 React.createElement 方法，那么 props 就会被重新创建，生命周期 componentWillReceiveProps 就会执行了。这就解释了即使 props 没变，该生命周期也会执行。
+`UNSAFE_componentWillReceiveProps` 函数的执行是在更新组件阶段，该生命周期执行驱动是因为父组件更新带来的 props 修改，但是只要父组件触发 render 函数，调用 `React.createElement` 方法，那么 props 就会被重新创建，生命周期 `componentWillReceiveProps` 就会执行了。这就解释了即使 props 没变，该生命周期也会执行。
 
-componentWillReceiveProps 可以用来干什么
+`componentWillReceiveProps` 可以用来干什么
 
 ```js
 UNSAFE_componentWillReceiveProps(newProps){
@@ -300,18 +300,18 @@ UNSAFE_componentWillReceiveProps(newProps){
 }
 ```
 
-- componentWillReceiveProps 可以用来监听父组件是否执行 render 。
-- componentWillReceiveProps 可以用来接受 props 改变，组件可以根据 props 改变，来决定是否更新 state ，因为可以访问到 this ， 所以可以在异步成功回调(接口请求数据)改变 state 。这个是 getDerivedStateFromProps 不能实现的。
+- `componentWillReceiveProps` 可以用来监听父组件是否执行 render 。
+- `componentWillReceiveProps` 可以用来接受 props 改变，组件可以根据 props 改变，来决定是否更新 state ，因为可以访问到 this ， 所以可以在异步成功回调(接口请求数据)改变 state 。这个是 `getDerivedStateFromProps` 不能实现的。
 
-不建议用这种方式，props 改变，再触发 componentWillReceiveProps 异步请求数据渲染，这样首先在没做优化前提下会带来两次子组件的更新，第一次 props 改变，第二次 props 改变，异步改变state 。其次该生命周期的不安全性。再者需要在该生命周期内部，设置大量的条件判断语句，通过 this.props ， nextProps 判断 props 到底改变与否。所以完全可以换一种思路，那就是状态提升，把数据层完全托管父组件，子组件没有副作用，只负责渲染父组件传递的 props 即可。
+不建议用这种方式，props 改变，再触发 `componentWillReceiveProps` 异步请求数据渲染，这样首先在没做优化前提下会带来两次子组件的更新，第一次 props 改变，第二次 props 改变，异步改变state 。其次该生命周期的不安全性。再者需要在该生命周期内部，设置大量的条件判断语句，通过 this.props ， nextProps 判断 props 到底改变与否。所以完全可以换一种思路，那就是状态提升，把数据层完全托管父组件，子组件没有副作用，只负责渲染父组件传递的 props 即可。
 
-当 props 不变的前提下， PureComponent 组件能否阻止 componentWillReceiveProps 执行？
+当 props 不变的前提下， PureComponent 组件能否阻止 `componentWillReceiveProps` 执行？
 
-答案是否定的，componentWillReceiveProps 生命周期的执行，和纯组件没有关系，纯组件是在 componentWillReceiveProps 执行之后浅比较 props 是否发生变化。所以 PureComponent 下不会阻止该生命周期的执行。
+答案是否定的，`componentWillReceiveProps` 生命周期的执行，和纯组件没有关系，纯组件是在 `componentWillReceiveProps` 执行之后浅比较 props 是否发生变化。所以 PureComponent 下不会阻止该生命周期的执行。
 
 ### componentWillUpdate 和 UNSAFE_componentWillUpdate
 
-UNSAFE_componentWillUpdate 可以意味着在更新之前，此时的 DOM 还没有更新。在这里可以做一些获取 DOM 的操作。就比如说在一次更新中，保存 DOM 之前的信息(记录上一次位置)。但是 React 已经出了新的生命周期 getSnapshotBeforeUpdate 来代替 UNSAFE_componentWillUpdate。
+`UNSAFE_componentWillUpdate` 可以意味着在更新之前，此时的 DOM 还没有更新。在这里可以做一些获取 DOM 的操作。就比如说在一次更新中，保存 DOM 之前的信息(记录上一次位置)。但是 React 已经出了新的生命周期 `getSnapshotBeforeUpdate` 来代替 `UNSAFE_componentWillUpdate`。
 
 ```js
 UNSAFE_componentWillUpdate(){
@@ -704,3 +704,26 @@ function () {
         />
 }
 ```
+
+## 问题
+
+### Q1. useEffect/useLayoutEffect/useInsertionEffect 有什么区别？
+
+一句话概括如何选择 useEffect 和 useLayoutEffect ：修改 DOM ，改变布局就用 useLayoutEffect ，其他情况就用 useEffect 。
+
+- useInsertionEffect: useInsertionEffect 的执行时机要比 useLayoutEffect 提前，useLayoutEffect 执行的时候 DOM 已经更新了，但是在 useInsertionEffect 的执行的时候，DOM 还没有更新。本质上 useInsertionEffect 主要是解决 CSS-in-JS 在渲染中注入样式的性能问题。这个 hooks 主要是应用于这个场景，在其他场景下 React 不期望用这个 hooks。useInsertionEffect 的执行在 DOM 更新前，所以此时使用 CSS-in-JS 避免了浏览器出现再次重回和重排的可能，解决了性能上的问题。
+- useLayoutEffect: useLayoutEffect 是在 DOM 更新之后，浏览器绘制之前，这样可以方便修改 DOM，获取 DOM 信息，这样浏览器只会绘制一次，如果修改 DOM 布局放在 useEffect ，那 useEffect 执行是在浏览器绘制视图之后，接下来又改 DOM ，就可能会导致浏览器再次回流和重绘。而且由于两次绘制，视图上可能会造成闪现突兀的效果。useLayoutEffect callback 中代码执行会阻塞浏览器绘制。
+- useEffect：对于 useEffect 执行， React 处理逻辑是采用异步调用 ，对于每一个 effect 的 callback， React 会向 setTimeout回调函数一样，放入任务队列，等到主线程任务完成，DOM 更新，js 执行完成，视图绘制完毕，才执行。所以 effect 回调函数不会阻塞浏览器绘制视图。
+
+顺序：useInsertionEffect -> DOM 更新 -> useLayoutEffect -> render -> useEffect
+
+### Q2. React.useEffect 回调函数 和 componentDidMount / componentDidUpdate 执行时机有什么区别 ？
+
+useEffect 对 React 执行栈来看是异步执行的，而 componentDidMount / componentDidUpdate 是同步执行的，useEffect代码不会阻塞浏览器绘制。在时机上 ，componentDidMount / componentDidUpdate 和 useLayoutEffect 更类似。
+
+### Q3. 类组件生命周期
+
+![生命周期总览](/blog/images/react/生命周期总览.png)
+
+
+[React 18.2 - 生命周期](https://juejin.cn/post/7188450404105977914)

@@ -289,6 +289,14 @@ function Index(){
 
 因为 jsx 在被 babel 编译后，写的 jsx 会变成 React.createElement 形式，所以需要引入 React，防止找不到 React 引起报错。@babel/plugin-syntax-jsx ,在编译的过程中注入 `_jsxRuntime api` ，使得新版本 React 已经不需要引入 createElement。
 
+本质上来说 JSX 是 `React.createElement(component, props, ...children)` 方法的语法糖。在 `React 17` 之前，如果使用了JSX，其实就是在使用 React， babel 会把组件转换为 CreateElement 形式。在 `React 17` 之后，就不再需要引入，因为 babel 已经可以帮我们自动引入 react。
+
+`JSX` 与 `JS` 的区别：
+
+1. `JS` 可以被打包工具直接编译，不需要额外转换，`jsx`需要通过 `babel` 编译，它是`React.createElement` 的语法糖，使用 `jsx`等价于`React.createElement`
+2. `jsx` 是 `js` 的语法扩展，允许在 `html`中写 `JS`。`JS` 是原生写法，需要通过 `script` 标签引入
+
+
 ### Q2. `React.createElement` 和 `React.cloneElement` 到底有什么区别?
 
 一个是用来创建 element 。另一个是用来修改 element，并返回一个新的 `React.element` 对象。在`React`中，所有`JSX`在运行时的返回结果（即`React.createElement()`的返回值）都是`React Element`。
@@ -423,3 +431,7 @@ function MyComponent() {  return <div dangerouslySetInnerHTML={createMarkup()} /
 所以，在组件`mount`时，`Reconciler`根据`JSX`描述的组件内容生成组件对应的`Fiber节点`。
 
 在`update`时，`Reconciler`将`JSX`与`Fiber节点`保存的数据对比，生成组件对应的`Fiber节点`，并根据对比结果为`Fiber节点`打上`标记`。
+
+### Q6. 为什么 React 要用 JSX？
+
+JSX 是一个 JavaScript 的语法扩展，结构类似 XML。JSX 主要用于声明 React 元素，但 React 中并不强制使用 JSX。即使使用了 JSX，也会在构建过程中，通过 Babel 插件编译为 `React.createElement`。所以 JSX 更像是 `React.createElement` 的一种语法糖。
