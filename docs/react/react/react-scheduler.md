@@ -41,6 +41,12 @@ React 为了防止 requestIdleCallback 中的任务由于浏览器没有空闲�
 
 React 的异步更新任务就是通过类似 requestIdleCallback 去向浏览器做一帧一帧请求，等到浏览器有空余时间，去执行 React 的异步更新任务，这样保证页面的流畅。
 
+::: tip 注意
+Scheduler 是独立于 React 的包，所以他的优先级也是独立于 React 的优先级。`Scheduler`对外暴露了一个方法　`unstable_runWithPriority` 。这个方法接受一个`优先级`与一个`回调函数`，在`回调函数`内部调用获取`优先级`的方法都会取得第一个参数对应的`优先级`。
+
+在`React`内部凡是涉及到`优先级`调度的地方，都会使用`unstable_runWithPriority`。比如，我们知道`commit`阶段是同步执行的。可以看到，`commit`阶段的起点`commitRoot`方法的优先级为`ImmediateSchedulerPriority`。`ImmediateSchedulerPriority`即`ImmediatePriority`的别名，为最高优先级，会立即执行。
+:::
+
 ### 模拟 requestIdleCallback
 
 但是 requestIdleCallback 目前只有谷歌浏览器支持 ，为了兼容每个浏览器，React需要自己实现一个 requestIdleCallback ，那么就要具备两个条件：
@@ -322,6 +328,26 @@ function unstable_shouldYield() {
 ## 调度整体流程
 
 ![scheduler1](/blog/images/react/scheduler1.png)
+
+`优先级`意味着任务的过期时间。设想一个大型`React`项目，在某一刻，存在很多不同`优先级`的`任务`，对应不同的过期时间。
+
+同时，又因为任务可以被延迟，所以我们可以将这些任务按是否被延迟分为：
+
+- 已就绪任务
+- 未就绪任务
+
+`Scheduler`存在两个队列：
+
+- timerQueue：保存未就绪任务
+- taskQueue：保存已就绪任务
+
+每当有新的未就绪的任务被注册，我们将其插入`timerQueue`并根据开始时间重新排列`timerQueue`中任务的顺序。
+
+当`timerQueue`中有任务就绪，即`startTime <= currentTime`，我们将其取出并加入`taskQueue`。
+
+取出`taskQueue`中最早过期的任务并执行他。
+
+为了能在O(1)复杂度找到两个队列中时间最早的那个任务，`Scheduler`使用小顶堆实现了`优先级队列`。
 
 ## 异步调度流程
 

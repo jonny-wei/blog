@@ -1,5 +1,7 @@
 # React Context 原理
 
+ `Context`　提供了一种直接访问祖先节点上的状态的方法, 避免了多级组件层层传递　`props`的问题。
+
 - Provder 如何传递 context？
 - 三种获取 context 原理 （ `Consumer`， `useContext`，`contextType` ）？
 - 消费 `context` 的组件，context 改变，为什么会订阅更新 （如何实现） 。
@@ -317,6 +319,7 @@ export function createContext(defaultValue,calculateChangedBits){
         $$typeof: REACT_CONTEXT_TYPE, /* 本质上就是 Consumer element 类型 */
         _calculateChangedBits: calculateChangedBits,
         _currentValue: defaultValue,
+        _currentValue2: defaultValue,
         _threadCount: 0,
         Provider: null,
         Consumer: null,
@@ -335,6 +338,10 @@ export function createContext(defaultValue,calculateChangedBits){
 - **`Provider`** 本质上是一个 element 对象 $$typeof -> `REACT_PROVIDER_TYPE`
 - **`Consumer`** 本质上也是一个 element 对象 $$typeof -> `REACT_CONTEXT_TYPE`
 - **`_currentValue`** 这个用来保存传递给 Provider 的 value 。
+
+`createContext`核心逻辑就是：其初始值保存在`context._currentValue`(同时保存到`context._currentValue2`。 保存 2 个 value 是为了支持多个渲染器并发渲染)。同时创建了`context.Provider`, `context.Consumer`2 个`reactElement`对象。
+
+在`fiber树渲染`时, 在`beginWork`中`ContextProvider`类型的节点对应的处理函数是[updateContextProvider](https://github.com/facebook/react/blob/v17.0.2/packages/react-reconciler/src/ReactFiberBeginWork.old.js#L2842-L2898) 详见下文 - Provider 提供者。
 
 ## Provider 提供者
 
@@ -356,6 +363,7 @@ export function createContext(defaultValue,calculateChangedBits){
 ```js
 function updateContextProvider(current ,workInProgress,renderExpirationTime,) {
   /*  获取 Provder 上的 value  */
+  /* pushProvider实际上是一个存储函数, 利用栈的特性, 先把context._currentValue压栈, 之后更新context._currentValue = nextValue */
   pushProvider(workInProgress, newProps.value;);
   /* 更新 context  */
   if (oldProps !== null) {
@@ -377,9 +385,11 @@ function updateContextProvider(current ,workInProgress,renderExpirationTime,) {
 }
 ```
 
+`updateContextProvider`　在　`fiber`　初次创建时十分简单，仅仅就是保存了　`pendingProps.value`　做为　`context`　的最新值, 之后这个最新的值用于供给消费。
+
 如上保留了 `updateContextProvider` 的核心流程如下：
 
-- 第一步： 首先会调用 `pushProvider`，`pushProvider` 会获取 type 属性上的 _context 对象，就是上述通过 `createContext` 创建的 context 对象。然后将 Provider 的 value 属性，赋值给 context 的_currentValue 属性上。**这里解释了 Provder 通过什么手段传递 context value，即通过挂载 context 的 _currentValue 属性。**
+- 第一步： 首先会调用 `pushProvider`，`pushProvider` 会获取 type 属性上的 `_context` 对象，就是上述通过 `createContext` 创建的 context 对象。然后将 Provider 的 value 属性，赋值给 context 的 `_currentValue` 属性上。**这里解释了 Provder 通过什么手段传递 context value，即通过挂载 context 的 `_currentValue` 属性。**
 - 第二步： 通过 `calculateChangedBits` 计算出 changedBits ，`calculateChangedBits` 内部触发 context 对象上的 `_calculateChangedBits` ，细心的同学可以发现，在调用 `createContext` 的时候，实际上是有第二个参数的 `calculateChangedBits`，在更新 Provider 的时候这个参数就派上用场了，当它返回的 `changedBits === 0` 的时候，那么还会浅比较 children 是否发生变化，还有就是有没有 `legacy context`，如果这三点都满足的话，那么会判断当前 Provider 和子节点不需要更新，那么会 return 停止向下调和子节点。
 - 第三步（**重点**）：在实际开发中，绝大多数当 value 发生变化，会走 `propagateContextChange` 这个流程，也是 Provider 更新的特点。
 
@@ -551,6 +561,7 @@ export function readContext( context,observedBits ){
 
 #### useContext 原理
 
+
 `useContext` 原理，调用 useContext 本质上调用 `readContext` 方法。
 
 ```js
@@ -560,6 +571,8 @@ const HooksDispatcherOnMount ={
 }
 ```
 
+- 进入`updateFunctionComponent`后, 会调用`prepareToReadContext`
+- 无论是初次[创建阶段](https://github.com/facebook/react/blob/v17.0.2/packages/react-reconciler/src/ReactFiberHooks.old.js#L1780), 还是[更新阶段](https://github.com/facebook/react/blob/v17.0.2/packages/react-reconciler/src/ReactFiberHooks.old.js#L1801), `useContext`都直接调用了`readContext`
 - 函数组件通过 readContext ，将函数组件的 `dependencies`和当前 context 建立起关联，context 改变，将当前函数组件设置高优先级，促使其渲染。
 
 #### contextType 原理
@@ -578,9 +591,37 @@ function constructClassInstance(workInProgress,ctor,props){
 }
 ```
 
+- 进入`updateClassComponent`后, 会调用`prepareToReadContext`
+- 无论[constructClassInstance](https://github.com/facebook/react/blob/v17.0.2/packages/react-reconciler/src/ReactFiberClassComponent.old.js#L573),[mountClassInstance](https://github.com/facebook/react/blob/v17.0.2/packages/react-reconciler/src/ReactFiberClassComponent.old.js#L807), [updateClassInstance](https://github.com/facebook/react/blob/v17.0.2/packages/react-reconciler/src/ReactFiberClassComponent.old.js#L1031)内部都调用`context = readContext((contextType: any));`
 - 静态属性 `contextType` ，在类组件实例化的时候被使用，本质上也是调用 `readContext`将 context 和 fiber 上的 `dependencies` 建立起关联。
+
+所以消费 consumer 的 3 种方式（ `contextType` ， `useContext`， `Consumer`）只是`react`根据不同使用场景封装的`api`, 内部都会调用[prepareToReadContext](https://github.com/facebook/react/blob/v17.0.2/packages/react-reconciler/src/ReactFiberNewContext.old.js#L297-L317)和[readContext(contextType)](https://github.com/facebook/react/blob/v17.0.2/packages/react-reconciler/src/ReactFiberNewContext.old.js#L319-L381)。
+
+`prepareToReadContext` 核心逻辑:
+
+1. `prepareToReadContext`: 设置`currentlyRenderingFiber = workInProgress`, 并重置`lastContextDependency`等全局变量.
+2. `readContext`: 返回`context._currentValue`, 并构造一个`contextItem`添加到`workInProgress.dependencies`链表之后.
+
+注意: 这个`readContext`并不是纯函数, 它还有一些副作用, 会更改`workInProgress.dependencies`, 其中`contextItem.context`保存了当前`context`的引用。这个`dependencies`属性会在更新时使用, 用于判定是否依赖了`ContextProvider`中的值。返回`context._currentValue`之后，之后继续进行`fiber树构造`直到全部完成即可。
+
+更新 Context，同样进入`updateContextConsumer`，核心逻辑:
+
+1. `value`没有改变, 直接进入`Bailout`。
+2. `value`改变, 调用`propagateContextChange`
+
+`propagateContextChange`源码比较长, 核心逻辑如下:
+
+1. 向下遍历: 从`ContextProvider`类型的节点开始, 向下查找所有`fiber.dependencies`依赖该`context`的节点(假设叫做`consumer`)。
+2. 向上遍历: 从`consumer`节点开始, 向上遍历, 修改父路径上所有节点的`fiber.childLanes`属性, 表明其子节点有改动, 子节点会进入更新逻辑。
+
+通过以上 2 个步骤, 保证了所有消费该`context`的子节点都会被重新构造, 进而保证了状态的一致性, 实现了`context`更新。
 
 ## 小结
 
 - Provider 传递流程：Provider 的更新，会深度遍历子代 fiber，消费 context 的 fiber 和父级链都会提升更新优先级。 对于类组件的 fiber ，会 forceUpdate 处理。接下来所有消费的 fiber，都会 beginWork 。
 - context 订阅流程： `contextType` ， `useContext`， `Consumer` 会内部调用 `readContext` ，readContext 会把 fiber 上的 `dependencies` 属性和 context 对象建立起关联。
+
+`Context`的实现思路还是比较清晰, 总体分为 2 步：
+
+1. 在消费状态时,`ContextConsumer`节点调用`readContext(MyContext)`获取最新状态。
+2. 在更新状态时, 由`ContextProvider`节点负责查找所有`ContextConsumer`节点, 并设置消费节点的父路径上所有节点的`fiber.childLanes`, 保证消费节点可以得到更新。

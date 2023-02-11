@@ -228,3 +228,9 @@ React 18 弃用了 `renderToNodeStream` API，取而代之的是一个名为 `re
 [React 18中新的Suspense SSR架构](https://mp.weixin.qq.com/s/hqvLam9RYLfolKkFrZ9DfQ)
 
 [React Server Component: 混合式渲染](https://mp.weixin.qq.com/s/BIxGyA1cnmWjFNNpL5NLmw)
+
+[大前端时代，如何做好C 端业务下的React SSR](https://mp.weixin.qq.com/s/zzKfcP8sNEU68-UOVIiDvg)
+
+[React 中同构（SSR）原理脉络梳理](https://mp.weixin.qq.com/s/BXC6tZyY6fsi8l8dJ40nug)
+
+[一文吃透React SSR服务端同构渲染](https://mp.weixin.qq.com/s/N1L92AdeCGofGIYwIb7qZw)
