@@ -276,7 +276,7 @@ promise.then(function(value) {
 
 ### Promise/A+ 规范
 
-![PromiseA+ 规范](/blog/images/javascript/PromiseA.png)
+![PromiseA+ 规范](/blog/images/javascript/promiseA.png)
 
 ### 手撕 Peomise 全家桶
 
@@ -967,7 +967,7 @@ async 函数对 Generator 函数改进如下：
 - 3. 更广的适用性
 - 4. 返回值是 Promise
 
-async/await 做的事情就是将 Generator 函数转换成 Promise，说白了，async 函数就是 Generator 函数的语法糖，await 命令就是内部 then 命令的语法糖。async 函数就是将 Generator 函数的星号（\*）替换成 async，将 yield 替换成 await，仅此而已。其实 async 函数的实现原理，就是将 Generator 函数和自动执行器(比如 co)，包装在一个函数里。
+async/await 做的事情就是将 Generator 函数转换成 Promise，说白了，async 函数就是 Generator 函数的语法糖，await 命令就是内部 then 命令的语法糖。async 函数就是将 Generator 函数的星号（`*`）替换成 async，将 yield 替换成 await，仅此而已。其实 async 函数的实现原理，就是将 Generator 函数和自动执行器(比如 co)，包装在一个函数里。
 
 async 函数内部 return 语句返回的值，会成为 then 方法回调函数的参数。
 
@@ -1031,7 +1031,7 @@ function asyncToGenerator(generatorFn) {
 
 ### Q2. new Promise() 返回的实例和实例 then 方法执行后返回的 promise 是一个吗?
 
-实例 then 返回的是一个新的 Promis e 对象，这个新 Promsie 的状态由 then 中的返回值决定，如果 then 内部 return 一个 Promsie 对象，那么返回的 Promsie 对象状态便是 return 的 Promise 的状态，如果 return 一段字符串那么便是一个 resolve 状态的 Promsie 对象。
+实例 then 返回的是一个新的 Promise 对象，这个新 Promsie 的状态由 then 中的返回值决定，如果 then 内部 return 一个 Promsie 对象，那么返回的 Promsie 对象状态便是 return 的 Promise 的状态，如果 return 一段字符串那么便是一个 resolve 状态的 Promsie 对象。
 
 ### Q3. Promise 和 async 差异点是什么？
 
@@ -1093,7 +1093,7 @@ async function loadData(urls) {
 
 ### Q5. try/catch 捕获多个错误并做不同的处理时，如何优化？
 
-尽管我们可以使用 try catch 捕获错误，但是当我们需要捕获多个错误并做不同的处理时，很快 try catch 就会导致代码杂乱。
+尽管我们可以使用 try catch 捕获错误，但是当我们需要捕获多个错误并做不同的处理时，很快 `try catch` 就会导致代码杂乱。
 
 为了简化这种错误的捕获，我们可以给 await 后的 promise 对象添加 catch 函数，为此我们需要写一个 helper:
 

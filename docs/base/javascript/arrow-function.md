@@ -10,7 +10,6 @@
 - 除了 this，以下三个变量在箭头函数之中也是不存在的，指向外层函数的对应变量：arguments、super、new.target。
 - 由于箭头函数没有自己的 this，所以当然也就不能用 call()、apply()、bind() 这些方法去改变 this 的指向。
 
-
 ## 普通函数和箭头函数的区别 <Badge text="重点" />
 
 - 箭头函数的 this 指向规则(没有 this)
@@ -34,6 +33,29 @@
 - 不能直接修改箭头函数的 this 指向。但是，我们可以间接修改箭头函数的指向。去修改被继承的普通函数的 this 指向，然后箭头函数的 this 指向也会跟着改变
 - 箭头函数外层没有普通函数，严格模式和非严格模式下它的 this 都会指向 window(全局对象)
 
+箭头函数实际上可以让 this 指向固定化，绑定 this 使得它不再可变，这种特性很有利于封装回调函数。
+
+Babel 转箭头函数产生的 ES5 代码，就能清楚地说明 this 的指向
+
+```js
+// ES6
+function foo() {
+  setTimeout(() => {
+    console.log('id:', this.id);
+  }, 100);
+}
+
+// ES5
+// 箭头函数里面根本没有自己的 this，而是引用外层的 this
+function foo() {
+  var _this = this;
+
+  setTimeout(function () {
+    console.log('id:', _this.id);
+  }, 100);
+}
+```
+
 ### 箭头函数的 arguments
 
 箭头函数没有自己的 arguments 对象，这不一定是件坏事，因为箭头函数可以访问外围函数的 arguments 对象。可以通过命名参数或者 rest 参数的形式访问参数。
@@ -42,7 +64,7 @@
 - 箭头函数的 this 指向普通函数时，它的 argumens 继承于该普通函数
 - rest（...扩展符）参数获取函数的多余参数
 
-###  new 调用箭头函数
+### new 调用箭头函数
 
 不可以当作构造函数，也就是说，不可以使用 new 命令，否则会抛出一个错误。
 
@@ -51,7 +73,6 @@ JavaScript 函数有两个内部方法：`[[Call]]` 和 `[[Construct]]`。
 当通过 new 调用函数时，执行 `[[Construct]]` 方法，创建一个实例对象，然后再执行函数体，将 this 绑定到实例上。当直接调用的时候，执行 `[[Call]]` 方法，直接执行函数体。箭头函数并没有 `[[Construct]]` 方法，不能被用作构造函数，如果通过 new 的方式调用，会报错。
 
 ### 不支持 new.target
-
 
 new.target 是 ES6 新引入的属性，普通函数如果通过 new 调用，new.target 会返回该函数的引用。此属性主要用于确定构造函数是否为 new 调用的。
 
@@ -67,6 +88,7 @@ new.target 是 ES6 新引入的属性，普通函数如果通过 new 调用，ne
 连原型都没有，自然也不能通过 super 来访问原型的属性，所以箭头函数也是没有 super 的，不过跟 this、arguments、new.target 一样，这些值由外围最近一层非箭头函数决定。
 
 ::: tip 箭头函数与非箭头函数的区别
+
 1. **箭头函数本身没有 this**。所以需要通过查找作用域链来确定 this 的值。this 绑定的就是最近一层非箭头函数的 this。箭头函数外层如果没有非箭头函数，严格模式和非严格模式下它的 this 都会指向 window(全局对象)。不可以直接修改箭头函数的 this 指向。
 2. **箭头函数本身没有 argument**。可以通过扩展符代替 argument 获取函数的多余参数。箭头函数的 this 指向普通函数时，它的 argumens 继承于该普通函数。如果箭头函数的 this 指向 window(全局对象)使用 arguments 会报错，未声明 arguments。
 3. **箭头函数不能通过 new 调用**。箭头函数不可以当作构造函数，也就是说，不可以使用 new 命令，否则会抛出一个错误。
@@ -82,6 +104,7 @@ new.target 是 ES6 新引入的属性，普通函数如果通过 new 调用，ne
 **尾调用（Tail Call）** 是函数式编程的一个重要概念，本身非常简单，一句话就能说清楚，就是指某个函数的最后一步是调用另一个函数。
 
 以下三种情况，都不属于尾调用。
+
 ```js
 // 情况一
 function f(x){
@@ -99,6 +122,7 @@ function f(x){
   g(x);
 }
 ```
+
 尾调用之所以与其他调用不同，就在于它的特殊的调用位置。
 
 函数调用会在内存形成一个“调用记录”，又称 **调用帧”（call frame）**，保存调用位置和内部变量等信息。
@@ -118,6 +142,45 @@ function f(x){
 
 **尾递归优化**：尾递归之所以需要优化，原因是调用栈太多，造成溢出，那么只要减少调用栈，就不会溢出。怎么做可以减少调用栈呢？就是采用“循环”换掉“递归”。
 
+## 函数的扩展其他特性
+
+ES2017 允许函数的最后一个参数**有尾逗号**。这样的规定也使得，函数参数与数组和对象的尾逗号规则，保持一致了。
+
+```javascript
+function clownsEverywhere(
+  param1,
+  param2,
+) { /* ... */ }
+
+clownsEverywhere(
+  'foo',
+  'bar',
+);
+```
+
+ES2019 对函数实例的`toString()`方法做出了修改，明确要求返回一模一样的原始代码。
+
+```javascript
+function /* foo comment */ foo () {}
+
+foo.toString()
+// function foo() {} 函数foo的原始代码包含注释，函数名foo和圆括号之间有空格，但是toString()方法都把它们省略了。
+
+function /* foo comment */ foo () {}
+
+foo.toString()
+// "function /* foo comment */ foo () {}"
+```
+
+ES2019 允许`catch`语句省略参数。
+
+```javascript
+try {
+  // ...
+} catch {
+  // ...
+}
+```
 
 ::: warning 参考文献
 [ES6 系列之箭头函数](https://github.com/mqyqingfeng/Blog/issues/85)

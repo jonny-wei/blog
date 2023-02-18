@@ -23,8 +23,6 @@ const sidebar = {
         "javascript/proxy-reflect",
         "javascript/module",
         "javascript/decorator",
-        "javascript/strict-mode",
-        "javascript/reference",
       ],
     },
     {
@@ -48,14 +46,8 @@ const sidebar = {
         "browser/web-security",
         "browser/web-attack",
         "browser/js-gc",
-        "browser/reference",
+        "browser/dom-event",
       ],
-    },
-    {
-      title: "DOM",
-      sidebarDepth: 1,
-      collapsable: false,
-      children: ["dom/dom-event", "dom/virtual-list", "dom/drag", "dom/edit"],
     },
     {
       title: "CSS基础",
@@ -202,7 +194,6 @@ const sidebar = {
         "react/react-scheduler",
         "react/react-render",
         "react/react-commit",
-        "react/react-fiber",
         "react/react-diff",
         "react/react-hooks",
         "react/react-context",
@@ -373,7 +364,10 @@ module.exports = {
       { text: "前端周刊", link: "/weekly/" },
       {
         text: "GitHub",
-        items: [{ text: "GitHub地址", link: "https://github.com/jonny-wei" }],
+        items: [
+          { text: "GitHub", link: "https://github.com/jonny-wei" },
+          { text: "JS 寿司", link: "https://github.com/jonny-wei/sushi-js" },
+        ],
       },
     ],
     sidebar: {

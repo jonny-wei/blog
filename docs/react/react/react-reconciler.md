@@ -1,25 +1,73 @@
-# Reconciler 协调器
+# Reconciler 调和器
 
-- 什么是fiber ? Fiber 架构解决了什么问题？
+- 什么是 fiber? Fiber 架构解决了什么问题？
 - Fiber root 和 root fiber 有什么区别？
-- 不同fiber 之间如何建立起关联的？
+- 不同 fiber 之间如何建立起关联的？
 - React 调和流程？
 - 两大阶段 commit 和 render 都做了哪些事情？
 - 什么是双缓冲树？ 有什么作用？
 - Fiber 深度遍历流程？
-- Fiber的调和能中断吗？ 如何中断？
+- Fiber 的调和能中断吗？ 如何中断？
 
 ## Fiber
 
-**什么是fiber**
+**什么是 fiber**
 
 fiber 架构，目的就是解决大型 React 应用卡顿；fiber 在 React 中是最小粒度的执行单元，无论 React 还是 Vue ，在遍历更新每一个节点的时候都不是用的真实 DOM ，都是采用虚拟 DOM ，所以可以理解成 fiber 就是 React 的虚拟 DOM 。
 
-**为什么要用fiber**
+Fiber 是一个**基于优先级策略**和**帧间回调**的**循环任务调度算法**的架构方案。
 
-在 `Reactv15` 以及之前的版本，React 对于虚拟 DOM 是采用递归方式遍历更新的，比如一次更新，就会从应用根部递归更新，递归一旦开始，中途无法中断，随着项目越来越复杂，层级越来越深，导致更新的时间越来越长，给前端交互上的体验就是卡顿。
+大量的组件渲染会导致主进程长时间被占用，导致一些动画或高频操作出现卡顿和掉帧的情况。而关键点，便是 同步阻塞。在之前的调度算法中，React 需要实例化每个类组件，生成一棵组件树，使用 同步递归 的方式进行遍历渲染，而这个过程最大的问题就是无法 暂停和恢复。
+
+当遇到进程同步阻塞的问题时，任务分割、异步调用 和 缓存策略 是三个显著的解决思路。而 React Fiber 便是为了实现任务分割而诞生的。 Fiber 架构的核心思想就是 任务拆分 和 协同，主动把执行权交给主线程，使主线程有时间空档处理其他高优先级任务。
+
+React Fiber 最终提供的关键特性主要是：
+
+- 增量渲染（把渲染任务拆分成块，均匀分布到多帧）
+- 更新时能够暂停、终止、复用渲染任务
+- 给不同类型的更新赋予优先级
+- 并发方面新的基础能力
+
+**为什么要用 fiber**
+
+在浏览器中，页面是一帧一帧绘制出来的，渲染的帧率与设备的刷新率保持一致。一般情况下，设备的屏幕刷新率为1s 60次，当每秒内绘制的帧数（FPS）超过60时，页面渲染是流畅的；而当FPS小于60时，会出现一定程度的卡顿现象。下面来看完整的一帧中，具体做了哪些事情：
+
+![reconciler3](/blog/images/react/reconciler3.png)
+![reconciler4](/blog/images/react/reconciler4.png)
+
+**一帧** 内可完成如下六个步骤的任务：
+
+- 用户交互输入事件（Input events），能够让用户得到最早的反馈。
+
+  - Blocking input events（阻塞输入事件）：例如 touch 或 wheel
+  - Non-blocking input events（非阻塞输入事件）：例如 click 或 keypress
+
+- JavaScript 引擎解析执行：执行定时器（Timers）事件等回调，需要检查定时器是否到时间，并执行对应的回调。
+- 帧开始（Begin frame）：每一帧事件（Per frame events），例如 window resize、scroll 或 media query change
+- 执行请求动画帧 rAF（requestAnimationFrame），即在每次绘制之前，会执行 rAF 回调。
+- 页面布局（Layout）：计算样式（Recalculate style）和更新布局（Update Layout）。即这个元素的样式是怎样的，它应该在页面如何展示。
+- 绘制渲染（Paint）：合成更新（Compositing update）、重绘部分节点（Paint invalidation）和 Record。得到树中每个节点的尺寸与位置等信息，浏览器针对每个元素进行内容填充。
+- 上述6个阶段完成，就处于 空闲阶段（Idle Peroid）会执行 RIC (RequestIdelCallback)注册的任务。
+
+JS 引擎和页面渲染引擎是在同一个渲染线程(主线程)之内，两者是互斥关系。如果在某个阶段执行任务特别长，例如在定时器阶段或 Begin Frame 阶段执行时间非常长，时间已经明显超过了 16ms，那么就会阻塞页面的渲染，从而出现卡顿现象。
+
+在 `Reactv15` 以及之前的版本，React 对于虚拟 DOM 是采用自顶向下递归（深度优先遍历）对比虚拟 DOM 树，找出需要变动的节点，然后同步更新它们，这个过程 react 称为 reconcilation（调和）。在 reconcilation 期间，react 会一直占用浏览器资源，会导致用户触发的事件得不到响应。随着项目越来越复杂，层级越来越深，导致更新的时间越来越长，给前端交互上的体验就是卡顿。**所以 V16 之前有一下 3 个痛点**：
+
+- 递归调用，执行栈会越来越深。
+- 同步更新虚拟　DOM，不能中断，中断后也不能恢复。
+- JS 代码执行时间长，会持续占用主线程，出现渲染卡顿。
+
+当遇到进程同步阻塞的问题时，**任务分割、异步调用** 和 **缓存策略** 是三个显著的解决思路。因此，为了解决以上的痛点问题，React 设计了 Fiber 架构， 把更新、渲染过程拆分为一个个小块的任务，通过合理的调度机制来调控时间，指定任务执行的时机，实现异步可中断执行，从而降低页面卡顿的概率，提升页面交互体验。通过 Fiber 架构，让 reconcilation 过程变得可被中断，适时地让出 CPU 执行权，可以让浏览器及时地响应用户的交互。（就是使 JS 的执行变成可控，不希望 JS 不受控制地长时间执行）
 
 `Reactv16` 为了解决卡顿问题引入了 fiber ，为什么它能解决卡顿，更新 fiber 的过程叫做 `Reconciler`（调和器），每一个 fiber 都可以作为一个执行单元来处理，所以每一个 fiber 可以根据自身的过期时间`expirationTime`（ v17 版本叫做优先级 `lane` ）来判断是否还有空间时间执行更新，如果没有时间更新，就要把主动权交给浏览器去渲染，做一些动画，重排（ reflow ），重绘 repaints 之类的事情，这样就能给用户感觉不是很卡。然后等浏览器空余时间，在通过 `scheduler` （调度器），再次恢复执行单元上来，这样就能本质上中断了渲染，提高了用户体验。
+
+Fiber 架构的核心思想就是**任务拆分**和**协同**，主动把执行权交给主线程，使主线程有时间空档处理其他高优先级任务。
+
+::: tip 合作式调度
+这种把渲染更新过程拆分成多个子任务，每次只做一小部分，做完看是否还有剩余时间，如果有继续下个任务；如果没有，挂起当前任务，将时间控制权交给主线程，等主线程不忙的时候再继续执行。这种策略叫做 [Cooperative Scheduling（合作式调度）](https://www.w3.org/TR/requestidlecallback/)，操作系统常用任务调度策略之一。
+
+操作系统常用任务调度策略：先来先服务（FCFS）调度算法、短作业（进程）有限调度算法（SJ/PF）、最高优先权优先调度算法（FPF）、高响应比优先调度算法（HRN）、时间片轮转法（RR）、多级队列反馈法。
+:::
 
 ### element,fiber,dom 之间关系
 
@@ -611,6 +659,167 @@ function commitRootImpl(root, renderPriorityLevel) {
 3. commitLayoutEffects
 
    - dom 变更后, 主要处理副作用队列中带有`Update | Callback`标记的`fiber`节点
+
+## 问题
+
+### Q1. 为什么设计 Fiber，React 为什么需要 Fiber ？
+
+解题思路
+
+1. Fiber 设计之前的痛点
+2. Fiber 怎么解决的这些痛点
+
+React v15 及之前版本使用的协调算法（diff 算法） 是 Stack Reconciler ，有以下的 3 个痛点：
+
+- 递归对比虚拟 DOM 树，执行栈会越来越深。
+- 同步更新DOM，不能中断，中断后也不能恢复。
+- JS 代码执行时间长，会持续占用主线程，出现渲染卡顿。
+
+当遇到进程同步阻塞的问题时，**任务分割、异步调用** 和 **缓存策略** 是三个显著的解决思路。因此，为了解决以上的痛点问题，React 设计了 Fiber 架构， 把更新、渲染过程拆分为一个个小块的任务，通过合理的调度机制来调控时间，指定任务执行的时机，实现异步可中断执行，从而降低页面卡顿的概率，提升页面交互体验。通过 Fiber 架构，让 reconcilation 过程变得可被中断，适时地让出 CPU 执行权，可以让浏览器及时地响应用户的交互。（就是使 JS 的执行变成可控，不希望 JS 不受控制地长时间执行）。
+
+Fiber 的主要目标是实现虚拟 DOM 的增量渲染，能够将渲染工作拆分成块并将其分散到多个帧的能力。在新的更新到来时，能够暂停、中止和复用工作，能为不同类型的更新分配优先级顺序的能力，因此 这种 Fiber reconciler 很好的解决了Stack Reconciler  的问题。
+
+### Q2. Fiber 为什么设计成链表结构？为什么中断执行后可以恢复？
+
+fiber 对象中存储的元素上下文信息以及指针域构成的链表结构，使其能够将执行到一半的工作保存在内存的链表中。当 React 停止并完成保存的工作后，让出时间片去处理一些其他优先级更高的事情。之后，在重新获取到可用的时间片后，它能够根据之前保存在内存的上下文信息通过快速遍历的方式找到停止的 fiber 节点并继续工作。由于在此阶段执行的工作并不会导致任何用户可见的更改，因为并没有被提交到真实的 DOM。所以，这种链表结构的 fiber 能让让调度能够实现暂停、中止以及重新开始等增量渲染的能力。
+
+### Q3. React Fiber 是如何实现更新过程可控？执行流程？
+
+更新过程的可控主要体现在下面几个方面：
+
+- 任务拆分
+- 任务挂起、恢复、终止
+- 任务具备优先级
+
+**任务拆分**
+
+在 React Fiber 机制中，它采用"化整为零"的思想，将调和阶段（Reconciler）递归遍历 VDOM 这个大任务分成若干小任务，每个任务只负责一个节点的处理。
+
+**任务挂起、恢复、终止**
+
+**workInProgress tree**： workInProgress 代表当前正在执行更新的 Fiber 树。在 render 或者 setState 后，会构建一颗 Fiber 树，也就是 workInProgress tree，这棵树在构建每一个节点的时候会收集当前节点的副作用，整棵树构建完成后，会形成一条完整的副作用链。
+
+**currentFiber tree**：currentFiber 表示上次渲染构建的 Filber 树。在每一次更新完成后 workInProgress 会赋值给 currentFiber。在新一轮更新时 workInProgress tree 再重新构建，新 workInProgress 的节点通过 alternate 属性和 currentFiber 的节点建立联系。
+
+在新 workInProgress tree 的创建过程中，会同 currentFiber 的对应节点进行 Diff 比较，收集副作用。同时也会复用和 currentFiber 对应的节点对象，减少新创建对象带来的开销。也就是说无论是创建还是更新、挂起、恢复以及终止操作都是发生在 workInProgress tree 创建过程中的。workInProgress tree 构建过程其实就是循环的执行任务和创建下一个任务。
+
+**挂起**
+
+当第一个小任务完成后，先判断这一帧是否还有空闲时间，没有就挂起下一个任务的执行，记住当前挂起的节点，让出控制权给浏览器执行更高优先级的任务。
+
+**恢复**
+
+在浏览器渲染完一帧后，判断当前帧是否有剩余时间，如果有就恢复执行之前挂起的任务。如果没有任务需要处理，代表调和阶段完成，可以开始进入渲染阶段。
+
+1. 如何判断一帧是否有空闲时间的呢？
+
+使用前面提到的 RIC (RequestIdleCallback) 浏览器原生 API，React 源码中为了兼容低版本的浏览器，对该方法进行了 Polyfill。
+
+1. 恢复执行的时候又是如何知道下一个任务是什么呢？
+
+答案是在前面提到的链表。在 React Fiber 中每个任务其实就是在处理一个 FiberNode 对象，然后又生成下一个任务需要处理的 FiberNode。
+
+**终止**
+
+其实并不是每次更新都会走到提交阶段。当在调和过程中触发了新的更新，在执行下一个任务的时候，判断是否有优先级更高的执行任务，如果有就终止原来将要执行的任务，开始新的 workInProgressFiber 树构建过程，开始新的更新流程。这样可以避免重复更新操作。这也是在 React 16 以后生命周期函数 componentWillMount 有可能会执行多次的原因。
+
+::: tip 注意
+
+React 17 全面开启 async rendering。因此 17 将会废弃多个生命周期钩子函数（will 系列），原因是开启 async rendering，在 render 函数之前的所有函数，都有可能被执行多次。
+
+长期以来，原有的生命周期函数总是会诱惑开发者在 render 之前的生命周期函数做一些动作，现在这些动作还放在这些函数中的话，有可能会被调用多次，这肯定不是你想要的结果。在 componentWillMount 执行网络请求，无论请求多快都无法赶上首次 render，而且 componentWillMount 在服务端渲染也会被调用，这样的 I/O 操作放在 componentDidMount 里更加合适。
+
+在 Fiber 启用 async rendering 之后，更没有理由在 componentWillMount 里执行网络请求，因为 componentWillMount 可能会被调用多次，谁也不会希望无谓地多次调用多次网络请求吧。
+
+:::
+
+### Q4. React 能否像 Vue 那样进行预编译优化
+
+Vue3.0 提出动静结合的 DOM diff 思想，动静结合的 DOM diff其实是在预编译阶段进行了优化。之所以能够做到**预编译优化**，是因为 Vue core 可以**静态分析 template**，在解析模版时，整个 parse 的过程是利用**正则表达式**顺序解析模板，当解析到开始标签、闭合标签和文本的时候都会分别执行对应的回调函数，来达到构造 AST 树的目的。
+
+**借助预编译过程**，Vue 可以做到的预编译优化就很强大了。比如在预编译时标记出模版中可能变化的组件节点，再次进行渲染前 diff 时就可以**跳过“永远不会变化的节点”**，而只需要对比“可能会变化的动态节点”。这也就是**动静结合的 DOM diff 将 diff 成本与模版大小正相关优化到与动态节点正相关的理论依据**。
+
+Vue 需要做数据双向绑定，需要进行数据拦截或代理，那它就需要在**预编译阶段静态分析模版，分析出视图依赖了哪些数据，进行响应式处理**。而 React 就是**局部重新渲染**，React 拿到的或者说掌管的，所负责的就是一堆**递归 React.createElement** 的执行调用（参考下方经过Babel转换的代码），它无法从模版层面进行静态分析。[JSX 和手写的 render function](https://link.juejin.cn?target=https%3A%2F%2Fcn.vuejs.org%2Fv2%2Fguide%2Frender-function.html) 是完全动态的，**过度的灵活性导致运行时可以用于优化的信息不足**。
+
+- JSX 具有 JavaScript 的完整表现力，可以构建非常复杂的组件。但是**灵活**的语法，也意味着**引擎难以理解**，无法预判开发者的用户意图，从而难以优化性能。
+- Template 模板是一种非常有**约束**的语言，你只能以某种方式去编写模板。
+
+既然存在以上**编译时先天不足**，在运行时优化方面，React 一直在努力。比如，React15 实现了 batchedUpdates（批量更新）。即**同一事件回调函数上下文**中的多次 setState 只会触发一次更新。但是，如果单次更新就很耗时，页面还是会卡顿（这在一个维护时间很长的大应用中是很常见的）。这是因为 React15 的更新流程是同步执行的，一旦开始更新直到页面渲染前都不能中断。
+
+### Q5. React  hooks 的实现必须依赖 Fiber 吗?
+
+React 的 hooks 是在 fiber 之后出现的特性，所以很多人误以为 hooks 是必须依赖 fiber 才能实现的，其实并不是，它们俩没啥必然联系。
+
+在 React16 之前，会递归渲染这个 vdom，增删改真实 dom。而在 React16 引入了 fiber 架构之后就多了一步：首先把 vdom 转成 fiber，之后再渲染 fiber。vdom 转 fiber 的过程叫做 reconcile，最后增删改真实 dom 的过程叫做 commit。因为 vdom 只有子节点 children 的引用，没有父节点 parent 和其他兄弟节点 sibling 的引用，这导致了要一次性递归把所有 vdom 节点渲染到 dom 才行，不可打断。万一打断了会怎么样呢？因为没有记录父节点和兄弟节点，那只能继续处理子节点，却不能处理 vdom 的其他部分了。所以 React 才引入了这种 fiber 的结构，也就是有父节点 return、子节点 child、兄弟节点 sibling 等引用，可以打断，因为断了再恢复也能找到后面所有没处理过的节点。
+
+所以 fiber 架构就分为了 schdule、reconcile（vdom 转 fiber）、commit（更新到 dom）三个阶段。
+
+函数组件内可以用 hooks 来存取一些值，这些值就是存在 fiber 节点上的。不同的 hook 在 memorizedState 链表不同的元素上存取值，通过 next 串联起来，这就是 react hooks 的原理。
+
+对比其他框架：
+
+- react 是把 vdom 转成 fiber，然后把 hook 链表存放到了 fiber.memorizedState 属性上，通过 next 串联
+- preact 没有实现 fiber，它是把 hook 链表放到了 vnode._component._hooks 属性上，数组实现的，通过下标访问
+- react ssr 时不需要 fiber，但是也没有把 hook 链表挂到 vdom 上，而是直接放在了一个全局变量上，因为只需要渲染一次，渲染完一个组件就清空这个全局变量就行
+- midway 是一个 Node.js 框架，它也实现了 hooks 类似的 api，具体放在哪我们没深入，但是只要有个上下文存放 hook 链表就行
+
+### Q6. React 15/16/17 的架构有什么区别
+
+React渲染页面的两个阶段
+
+- 调度阶段（reconciliation）：在这个阶段 React 会更新数据生成新的 Virtual DOM，然后通过Diff算法，快速找出需要更新的元素，放到更新队列中去，**得到新的更新队列**。
+- 渲染阶段（commit）：这个阶段 React 会遍历更新队列，**将其所有的变更一次性更新到DOM上**。
+
+**React15 架构**
+
+React15 架构可以分为两层：
+
+- Reconciler（协调器）—— 负责找出变化的组件；
+- Renderer（渲染器）—— 负责将变化的组件渲染到页面上；
+
+在 React15 及以前，Reconciler 采用递归的方式创建虚拟 DOM，**递归过程是不能中断的**。如果组件树的层级很深，递归会占用线程很多时间，递归更新时间超过了16ms，用户交互就会卡顿。
+
+为了解决这个问题，React16 将递归的无法中断的更新重构为**异步的可中断更新**，由于曾经用于递归的虚拟 DOM数据结构已经无法满足需要。于是，全新的 Fiber 架构应运而生。
+
+**React 16 架构**
+
+为了解决同步更新长时间占用线程导致页面卡顿的问题，也为了探索运行时优化的更多可能，React 开始重构并一直持续至今。重构的目标是实现 Concurrent Mode（并发模式）。
+
+从 v15 到 v16，React 团队花了两年时间将源码架构中的 Stack Reconciler 重构为 Fiber Reconciler。
+
+React16 架构可以分为三层：
+
+- Scheduler（调度器）—— **调度任务的优先级**，高优任务优先进入Reconciler；
+- Reconciler（协调器）—— 负责找出变化的组件：**更新工作从递归变成了可以中断的循环过程。Reconciler内部采用了Fiber的架构**；
+- Renderer（渲染器）—— 负责将变化的组件渲染到页面上。
+
+**React 17 优化**
+
+React16 的 expirationTimes 模型只能区分是否 >=expirationTimes 决定节点是否更新。React17 的 lanes 模型可以选定一个更新区间，并且动态的向区间中增减优先级，可以处理更细粒度的更新。
+
+Lane 用二进制位表示任务的优先级，方便优先级的计算（位运算），不同优先级占用不同位置的“赛道”，而且存在批的概念，优先级越低，“赛道”越多。高优先级打断低优先级，新建的任务需要赋予什么优先级等问题都是Lane 所要解决的问题。
+
+Concurrent Mode的目的是实现一套可中断/恢复的更新机制。其由两部分组成：
+
+- 一套协程架构：Fiber Reconciler
+- 基于协程架构的[启发式更新算法](https://zhuanlan.zhihu.com/p/182411298)：控制协程架构工作方式的算法
+
+### Q7. Concurrent Mode
+
+Concurrent Mode 指的就是 React 利用上面 Fiber 带来的新特性的开启的新模式 (mode)。react17开始支持concurrent mode，这种模式的根本目的是为了让应用保持cpu和io的快速响应，它是一组新功能，包括Fiber、Scheduler、Lane，可以根据用户硬件性能和网络状况调整应用的响应速度，核心就是为了实现异步可中断的更新。concurrent mode也是未来react主要迭代的方向。
+
+目前 React 实验版本允许用户选择三种 mode：
+
+1. Legacy Mode: 就相当于目前稳定版的模式
+2. Blocking Mode: 应该是以后会代替 Legacy Mode 而长期存在的模式
+3. Concurrent Mode: 以后会变成 default 的模式
+
+Concurrent Mode 其实开启了一堆新特性，其中有两个最重要的特性可以用来解决我们开头提到的两个问题：
+
+1. [Suspense](https://juejin.cn/post/6844903981999718407)：Suspense 是 React 提供的一种异步处理的机制, 它不是一个具体的数据请求库。它是React 提供的原生的组件异步调用原语。
+2. [useTrasition](https://juejin.cn/post/6844903986420514823)：让页面实现 Pending -> Skeleton -> Complete 的更新路径, 用户在切换页面时可以停留在当前页面，让页面保持响应。 相比展示一个无用的空白页面或者加载状态，这种用户体验更加友好。
+
+其中 Suspense 可以用来解决请求阻塞的问题，UI 卡顿的问题其实开启 concurrent mode 就已经解决的，但如何利用 concurrent mode 来实现更友好的交互还是需要对代码做一番改动的。
 
 [深入分析虚拟DOM的渲染过程和特性](https://mp.weixin.qq.com/s?__biz=Mzk0MDMwMzQyOA==&mid=2247490064&idx=1&sn=0f5047c2be91db25203c42b0ece074e9&source=41#wechat_redirect)
 

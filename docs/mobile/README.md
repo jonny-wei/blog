@@ -179,6 +179,12 @@ GPU 线程从 UI 线程获取 Layer Tree 构成的绘制指令，通过 Skia 这
 
 [跨平台方案、跨端引擎的本质](https://juejin.cn/post/6966626823912308772#heading-11)
 
+[新一代Web技术栈的演进：SSR/SSG/ISR/DPR都在做什么](https://mp.weixin.qq.com/s/x07fhB1LT7L2Pq0yt34iqA)
+
 [React Native原理之跨端通信机制](https://mp.weixin.qq.com/s/8R9S4C5Av5-C09wC7Cjzgw)
 
 [React Native 原理与实践](https://mp.weixin.qq.com/s/QTHqQ-jaO7yPV-rQzAqglA)
+
+[React-native源码解析](https://mp.weixin.qq.com/s/7FpdGEN0KJPtG0yR0zH62A)
+
+[超详解析Flutter渲染引擎](https://mp.weixin.qq.com/s/xxdgoEBIC3Bg4OCOZcm-aQ)

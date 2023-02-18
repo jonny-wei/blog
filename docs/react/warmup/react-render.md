@@ -1094,3 +1094,6 @@ if(!hook.current){
 ### Q1. useCallback 和 useMemo 有什么区别？
 
 useCallback 第一个参数就是缓存的内容，useMemo 需要执行第一个函数，返回值为缓存的内容，比起 useCallback ， useMemo 更像是缓存了一段逻辑，或者说执行这段逻辑获取的结果。那么对于缓存 element 用 useCallback 可以吗，答案是当然可以了。
+
+
+[手写 React-router](https://mp.weixin.qq.com/s/MoGHYPIJwirjes5B-GmqkQ)

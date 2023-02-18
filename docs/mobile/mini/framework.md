@@ -304,3 +304,5 @@ React Native 基于 JSCore 实现 js 与 java/oc 交互，具体流程大致如�
 [Web内核微信小程序框架实践](https://mp.weixin.qq.com/s?__biz=MjM5ODYwMjI2MA==&mid=2649768509&idx=1&sn=78f847efa8843cd33c0463fbe45a6747&chksm=beccd14689bb58508a21331f7f017d558475d18363993bdedc95f00b357b6a54edca0c15f3ba&scene=126&sessionid=1674976415&subscene=7#rd)
 
 [探索小程序底层架构原理](https://mp.weixin.qq.com/s/ZoaQz5uxt8UKTN5YnmvDCw)
+
+[探索小程序底层架构原理](https://juejin.cn/post/7176832643797876791#heading-6)

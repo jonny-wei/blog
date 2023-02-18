@@ -4,11 +4,29 @@
 
 ### 简介
 
-一个 Proxy 对象包装另一个对象并拦截诸如读取/写入属性和其他操作，可以选择自行处理它们，或者透明地允许该对象处理它们。
+Proxy 用于修改某些操作的默认行为，等同于在语言层面做出修改，所以属于一种“元编程”（meta programming），即对编程语言进行编程。
 
-`var proxy = new Proxy(target, handler);`
+Proxy 可以理解成，在目标对象之前架设一层“拦截”，外界对该对象的访问，都必须先通过这层拦截，因此提供了一种机制，可以对外界的访问进行过滤和改写。Proxy 这个词的原意是代理，用在这里表示由它来“代理”某些操作，可以译为“代理器”。
+
+```js
+var proxy = new Proxy(target, handler);
+```
 
 new Proxy() 表示生成一个 Proxy 实例，target 参数表示所要拦截的目标对象(包括函数)，handler 参数也是一个对象，用来定制拦截行为。
+
+```js
+var proxy = new Proxy({}, {
+  get: function(target, propKey) {
+    return 35;
+  }
+});
+
+proxy.time // 35
+proxy.name // 35
+proxy.title // 35
+```
+
+要使得`Proxy`起作用，必须针对`Proxy`实例（上例是`proxy`对象）进行操作，而不是针对目标对象（上例是空对象）进行操作。
 
 ### Proxy 实例的方法
 
@@ -83,6 +101,167 @@ set 方法用来拦截某个属性的赋值操作，可以接受四个参数，�
 | `[[DefineOwnProperty]]` | `defineProperty`           | [Object.defineProperty](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/defineProperty), [Object.defineProperties](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/defineProperties) |
 | `[[GetOwnProperty]]`    | `getOwnPropertyDescriptor` | [Object.getOwnPropertyDescriptor](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/getOwnPropertyDescriptor), `for..in`, `Object.keys/values/entries` |
 | `[[OwnPropertyKeys]]`   | `ownKeys`                  | [Object.getOwnPropertyNames](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/getOwnPropertyNames), [Object.getOwnPropertySymbols](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/getOwnPropertySymbols), `for..in`, `Object/keys/values/entries` |
+
+## definePropety 与 proxy
+
+### definePropety
+
+ES5 提供了 `Object.defineProperty` 方法，该方法可以在一个对象上定义一个新属性，或者修改一个对象的现有属性，并返回这个对象。
+
+```js
+Object.defineProperty(obj, prop, descriptor)
+
+obj: 要在其上定义属性的对象。
+prop:  要定义或修改的属性的名称。
+descriptor: 将被定义或修改的属性的描述符。
+
+// 例如
+var obj = {};
+Object.defineProperty(obj, "num", {
+    value : 1,
+    writable : true,
+    enumerable : true,
+    configurable : true
+});
+//  对象 obj 拥有属性 num，值为 1
+```
+
+虽然我们可以直接添加属性和值，但是使用这种方式，我们能进行更多的配置。
+
+函数的第三个参数 descriptor 所表示的属性描述符有两种形式：**数据描述符和存取描述符**
+
+两者均具有以下两种键值：
+
+- **configurable**
+当且仅当该属性的 configurable 为 true 时，该属性描述符才能够被改变，也能够被删除。默认为 false。
+- **enumerable**
+当且仅当该属性的 enumerable 为 true 时，该属性才能够出现在对象的枚举属性中。默认为 false。
+数据描述符同时具有以下可选键值：
+- **value**
+该属性对应的值。可以是任何有效的 JavaScript 值（数值，对象，函数等）。默认为 undefined。
+- **writable**
+当且仅当该属性的 writable 为 true 时，该属性才能被赋值运算符改变。默认为 false。
+存取描述符同时具有以下可选键值：
+- **get**
+一个给属性提供 getter 的方法，如果没有 getter 则为 undefined。该方法返回值被用作属性值。默认为 undefined。
+- **set**
+一个给属性提供 setter 的方法，如果没有 setter 则为 undefined。该方法将接受唯一参数，并将该参数的新值分配给该属性。默认为 undefined。
+值得注意的是：
+
+**属性描述符必须是数据描述符或者存取描述符两种形式之一，不能同时是两者** 。这就意味着你可以：
+
+```JS
+Object.defineProperty({}, "num", {
+    value: 1,
+    writable: true,
+    enumerable: true,
+    configurable: true
+});
+```
+
+也可以：
+
+```JS
+var value = 1;
+Object.defineProperty({}, "num", {
+    get : function(){
+      return value;
+    },
+    set : function(newValue){
+      value = newValue;
+    },
+    enumerable : true,
+    configurable : true
+});
+```
+
+但是不可以：
+
+```JS
+// 报错
+Object.defineProperty({}, "num", {
+    value: 1,
+    get: function() {
+        return 1;
+    }
+});
+```
+
+此外，所有的属性描述符都是非必须的，但是 descriptor 这个字段是必须的，如果不进行任何配置，你可以这样：
+
+```JS
+var obj = Object.defineProperty({}, "num", {});
+console.log(obj.num); // undefined
+```
+
+### Setters 和 Getters
+
+之所以讲到 defineProperty，是因为我们要使用存取描述符中的 get 和 set，这两个方法又被称为 getter 和 setter。由 getter 和 setter 定义的属性称做”存取器属性“。
+
+当程序查询存取器属性的值时，JavaScript 调用 getter方法。这个方法的返回值就是属性存取表达式的值。当程序设置一个存取器属性的值时，JavaScript 调用 setter 方法，将赋值表达式右侧的值当做参数传入 setter。从某种意义上讲，这个方法负责“设置”属性值。可以忽略 setter 方法的返回值。
+
+举个例子：
+
+```JS
+var obj = {}, value = null;
+Object.defineProperty(obj, "num", {
+    get: function(){
+        console.log('执行了 get 操作')
+        return value;
+    },
+    set: function(newValue) {
+        console.log('执行了 set 操作')
+        value = newValue;
+    }
+})
+
+obj.num = 1 // 执行了 set 操作
+
+console.log(obj.num); // 执行了 get 操作 // 1
+```
+
+### proxy
+
+使用 defineProperty 只能重定义属性的读取（get）和设置（set）行为，到了 ES6，提供了 Proxy，可以重定义更多的行为，比如 in、delete、函数调用等更多行为。
+
+使用 proxy 再来写一下 watch 函数:
+
+```JS
+(function() {
+    var root = this;
+
+    function watch(target, func) {
+
+        var proxy = new Proxy(target, {
+            get: function(target, prop) {
+                return target[prop];
+            },
+            set: function(target, prop, value) {
+                target[prop] = value;
+                func(prop, value);
+            }
+        });
+
+        return proxy;
+    }
+
+    this.watch = watch;
+})()
+
+var obj = {
+    value: 1
+}
+
+var newObj = watch(obj, function(key, newvalue) {
+    if (key == 'value') document.getElementById('container').innerHTML = newvalue;
+})
+
+document.getElementById('button').addEventListener("click", function() {
+    newObj.value += 1
+});
+```
+
+我们也可以发现，使用 `defineProperty` 和 `proxy` 的区别，当使用 `defineProperty`，我们修改原来的 obj 对象就可以触发拦截，而使用 proxy，就必须修改代理对象，即 Proxy 的实例才可以触发拦截。
 
 ## Reflect
 

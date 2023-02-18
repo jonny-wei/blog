@@ -4,6 +4,14 @@
 
 [CSS选择器有哪些？优先级？哪些属性可以继承？](https://mp.weixin.qq.com/s/hCaRwKswMVdK8ZrYfqcTcA)
 
+[探究 CSS 选择器性能真相](7199832444835659837)
+
+[再次认识 CSS 优先级](https://juejin.cn/post/7200685976526815291#heading-18)
+
+## BFC
+
+[了解 BFC、IFC、GFC 和 FFC](https://juejin.cn/post/7072174649735381029)
+
 ## 水平与垂直居中
 
 [元素水平垂直居中的方法有哪些？如果元素不定宽高呢？](https://mp.weixin.qq.com/s/r17roT-aEdElmmgNeg7qdg)
@@ -88,10 +96,13 @@
 
 [CSS中，有哪些方式可以隐藏页面元素？区别?](https://mp.weixin.qq.com/s/1tnP66WsEZHEDNcNV2srRA)
 
+[在 CSS 中隐藏元素的 10 种方法](https://juejin.cn/post/7065871783232012318)
+
 ## CSS 画一个三角形
 
 [CSS如何画一个三角形？原理是什么？](https://mp.weixin.qq.com/s/KtKFnuRtK-PDESrVeGclEw)
 
+[纯 CSS 实现三角形的 3 种方式](https://juejin.cn/post/7075884138900750372)
 
 #### 利用 border
 
@@ -137,3 +148,25 @@
 [各种高度clientHeight/scrollHeight/offsetHeight及应用](https://juejin.cn/post/6898575556796022797)
 
 [元素 offset client scroll 相关属性简介](https://juejin.cn/post/6844903811463512077)
+
+## Flex 布局和 Grid 布局?
+
+[彻底理解CSS Flexbox布局](https://juejin.cn/post/7004622232378966046)
+
+[图解 CSS Grid 布局](https://juejin.cn/post/7160485893810667534)
+
+[Flex 布局和 Grid 布局怎么选](https://juejin.cn/post/7197279149337395260#heading-4)
+
+## 主题切换方案
+
+[前端主题切换方案](https://juejin.cn/post/7134594122391748615)
+
+[深色模式在 Web 端的适配方案](https://juejin.cn/post/6862274734373994509)
+
+## CSS 渲染优化
+
+[关键渲染路径中的 CSS 解析和渲染](https://juejin.cn/post/6844903648833568776)
+
+[用 content-visibility 提高渲染性能](https://juejin.cn/post/7168629736838463525#heading-13)
+
+[仅使用CSS提高页面渲染速度](https://juejin.cn/post/6942661408181977118)

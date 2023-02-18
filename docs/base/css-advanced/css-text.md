@@ -1,20 +1,14 @@
 # 文本溢出
 
-[巧用二分查找实现多行文本溢出显示省略号](https://jelly.jd.com/article/5fbcdff7cff6b301458364e9)
+## 解决方案
 
-[【译】在 CSS 中处理长短文本](https://jelly.jd.com/article/5fe967d16c8ad2014c3f081e)
-
-[如何实现单行／多行文本溢出的省略样式？](https://mp.weixin.qq.com/s/69DhD8cUliuZZZl5tml5yA)
-
-### 文本溢出
-
-#### 单行文本
+### 单行文本
 
 ```css
 .text {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow: hidden;           // 溢出隐藏
+  text-overflow: ellipsis;    // 溢出用省略号显示
+  white-space: nowrap;        // 规定段落中的文本不进行换行
 }
 ```
 
@@ -22,14 +16,15 @@
 - white-space: nowrap（设置文字在一行显示，不能换行）
 - text-overflow: ellipsis（规定当文本溢出时，显示省略符号来代表被修剪的文本）
 
-#### 多行文本（css）
+### 多行文本（css）
 
 ```css
 .text {
-  display: -webkit-box;
-  overflow: hidden;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
+  overflow: hidden;            // 溢出隐藏
+  text-overflow: ellipsis;     // 溢出用省略号显示
+  display:-webkit-box;         // 作为弹性伸缩盒子模型显示。
+  -webkit-line-clamp:3;        // 显示的行数
+  -webkit-box-orient:vertical; // 设置伸缩盒子的子元素排列方式：从上到下垂直排列
 }
 
 // 加省略号
@@ -54,8 +49,14 @@
 - overflow: hidden（文本溢出限定的宽度就隐藏内容）
 - text-overflow: ellipsis（多行文本的情况下，用省略号“…”隐藏溢出范围的文本)
 
-#### 多行文本（js）
+### 多行文本（js）
 
 - 监听 DOM 尺寸变化
 - 判断是否溢出 scrollHeight > offsetHeight
 - 二分查找多行截取字符临界值（算法的解法：判断字符串是否溢出，二分查找字符串溢出临界子串，控制...显示）
+
+[巧用二分查找实现多行文本溢出显示省略号](https://jelly.jd.com/article/5fbcdff7cff6b301458364e9)
+
+[【译】在 CSS 中处理长短文本](https://jelly.jd.com/article/5fe967d16c8ad2014c3f081e)
+
+[如何实现单行／多行文本溢出的省略样式？](https://mp.weixin.qq.com/s/69DhD8cUliuZZZl5tml5yA)
