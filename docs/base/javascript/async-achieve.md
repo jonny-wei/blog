@@ -12,19 +12,19 @@
 
 Promise 是一个对象，从它可以获取异步操作的消息。本质上 Promise 是一个函数返回的对象，我们可以在它上面绑定回调函数，这样我们就不需要在一开始把回调函数作为参数传入这个函数了。Promise 是异步编程的一种解决方案，比传统的解决方案——回调函数和事件——更合理和更强大
 
-#### 2 个特点：
+#### 2 个特点
 
 - **对象的状态不受外界影响**。只有异步操作的结果，可以决定当前是哪一种状态，任何其他操作都无法改变这个状态。
 - **一旦状态改变，就不会再变，任何时候都可以得到这个结果(状态不可逆)**。Promise 对象的状态改变，只有两种可能：从 pending 变为 fulfilled 和从 pending 变为 rejected。只要这两种情况发生，状态就凝固了，不会再变了，会一直保持这个结果，这时就称为 resolved（已定型）。如果改变已经发生了，你再对 Promise 对象添加回调函数，也会立即得到这个结果。**这与事件（Event）完全不同，事件的特点是，如果你错过了它，再去监听，是得不到结果的。**
 
-#### 3 个状态：
+#### 3 个状态
 
 - pending（进行中/待定）: 初始状态，既没有被兑现，也没有被拒绝。在此状态下可以落定 (settled) 为 fulfilled 或 rejected 状态。
 - fulfilled（已成功/已兑现）: 意味着操作成功完成。Promise 被 resolve 后的状态，状态不可再改变，且有一个私有的值 value。
 - rejected（已失败/已拒绝）: 意味着操作失败。Promise 被 reject 后的状态，状态不可再改变，且有一个私有的原因 reason。
 
 ::: tip 注意
-value 和 reason 也是不可变的，它们包含原始值或对象的不可修改的引用，默认值为 undefined
+**value 和 reason 也是不可变的**，它们包含原始值或对象的不可修改的引用，默认值为 undefined
 :::
 
 ![Promise](/blog/images/javascript/Promise2.png)
@@ -37,10 +37,10 @@ Promise 利用 3 大手段解决回调地狱：
 - 返回值穿透
 - 错误冒泡
 
-#### 4 个缺点：
+#### 4 个缺点
 
 - **无法取消 Promise**。一旦新建它就会立即执行，无法中途取消。
-- **错误被吃掉**。错误被吃掉指 Promise 内部的错误不会影响到 Promise 外部的代码。如果不设置回调函数，Promise 内部抛出的错误，不会反应到外部。这也是为什么一般推荐在 Promise 链的最后添加一个 catch 函数的原因。其实这并不是 Promise 独有的局限性，try/catch 也是这样，同样会捕获一个异常并简单的吃掉错误。不过，Node.js 有一个 unhandledRejection 事件，专门监听未捕获的 reject 错误。注意，Node 有计划在未来废除 unhandledRejection 事件。如果 Promise 内部有未捕获的错误，会直接终止进程，并且进程的退出码不为 0。
+- **错误被吃掉**。错误被吃掉**指 Promise 内部的错误不会影响到 Promise 外部的代码**。如果不设置回调函数，Promise 内部抛出的错误，不会反应到外部。这也是为什么一般推荐在 Promise 链的最后添加一个 catch 函数的原因。其实这并不是 Promise 独有的局限性，`try/catch` 也是这样，同样会捕获一个异常并简单的吃掉错误。不过，Node.js 有一个 `unhandledRejection` 事件，专门监听未捕获的 reject 错误。注意，Node 有计划在未来废除 `unhandledRejection` 事件。如果 Promise 内部有未捕获的错误，会直接终止进程，并且进程的退出码不为 0。
 - **无法得知 pending 状态**。当处于 pending 状态时，无法得知目前进展到哪一个阶段（刚刚开始还是即将完成）。
 - **单一值**。Promise 只能有一个完成值或一个拒绝原因，当需要传递多个值时，构造成一个对象或数组，然后再传递，then 中获得这个值后，又会进行取值赋值的操作。
 
@@ -88,9 +88,9 @@ Promise 的参数 executor 是带有 resolve 和 reject 两个参数的函数。
 
 - Promise 构造函数执行时立即调用 executor 函数，resolve 和 reject 两个函数作为参数传入 executor （executor 函数会在 Promise 构造函数返回新建对象前被调用，Promise 新建后就会立即执行。）。
 - executor 内部通常会执行一些异步操作，一旦完成，可以调用 resolve 函数来将 Promise 状态改成 Fulfilled，或者在发生错误时将它的状态改为 Rejected
-- 无法取消 Promise，一旦新建它就会立即执行，无法中途取消
-- 如果不设置回调函数（executor），Promise 内部抛出错误，不会反应到外部
-- 当处于 Pending 状态时，无法得知目前进展到哪一个阶段
+- 无法取消 Promise，一旦新建它就会立即执行，**无法中途取消**
+- **如果不设置回调函数（executor），Promise 内部抛出错误，不会反应到外部**
+- 当处于 Pending 状态时，无法得知目前进展到哪一个阶段（**无法得知 pending 状态**）
 
 ```js
 const promise = new Promise((resolve,reject) => {
@@ -110,27 +110,27 @@ promise.then(function(value) {
 
 #### 静态方法
 
-- Promise.all(iterable)
+- Promise.all(iterable)：所有成功才成功，失败返回第一个失败。
 
-  这个方法返回一个新的 promise 对象，该 promise 对象在 iterable 参数对象里所有的 promise 对象都成功的时候才会触发成功，一旦有任何一个 iterable 里面的 promise 对象失败则立即触发该 promise 对象的失败。如果这个新的 promise 对象触发了失败状态，它会把 iterable 里第一个触发失败的 promise 对象的错误信息作为它的失败错误信息。Promise.all() 方法接受一个数组作为参数，数组元素都是 Promise 实例，如果不是，就会先调用 Promise.resolve 方法，将参数转为 Promise 实例，再进一步处理。另外，Promise.all() 方法的参数可以不是数组，但必须具有 Iterator 接口，且返回的每个成员都是 Promise 实例。
+  这个方法返回一个新的 promise 对象，该 promise 对象在 iterable 参数对象里所有的 promise 对象都成功的时候才会触发成功，一旦有任何一个 iterable 里面的 promise 对象失败则立即触发该 promise 对象的失败。如果这个新的 promise 对象触发了失败状态，它会把 iterable 里第一个触发失败的 promise 对象的错误信息作为它的失败错误信息。`Promise.all()` 方法接受一个数组作为参数，**数组元素都是 Promise 实例，如果不是，就会先调用 Promise.resolve 方法，将参数转为 Promise 实例**，再进一步处理。另外，`Promise.all()` 方法的参数可以不是数组，但必须具有 Iterator 接口，且返回的每个成员都是 Promise 实例。
 
-  iterable 参数对象里所有的 promise 都执行成功时返回一个数组，数组中存放每个 promise 执行成功的结果，传递给新 promise 的回调函数。若有一个 promise 执行失败，此时第一个被 reject 的实例的返回值，传递给新 promise 的回调函数。一般 Promise.all(iterable) 中的 promise 都是互相有关联的。
+  iterable 参数对象里所有的 promise 都执行成功时返回一个数组，数组中存放每个 promise 执行成功的结果，传递给新 promise 的回调函数。若有一个 promise 执行失败，此时第一个被 reject 的实例的返回值，传递给新 promise 的回调函数。**一般 Promise.all(iterable) 中的 promise 都是互相有关联的**。
 
-- Promise.allSettled(iterable) ES2020
+- Promise.allSettled(iterable) ES2020：所有状态落定才返回，无论成功与失败。
 
-  等到所有 promises 都已敲定（settled）（每个 promise 都已兑现（fulfilled）或已拒绝（rejected））。返回一个 promise，该 promise 在所有 promise 完成后完成。并带有一个对象数组，每个对象对应每个 promise 的结果。当您有多个彼此不依赖的异步任务成功完成时，或者您总是想知道每个 promise 的结果时，通常使用它。比之下，Promise.all() 更适合彼此相互依赖或者在其中任何一个 reject 时立即结束。
+  等到所有 promises 都已敲定（settled）（每个 promise 都已兑现（fulfilled）或已拒绝（rejected））。返回一个 promise，该 promise 在所有 promise 完成后完成。并带有一个对象数组，每个对象对应每个 promise 的结果。当您**有多个彼此不依赖的异步任务成功完成时，或者您总是想知道每个 promise 的结果时，通常使用它**。比之下，`Promise.all()` 更适合彼此相互依赖或者在其中任何一个 reject 时立即结束。
 
-- Promise.any(iterable) ES2021
+- Promise.any(iterable) ES2021：有一个成功即返回，所有失败才返回，与 all 相反。
 
-  接收一个 Promise 对象的集合，当其中的一个 promise 成功，就返回那个成功的 promise 的值。有一个成功或就返回 ，所有失败后才返回失败。本质上，这个方法和 Promise.all() 是相反的。
+  接收一个 Promise 对象的集合，当其中的一个 promise 成功，就返回那个成功的 promise 的值。有一个成功或就返回 ，所有失败后才返回失败。本质上，这个方法和 `Promise.all()` 是相反的。
 
-- Promise.race(iterable)
+- Promise.race(iterable)：任意失败或成功，返回第一个落定的，“跑的最快的”
 
   当 iterable 参数里的任意一个子 promise 被成功或失败后，父 promise 马上也会用子 promise 的成功返回值或失败详情作为参数调用父 promise 绑定的相应句柄，并返回该 promise 对象。率先改变状态的 Promise 实例返回，不论结果是否成功或失败。
 
 - Promise.resolve(value)
 
-  返回一个状态由给定 value 决定的 Promise 对象。有时需要**将现有对象转为 Promise 对象，Promise.resolve() 方法就起到这个作用**。从 Pending（待定） 变为 Fullfilled（实现），在异步操作成功时调用，并将异步操作的结果，作为参数传递出去。该函数的参数除了正常的值以外，还可能是另一个 Promise 实例。**需要注意的是，立即 resolve()的 Promise 对象，是在本轮“事件循环”（event loop）的结束时执行，而不是在下一轮“事件循环”的开始时。**
+  返回一个状态由给定 value 决定的 Promise 对象。有时需要**将现有对象转为 Promise 对象，`Promise.resolve()` 方法就起到这个作用**。从 Pending（待定） 变为 Fullfilled（实现），在异步操作成功时调用，并将异步操作的结果，作为参数传递出去。该函数的参数除了正常的值以外，还可能是另一个 Promise 实例。**需要注意的是，立即 resolve()的 Promise 对象，是在本轮“事件循环”（event loop）的结束时执行，而不是在下一轮“事件循环”的开始时。**
 
 - Promise.reject(reason)
 
@@ -160,7 +160,7 @@ new Promise((resolve, reject) => {
 // 1
 ```
 
-调用 resolve 或 reject 并不会终结 Promise 的参数函数的执行。上面代码中，调用 resolve(1) 以后，后面的 console.log(2) 还是会执行，并且会首先打印出来。这是因为立即 resolved 的 Promise 是在本轮事件循环的末尾执行，总是晚于本轮循环的同步任务。本轮同步任务(宏任务) 执行完才去执行异步微任务。
+**调用 resolve 或 reject 并不会终结 Promise 的参数函数的执行**。上面代码中，调用 `resolve(1)` 以后，后面的 `console.log(2)` 还是会执行，并且会首先打印出来。这是因为**立即 resolved 的 Promise 是在本轮事件循环的末尾执行，总是晚于本轮循环的同步任务**。**本轮同步任务(宏任务) 执行完才去执行异步微任务**。
 
 ```js
 new Promise((resolve, reject) => {
@@ -170,7 +170,7 @@ new Promise((resolve, reject) => {
 });
 ```
 
-一般来说，调用 resolve 或 reject 以后，Promise 的使命就完成了，后继操作应该放到 then 方法里面，而不应该直接写在 resolve 或 reject 的后面。所以，最好在它们前面加上 return 语句，这样就不会有意外。
+一般来说，调用 resolve 或 reject 以后，Promise 的使命就完成了，后继操作应该放到 then 方法里面，而不应该直接写在 resolve 或 reject 的后面。所以，最好在它们前面加上 return 语句，**return 后面的语句不会执行**，这样就不会有意外。
 
 ```js
 const p = Promise.resolve("Hello");
@@ -181,7 +181,7 @@ p.then(function(s) {
 // Hello
 ```
 
-Promise.resolve() 方法会将这个对象转为 Promise 对象，然后就立即执行 thenable 对象的 then() 方法。上面代码生成一个新的 Promise 对象的实例 p。由于字符串 Hello 不属于异步操作（判断方法是字符串对象不具有 then 方法），返回 Promise 实例的状态从一生成就是 resolved，所以回调函数会立即执行。Promise.resolve() 方法的参数，会同时传给回调函数。
+`Promise.resolve()` 方法会将这个对象转为 Promise 对象，然后就立即执行 thenable 对象的 `then()` 方法。上面代码生成一个新的 Promise 对象的实例 p。由于字符串 Hello 不属于异步操作（判断方法是字符串对象不具有 then 方法），返回 Promise 实例的状态从一生成就是 resolved，所以回调函数会立即执行。`Promise.resolve()` 方法的参数，会同时传给回调函数。
 
 ```js
 setTimeout(function() {
@@ -199,14 +199,14 @@ console.log("one");
 // three
 ```
 
-**需要注意的是，立即 resolve()的 Promise 对象，是在本轮“事件循环”（event loop）的结束时执行，而不是在下一轮“事件循环”的开始时**。上面代码中， setTimeout(fn, 0) 在下一轮“事件循环”开始时执行，Promise.resolve() 在本轮“事件循环”结束时执行，console.log('one') 则是立即执行，因此最先输出。
+**需要注意的是，立即 `resolve()` 的 Promise 对象，是在本轮“事件循环”（event loop）的结束时执行，而不是在下一轮“事件循环”的开始时**。上面代码中， `setTimeout(fn, 0)` 在下一轮“事件循环”开始时执行，`Promise.resolve()` 在本轮“事件循环”结束时执行，`console.log('one')` 则是立即执行，因此最先输出。
 
 #### Promise 原型
 
 - Promise.prototype.then(onFulfilled, onRejected)
 
   - then 方法接受两个函数作为参数，且参数可选
-  - 如果可选参数不为函数时会被忽略
+  - 如果可选**参数不为函数时会被忽略**
   - 两个函数都是异步执行，会放入事件队列等待下一轮 tick
   - then 函数的返回值为 Promise
   - then 可以被同一个 Promise 多次调用
@@ -219,7 +219,7 @@ console.log("one");
 
 - Promise.prototype.finally(onFinally) ES2018
 
-  添加一个事件处理回调于当前 promise 对象，并且在原 promise 对象解析完毕后，返回一个新的 promise 对象。回调会在当前 promise 运行完毕后被调用，无论当前 promise 的状态是完成(fulfilled)还是失败(rejected)。finally() 方法用于指定不管 Promise 对象最后状态如何，都会执行的操作。该方法是 ES2018 引入标准的。finally 方法里面的操作，应该是与状态无关的，不依赖于 Promise 的执行结果。
+  添加一个事件处理回调于当前 promise 对象，并且在原 promise 对象解析完毕后，返回一个新的 promise 对象。回调会在当前 promise 运行完毕后被调用，无论当前 promise 的状态是完成(fulfilled)还是失败(rejected)。`finally()` 方法用于指定不管 Promise 对象最后状态如何，都会执行的操作。该方法是 ES2018 引入标准的。finally 方法里面的操作，应该是与状态无关的，不依赖于 Promise 的执行结果。
 
 ```js
 p.then(val => console.log("fulfilled:", val)).catch(err =>
@@ -251,7 +251,7 @@ promise.catch(function(error) {
 });
 ```
 
-如果该对象状态变为 resolved，则会调用 then() 方法指定的回调函数；如果异步操作抛出错误，状态就会变为 rejected，就会调用 catch() 方法指定的回调函数，处理这个错误。另外，then() 方法指定的回调函数，如果运行中抛出错误，也会被 catch() 方法捕获。如果 Promise 状态已经变成 resolved，再抛出错误是无效的。**一般来说，不要在 then()方法里面定义 Reject 状态的回调函数（即 then 的第二个参数），总是使用 catch 方法。**
+如果该对象状态变为 resolved，则会调用 `then()` 方法指定的回调函数；如果异步操作抛出错误，状态就会变为 rejected，就会调用 `catch()` 方法指定的回调函数，处理这个错误。另外，`then()` 方法指定的回调函数，如果运行中抛出错误，也会被 `catch()` 方法捕获。如果 Promise 状态已经变成 resolved，再抛出错误是无效的。**一般来说，不要在 `then()` 方法里面定义 Reject 状态的回调函数（即 then 的第二个参数），总是使用 catch 方法。**
 
 ```js
 const promise = new Promise(function(resolve, reject) {
@@ -267,7 +267,7 @@ promise.then(function(value) {
 // Uncaught Error: test
 ```
 
-上面代码中，Promise 指定在下一轮“事件循环”再抛出错误。到了那个时候，Promise 的运行已经结束了，所以这个错误是在 Promise 函数体外抛出的，会冒泡到最外层，成了未捕获的错误。一般总是建议，Promise 对象后面要跟 catch() 方法，这样可以处理 Promise 内部发生的错误。catch() 方法返回的还是一个 Promise 对象，因此后面还可以接着调用 then() 方法。
+上面代码中，Promise 指定在下一轮“事件循环”再抛出错误。到了那个时候，Promise 的运行已经结束了，所以这个错误是在 Promise 函数体外抛出的，会冒泡到最外层，成了未捕获的错误。一般总是建议，Promise 对象后面要跟 `catch()` 方法，这样可以处理 Promise 内部发生的错误。`catch()` 方法返回的还是一个 Promise 对象，因此后面还可以接着调用 `then()` 方法。
 
 #### 串行与并行
 
@@ -807,11 +807,11 @@ getJSON("/posts.json").then(
 
 ### 基本概念
 
-Generator 函数是一个状态机，封装了多个内部状态。执行 Generator 函数会返回一个遍历器对象。也就是说，Generator 函数除了状态机，还是一个遍历器对象生成函数。返回的遍历器对象，可以依次遍历 Generator 函数内部的每一个状态。
+Generator 函数是一个状态机，封装了多个内部状态。执行 Generator 函数会**返回一个遍历器对象**。也就是说，Generator 函数除了状态机，还是一个遍历器对象生成函数。返回的遍历器对象，可以依次遍历 Generator 函数内部的每一个状态。
 
 Generator 函数是一个普通函数，但是有两个特征：
 
-- function 关键字与函数名之间有一个星号(\*)；
+- function 关键字与函数名之间有一个星号(`*`)；
 - 函数体内部使用 yield 表达式，定义不同的内部状态（yield 在英语里的意思就是“产出”）
 
 Generator 函数的调用方法与普通函数一样，也是在函数名后面加上一对圆括号。不同的是，调用 Generator 函数后，该函数并不执行，返回的也不是函数运行结果，而是一个指向内部状态的指针对象，也就是遍历器对象（Iterator Object）。
@@ -822,9 +822,9 @@ Generator 函数的调用方法与普通函数一样，也是在函数名后面�
 
 - 状态机，封装了多个内部状态；
 - 返回一个遍历器对象，通过改对象可以一次遍历 Generator 函数内部的每一个状态
-- 带 \* 号，yeild 表达式定义不同的内部状态；
+- 带 `*` 号，yeild 表达式定义不同的内部状态；
 - 调用 Generator 函数后，该函数并不执行，返回的也不是函数运行结果，而是一个指向内部状态的指针对象，也就是遍历器对象；
-- Generator 函数是分段执行的，yield 表达式是暂停执行的标记，而 next 方法可以恢复执行；
+- Generator 函数是分段执行的，**yield 表达式是暂停执行的标记，而 next 方法可以恢复执行**
   :::
 
 ### yield 与 next
@@ -833,15 +833,15 @@ Generator 函数的调用方法与普通函数一样，也是在函数名后面�
 
 yield 表达式只能用在 Generator 函数里面，用在其他地方都会报错。yield 表达式本身没有返回值，或者说总是返回 undefined。next 方法可以带一个参数，该参数就会被当作上一个 yield 表达式的返回值。
 
-yield 表达式与 return 语句既有相似之处，也有区别。相似之处在于，都能返回紧跟在语句后面的那个表达式的值。区别在于每次遇到 yield，函数暂停执行，下一次再从该位置继续向后执行，而 return 语句不具备位置记忆的功能。一个函数里面，只能执行一次（或者说一个）return 语句，但是可以执行多次（或者说多个）yield 表达式。正常函数只能返回一个值，因为只能执行一次 return。
+yield 表达式与 return 语句既有相似之处，也有区别。相似之处在于，都能返回紧跟在语句后面的那个表达式的值。区别在于**每次遇到 yield，函数暂停执行**，下一次再从该位置继续向后执行，**而 return 语句不具备位置记忆的功能**。一个函数里面，只能执行一次（或者说一个）return 语句，但是可以执行多次（或者说多个）yield 表达式。正常函数只能返回一个值，因为只能执行一次 return。
 
 #### next
 
-next() 方法返回值：{ value: undefined, done: true/false }
+`next()` 方法返回值：`{ value: undefined, done: true/false }`
 
 通过 next 方法的参数，就有办法在 Generator 函数开始运行之后，继续向函数体内部注入值(第二次传参)。也就是说，可以在 Generator 函数运行的不同阶段，从外部向内部注入不同的值，从而调整函数行为。
 
-由于 next 方法的参数表示上一个 yield 表达式的返回值，所以在第一次使用 next 方法时，传递参数是无效的。V8 引擎直接忽略第一次使用 next 方法时的参数，只有从第二次使用 next 方法开始，参数才是有效的。从语义上讲，第一个 next 方法用来启动遍历器对象，所以不用带有参数。
+由于 next 方法的参数表示上一个 yield 表达式的返回值，所以在第一次使用 next 方法时，传递参数是无效的。V8 引擎直接忽略第一次使用 next 方法时的参数，只有从第二次使用 next 方法开始，参数才是有效的。**从语义上讲，第一个 next 方法用来启动遍历器对象，所以不用带有参数**。
 
 遍历器对象的 next 方法的运行逻辑如下：
 
@@ -855,9 +855,9 @@ next() 方法返回值：{ value: undefined, done: true/false }
 
 ### 与 Iterator 接口的关系
 
-任意一个对象的 Symbol.iterator 方法，等于该对象的遍历器生成函数，调用该函数会返回该对象的一个遍历器对象。
+任意一个对象的 `Symbol.iterator` 方法，等于该对象的遍历器生成函数，调用该函数会返回该对象的一个遍历器对象。
 
-由于 Generator 函数就是遍历器生成函数，因此可以把 Generator 赋值给对象的 Symbol.iterator 属性，从而使得该对象具有 Iterator 接口。
+由于 Generator 函数就是遍历器生成函数，因此可以把 Generator 赋值给对象的 `Symbol.iterator` 属性，从而使得该对象具有 Iterator 接口。
 
 ```js
 var myIterable = {};
@@ -874,7 +874,7 @@ myIterable[Symbol.iterator] = function*() {
 
 #### Generator.prototype.throw()
 
-Generator 函数返回的遍历器对象，都有一个 throw 方法，可以在函数体外抛出错误，然后在 Generator 函数体内捕获。throw 方法可以接受一个参数，该参数会被 catch 语句接收，建议抛出 Error 对象的实例。如果 Generator 函数内部没有部署 try...catch 代码块，那么 throw 方法抛出的错误，将被外部 try...catch 代码块捕获。
+Generator 函数返回的遍历器对象，都有一个 throw 方法，可以在函数体外抛出错误，然后在 Generator 函数体内捕获。throw 方法可以接受一个参数，该参数会被 catch 语句接收，建议抛出 Error 对象的实例。如果 Generator 函数内部没有部署 `try...catch` 代码块，那么 throw 方法抛出的错误，将被外部 `try...catch` 代码块捕获。
 
 #### Generator.prototype.return()
 
@@ -967,7 +967,7 @@ async 函数对 Generator 函数改进如下：
 - 3. 更广的适用性
 - 4. 返回值是 Promise
 
-async/await 做的事情就是将 Generator 函数转换成 Promise，说白了，async 函数就是 Generator 函数的语法糖，await 命令就是内部 then 命令的语法糖。async 函数就是将 Generator 函数的星号（`*`）替换成 async，将 yield 替换成 await，仅此而已。其实 async 函数的实现原理，就是将 Generator 函数和自动执行器(比如 co)，包装在一个函数里。
+**async/await 做的事情就是将 Generator 函数转换成 Promise，说白了，async 函数就是 Generator 函数的语法糖，await 命令就是内部 then 命令的语法糖**。async 函数就是将 Generator 函数的星号（`*`）替换成 async，将 yield 替换成 await，仅此而已。其实 async 函数的实现原理，就是将 Generator 函数和自动执行器(比如 co)，包装在一个函数里。
 
 async 函数内部 return 语句返回的值，会成为 then 方法回调函数的参数。
 

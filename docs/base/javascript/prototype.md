@@ -76,6 +76,7 @@ person.constructor <===> Person.prototype.constructor <===> Persion
 - 通过 instanceof 操作符可以确定原型与实例的关系，判断一个实例是否属于某种类型。instanceof 操作符会递归查找原型链直到找到了或者到达顶层为止。
 - 当通过字面量方式创建对象时，它的原型就是 Object.prototype。
 - 通过 Object.create() 方式创建的对象会以传入的对象参数为对象的原型。
+- hasOwnProperty 判断对象的属性是否属于原型链
 :::
 
 ## 问题

@@ -6,6 +6,14 @@ Tree Shaking 它能充分优化产物代码，使用频率颇高，并且底层�
 
 是一种基于 ES Module 规范的 Dead Code Elimination 技术，它会在运行过程中静态分析模块之间的导入导出，确定 ESM 模块中哪些导出值未曾其他模块使用，并将其删除，以此实现打包产物的优化。
 
+Dead Code 一般具有以下几个特征
+
+- 代码不会被执行，不可到达
+
+- 代码执行的结果不会被用到
+
+- 代码只会影响死变量（只写不读）
+
 ## 条件
 
 在 Webpack 中，启动 Tree Shaking 功能必须同时满足三个条件：
@@ -79,7 +87,28 @@ Tree-Shaking 的实现大致上可以分为三个步骤：
 
 ## 实践
 
-虽然 Webpack 自 2.x 开始就原生支持 Tree Shaking 功能，但受限于 JS 的动态特性与模块的复杂性，直至最新的 5.0 版本，依然没有解决许多代码副作用带来的问题，使得优化效果并不如 Tree Shaking 原本设想的那么完美，所以需要使用者有意识地优化代码结构，或使用一些补丁技术帮助 Webpack 更精确地检测无效代码，完成 Tree Shaking 操作。
+虽然 Webpack 自 2.x 开始就原生支持 Tree Shaking 功能，但受限于 JS 的动态特性与模块的复杂性，直至最新的 5.0 版本，依然**没有解决许多代码副作用带来的问题**，使得优化效果并不如 Tree Shaking 原本设想的那么完美，所以需要使用者有意识地优化代码结构，或使用一些补丁技术帮助 Webpack 更精确地检测无效代码，完成 Tree Shaking 操作。
+
+现实是你的 tree-shaking 似乎没用，其实基本都是副作用惹的祸。其次，开发了几个组件，且没有副作用，tree-shaking 也没有用，那大概是因为 Babel。Babel 提供的部分功能特性会致使 Tree Shaking 功能失效，由于它的编译，一些我们原本看似没有副作用的代码，便转化为了(可能)有副作用的。例如 Babel 可以将 `import/export` 风格的 ESM 语句等价转译为 CommonJS 风格的模块化语句，但该功能却导致 Webpack 无法对转译后的模块导入导出内容做静态分析。
+
+**副作用**：它大致可以理解成，一个函数会、或者可能会对函数外部变量产生影响的行为。举个例子：
+
+```js
+var V8Engine = (function () {
+  function V8Engine () {}
+  V8Engine.prototype.toString = function () { return 'V8' }
+  return V8Engine
+}())
+var V6Engine = (function () {
+  function V6Engine () {}
+  V6Engine.prototype = V8Engine.prototype // <---- side effect
+  V6Engine.prototype.toString = function () { return 'V6' }
+  return V6Engine
+}())
+console.log(new V8Engine().toString())
+```
+
+变量赋值就是有可能产生副作用的！V6Engine 虽然没有被使用，但是它修改了 V8Engine 原型链上的属性，这就产生副作用了。
 
 ### 始终使用 ESM
 
@@ -125,13 +154,50 @@ console.log(count);
 
 因此，在使用 Webpack 时开发者需要有意识地规避这些无意义的重复赋值操作。
 
-### 使用 `#pure` 标注纯函数调用
+### 尽量不写带有副作用的代码
 
-与赋值语句类似，JavaScript 中的函数调用语句也可能产生副作用，因此默认情况下 Webpack 并不会对函数调用做 Tree Shaking 操作。不过，开发者可以在调用语句前添加 `/*#__PURE__*/` 备注，明确告诉 Webpack 该次函数调用并不会对上下文环境产生副作用，例如：
+Tree Shaking 并不能消除所有未使用的代码，Tree Shaking 并不能自动判断哪些脚本是副作用，因此手动指定它们非常重要。
+
+- 立即执行函数 IIFE
+- 函数里又使用了外部变量
+
+UglifyJS 不能消除未引用的类，uglify 不进行程序流分析，所以不能排除有可能有副作用的代码
+
+函数的参数若是引用类型，对于它属性的操作，都是有可能会产生副作用的。因为首先它是引用类型，对它属性的任何修改其实都是改变了函数外部的数据。其次获取或修改它的属性，会触发 `getter` 或者 `setter` ，而`getter`、`setter`是不透明的，有可能会产生副作用。uglify 没有完善的程序流分析。它可以简单的判断变量后续是否被引用、修改，但是不能判断一个变量完整的修改过程，不知道它是否已经指向了外部变量，所以很多有可能会产生副作用的代码，都只能保守的不删除。rollup 有程序流分析的功能，可以更好的判断代码是否真正会产生副作用。
+
+所以，如果是开发 JavaScript 库，请使用 rollup。并且提供 ES6 module 的版本，入口文件地址设置到package.json的module字段
+
+### 手动标记副作用
+
+#### 使用 `#pure` 标注纯函数调用
+
+与赋值语句类似，JavaScript 中的函数调用语句也可能产生副作用，因此默认情况下 Webpack 并不会对函数调用做 Tree Shaking 操作。不过，开发者可以在调用语句前添加 `/*#__PURE__*/` 备注，将函数调用标记为无副作用，明确告诉 Webpack 该次函数调用并不会对上下文环境产生副作用，例如：
 
 ![tree-shaking3](/blog/images/devops/tree-shaking3.png)
 
 示例中，`foo('be retained')` 调用没有带上 `/*#__PURE__*/` 备注，代码被保留；作为对比，`foo('be removed')` 带上 Pure 声明后则被 Tree Shaking 删除。
+
+#### 使用 sideEffects 标记
+
+要将某些文件标记为副作用，我们需要将它们添加到 `package.json` 文件中。它类似于 `/*#**PURE***/` 但是作用于模块的层面，而不是代码语句的层面。它表示的意思是(指"sideEffects" 属性)：“如果被标记为无副作用的模块没有被直接导出使用，打包工具会跳过进行模块的副作用分析评估。”。
+
+例如，一个副作用是：有一些代码，是在 import 时执行了一些行为，这些行为不一定和任何导出相关。例如 polyfill ，Polyfills 通常是在项目中全局引用，而不是在 index.js 中使用导入的方式引用。
+
+```js
+{
+    ...,
+    "sideEffects": [
+        "./src/polyfill.js"
+    ],
+    ...,
+}
+```
+
+sideEffects 和 usedExports（更多被认为是 tree shaking）是两种不同的优化方式。
+
+sideEffects 更为有效 是因为它允许跳过整个模块/文件和整个文件子树。
+
+usedExports 依赖于 terser 去检测语句中的副作用。它是一个 JavaScript 任务而且没有像 sideEffects 一样简单直接。而且它不能跳转子树/依赖由于细则中说副作用需要被评估。尽管导出函数能运作如常，但 React 框架的高阶函数（HOC）在这种情况下是会出问题的。
 
 ### 禁止 Babel 转译模块导入导出语句
 

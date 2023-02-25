@@ -2,6 +2,8 @@
 
 ## 理解 Plugin
 
+Webpack Plugin 其实就是一个普通的函数，在该函数中需要我们定制一个 apply 方法。当 Webpack 内部进行插件挂载时会执行 apply 函数。我们可以在 apply 方法中订阅各种生命周期钩子，当到达对应的时间点时就会执行。
+
 插件通常是一个带有 `apply` 函数的类。Webpack 在启动时会调用插件对象的 `apply` 函数，并以参数方式传递核心对象 `compiler` ，以此为起点，插件内可以注册 `compiler` 对象及其子对象的钩子([Hook](https://link.juejin.cn/?target=https%3A%2F%2Fwebpack.js.org%2Fapi%2Fplugins%2F))回调，例如：
 
 ```js

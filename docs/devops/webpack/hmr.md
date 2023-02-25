@@ -74,6 +74,13 @@ module.hot.accept(path?: string, callback?: function);
 
 综上，Webpack 的 HMR 特性底层有两个重点，一是监听文件变化并通过 WebSocket 发送变更消息；二是需要客户端配合，通过 module.hot.accept 接口定制特定模块的热替换规则。
 
+在开发项目时，我们自己通过 module.hot.accept 接口定制特定模块的热替换规则是比较痛苦的。不过幸好，在社区中已经针对这些有很成熟的解决方案了：
+
+- 比如 Vue 开发中，我们使用 [vue-loader](https://link.juejin.cn?target=https%3A%2F%2Fwww.npmjs.com%2Fpackage%2Fvue-loader)，此 loader 支持 Vue 组件的 HMR，提供开箱即用的体验
+- 比如 React 开发中，有 [React Hot Loader](https://link.juejin.cn?target=https%3A%2F%2Fwww.npmjs.com%2Fpackage%2Freact-hot-loader)，实时调整 React 组件（目前 React 官方已经弃用了，改成使用 [react-refresh](https://link.juejin.cn?target=https%3A%2F%2Fwww.npmjs.com%2Fpackage%2Freact-refresh))
+
+下面以 Vue 为例，看看 vue-loader 如何实现 HMR。
+
 ## vue-loader 如何实现 HMR
 
 除常规的代码转译外，在 HMR 模式下，vue-loader 还会为每一个 Vue 文件注入一段处理模块替换的逻辑，如：

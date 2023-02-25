@@ -9,6 +9,8 @@
 
 Loader 通常是一种 mapping 函数形式，接收原始代码内容，返回翻译结果。在 Webpack 进入构建阶段后，首先会通过 IO 接口读取文件内容，之后调用 [LoaderRunner](https://link.juejin.cn/?target=https%3A%2F%2Fgithub.com%2Fwebpack%2Floader-runner) 并将文件内容以 `source` 参数形式传递到 Loader 数组，`source` 数据在 Loader 数组内可能会经过若干次形态转换，最终以标准 JavaScript 代码提交给 Webpack 主流程，以此实现内容翻译功能。
 
+Loader 本质上是导出为函数的 JavaScript 模块。它接收资源文件或者上一个 Loader 产生的结果作为入参，也可以用多个 Loader 函数组成 loader chain（链），最终输出转换后的结果。这里要注意的是，如果是组成的 loader chain（链），它们的执行顺序是从右向左，或者说是从下往上执行。loader chain（链） 这样设计的好处，是可以保证每个 Loader 的职责单一。同时，也方便后期 Loader 的组合和扩展
+
 ```js
 module.exports = function(source, sourceMap?, data?) {
   return source;
@@ -34,6 +36,131 @@ module.exports = function(source) {
   return output;
 };
 ```
+
+## Loader 类型
+
+Loader 按类型分可以分为四种：
+
+- 前置(pre)
+- 普通(normal)
+- 行内(inline)
+- 后置(post)
+
+我们平常使用的大多数就是 `普通(normal)`类型的，关键是 Loader 的类型和它本身没有任何关系，而是和配置的 `enforce` 属性有关系。
+
+```js
+  module: {
+    rules: [
+      {
+        test: /\.css$/,
+        use: ["css-loader"],
+        enforce: "pre", //这里也可以是 post，默认不写就是 normal
+      },
+    ],
+  },
+
+```
+
+在上面讲 loader chain 的时候提到过 Loader 的执行顺序是由右向左，或者由下到上执行。其实这种说法的并不准确，在这里我引用官方的说法:
+
+- **Pitching** 阶段: Loader 上的 pitch 方法，按照 `后置(post)、行内(inline)、普通(normal)、前置(pre)` 的顺序调用。
+
+- **Normal** 阶段: Loader 上的 常规方法，按照 `前置(pre)、普通(normal)、行内(inline)、后置(post)` 的顺序调用。模块源码的转换， 发生在这个阶段。
+
+- 同等类型下的 Loader 执行顺序才是由右向左，或者由下到上执行。
+
+### Normal Loader
+
+Loader 本质上是导出函数的 JavaScript 模块，而该模块导出的函数（若是 ES6 模块，则是默认导出的函数）就被称为 Normal Loader。
+例如：
+
+```js
+//a-loader.js
+function ALoader(content, map, meta) {
+  console.log("执行 a-loader 的normal阶段");
+  return content + "//给你加点注释(来自于Aloader)";
+}
+module.exports = ALoader;
+```
+
+### Pitching Loader
+
+其实我们在导出的 Loader 函数上还有一个可选属性：**pitch**。它的值也是一个函数，该函数就被称为Pitching Loader。
+
+例如：
+
+```js
+function ALoader(content, map, meta) {
+  console.log("执行 a-loader 的normal阶段");
+  return content + "//给你加点注释(来自于Aloader)";
+}
+
+ALoader.pitch = function () {
+  console.log("ALoader的pitch阶段");
+};
+
+module.exports = ALoader;
+```
+
+结论：
+
+在 Loader 的运行过程中，如果发现该 Loader 上有pitch属性，会先执行 pitch 阶段，再执行 normal 阶段。
+
+结合 Loader 的 4 种类型，Loader 链的执行顺序如下：
+
+![loader7](/blog/images/devops/loader7.png)
+
+- **Pitching** 阶段: Loader 上的 pitch 方法，按照 `后置(post)、行内(inline)、普通(normal)、前置(pre)` 的顺序调用。
+
+- **Normal** 阶段: Loader 上的 常规方法，按照 `前置(pre)、普通(normal)、行内(inline)、后置(post)` 的顺序调用。模块源码的转换， 发生在这个阶段。
+
+注意：当一个 Loader 的 pitch 阶段有返回值时，将跳过后续 Loader 的 pitch 阶段，直接进行到该 Loader 的 normal 阶段。 - pitch 设计的目的：中断
+
+![loader8](/blog/images/devops/loader8.png)
+
+### Loader 内联方式
+
+如果此时想指定执行某些类型的 Loader，忽略掉其他类型应该怎么办？
+
+- `!`：忽略`normal`loader
+- `-!`：忽略`pre`loader和`normal`loader
+- `!!`：忽略所有loader（`pre` / `noraml` / `post` ）
+
+1. 使用 `!` 前缀，将禁用所有已配置的 normal loader(普通 loader)（通过为内联 `import` 语句添加前缀）:
+
+```js
+import test from "!c-loader!./test.js";
+
+const a = 1;
+```
+
+此时 Loader 的执行顺序就变成了（忽略掉了 normal类型的 ALoader）：
+
+![loader9](/blog/images/devops/loader9.png)
+
+2. 使用 `!!` 前缀，将禁用其他类型的loader，只要内联loader
+
+```js
+import test from "!!c-loader!./test.js";
+
+const a = 1;
+```
+
+此时loader的执行顺序就变成了：
+
+![loader10](/blog/images/devops/loader10.png)
+
+3. 使用 `-!` 前缀，将禁用所有已配置的 preLoader 和 loader，但是不禁用 postLoaders，也就是不要 pre 和 normal loader
+
+```js
+import test from "-!c-loader!./test.js";
+
+const a = 1;
+```
+
+此时loader的执行顺序就变成了：
+
+![loader11](/blog/images/devops/loader11.png)
 
 ## Loader 开发
 
@@ -1041,6 +1168,28 @@ module.exports = function selectBlock (
 1. 首先给原始文件路径增加不同的参数，后续配合 `resourceQuery` 参数就可以分开处理这些内容，这样的实现相比于一次性处理，逻辑更清晰简洁，更容易理解；
 2. 经过 Normal Loader、Pitch Loader 两个阶段后，SFC 内容会被转化为 `import xxx from '!-babel-loader!vue-loader?xxx'` 格式的引用路径，以此复用用户配置。
 
+## 手写 babel-loader
+
+[babel-loader](https://link.juejin.cn/?target=https%3A%2F%2Fwww.npmjs.com%2Fpackage%2Fbabel-loader) 做的事情其实很简单，只需将 Loader 中的源代码交给 [babel 库处理](https://link.juejin.cn/?target=https%3A%2F%2Fbabeljs.io%2F)，拿到处理过后的值返回，仅此而已。
+
+```js
+const babel = require("@babel/core");
+const path = require("path");
+
+function babelLoader(source) {
+  // loade里面的 this=loaderContext，是一个唯一的对象，
+  // 不管在哪个loader或方法里，它的this都是同一个对象，称为loaderContext，这个等会就会实现
+  // 拿到在webpack中传递给该loader的参数，也就是presets: ["@babel/preset-env"]
+  const options = this.getOptions(); 
+  console.log("自己写的babel-loader");
+  const { code } = babel.transformSync(source, options); //交给babel库去解析
+  return code;
+}
+
+module.exports = babelLoader;
+
+```
+
 ## 小结
 
 - Loader 主要负责将资源内容转译为 Webpack 能够理解、处理的标准 JavaScript 形式，所以通常需要做 Loader 内通过 `return`/`this.callback` 方式返回翻译结果；
@@ -1048,3 +1197,5 @@ module.exports = function selectBlock (
 - 假若我们开发的 Loader 需要对外提供配置选项，建议使用 `schema-utils` 校验配置参数是否合法；
 - 假若 Loader 需要生成额外的资源文件，建议使用 `loader-utils` 拼接产物路径；
 - 执行时，Webpack 会按照 `use` 定义的顺序从前到后执行 Pitch Loader，从后到前执行 Normal Loader，我们可以将一些预处理逻辑放在 Pitch 中(如 `vue-loader`)；
+
+[彻底弄懂Webpack中的Loader机制](https://juejin.cn/post/7157739406835580965#heading-16)

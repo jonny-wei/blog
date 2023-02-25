@@ -4,6 +4,8 @@
 
 webpack 的持久化缓存它能够将首次构建的过程与结果数据持久化保存到本地文件系统，在下次执行构建时跳过解析、链接、编译等一系列非常消耗性能的操作，直接复用上次的 Module/ModuleGraph/Chunk 对象数据，迅速构建出最终产物。
 
+空间换时间是见效非常明显的提速方案，在 Webpack5 中通过配置 `cache: 'filesystem'` 来开启持久缓存，开启后命中缓存的情况下会直接反序列化缓存文件并跳过构建流程。
+
 ```js
 module.exports = {
     //...
@@ -50,3 +52,9 @@ Webpack5 持久化缓存用法简单，且优化效果非常出色，确实是�
 - `babel-loader`：针对 Babel 工具的专用缓存能力；
 - `eslint-loader`/`eslint-webpack-plugin`：针对 ESLint 的专用缓存方案；
 - `stylelint-webpack-plugin`：针对 StyleLint 的专用缓存方案。
+
+持久缓存效果非常好，但是对于首次启动的项目来说没有任何提升。那么有没有办法直接提升首次构建速度？
+
+使用 `swc-loader / esbuild-loader` 替换 `babel-loader` 也可以一定程度上减少构建耗时。
+
+ESBuild/SWC 效果也非常不错，但对于部分项目来说无法完全脱离 Babel ，即使使用了 ESBuild 或 SWC 后也会受到来自 node_modules 模块数量过多的影响无法达到更快的构建速度。

@@ -170,3 +170,9 @@
 [用 content-visibility 提高渲染性能](https://juejin.cn/post/7168629736838463525#heading-13)
 
 [仅使用CSS提高页面渲染速度](https://juejin.cn/post/6942661408181977118)
+
+## 移动端适配
+
+[超详细讲解H5移动端适配](https://juejin.cn/post/7085931616136069156)
+
+[数据大屏适配方案](https://juejin.cn/post/7163932925955112996)

@@ -229,6 +229,7 @@ const sidebar = {
         "webpack/split-chunks",
         "webpack/compress",
         "webpack/tree-shaking",
+        "webpack/others",
       ],
     },
     {
@@ -261,6 +262,12 @@ const sidebar = {
         "performance/code",
         "performance/analysis",
       ],
+    },
+    {
+      title: "代码与包管理",
+      sidebarDepth: 1,
+      collapsable: false,
+      children: ["git/git", "git/package"],
     },
   ],
   mobile: [
