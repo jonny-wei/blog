@@ -256,8 +256,9 @@ const sidebar = {
       sidebarDepth: 1,
       collapsable: false,
       children: [
-        "performance/network",
+        "performance/indicator",
         "performance/webpack",
+        "performance/network",
         "performance/render",
         "performance/code",
         "performance/analysis",

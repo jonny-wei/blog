@@ -1,4 +1,4 @@
-# 代码层面优化
+# 代码方面面优化
 
 ## 使用函数式组件
 
@@ -672,8 +672,6 @@ Vue.use(function() {
 ## Service Workers 缓存离线化
 
 [Service Workers 缓存离线化](https://juejin.cn/post/6844903783240204301)
-
-
 
 
 ::: warning 参考文献

@@ -1,16 +1,96 @@
-# 构建层面优化
+# 打包方面优化
 
-## 分离样式
+- 减少产物体积：代码压缩、代码分割、摇树优化、优化 SourceMap、按需引入、路由懒加载、动态垫片、依赖外置、作用提升等
+- 减少打包时间：缩减范围、定向搜索、持久化缓存、提前构建、按需构建、并行构建、可视结构等
+
+减小产物体积，提高首屏性能
+
+- **压缩 HTML/JS/CSS**。利用 AST 压缩混淆代码，压缩的过程中还伴随着 tree-shaking。目的是减小产物体积，减小页面加载和渲染时间，防止反向编译工程的可能性，进而提高首屏性能。
+- **分离 CSS 样式，成单独 bundle**。避免大量 CSS 内联 JS，减小 JS Bundle 体积与样式闪动，提高资源下载速度；利用浏览器强缓存，减少静态资源的网络请求，进而提高首屏性能。
+- **按需引入**。组件库、工具库按需引入，减小产物体积，进而提高首屏性能。
+- **利用 Tree-Shaking**。始终使用 ESM，避免无意义的赋值、尽量不写带有副作用的代码、禁止 Babel 转译模块导入导出语句、优化导出值的粒度、使用支持 Tree Shaking 的包、在异步模块中使用 Tree-Shaking等手段，利用 Tree-Shaking，减小产物体积，进而提高首屏性能。
+- **图片内联或使用 CDN**。HTTP1.1 经常将小体积图片利用一些 loader 将小图像转为 base64 形式的字符串，内敛到产物中，从而减少 HTTP 请求。但目前的网站大多使用 HTTP2，所以图片内联优化收效甚微，有时还会有反作用，因为图片内联增加了产物体积，所以生产环境尽量将图片上传图床，并利用 CDN 加载，减小产物体积，进而提高首屏性能。
+- **优化 SourceMap**。生产环境用 `cheap-module-source-map`，减少 SourceMap 体积，进而减小产物体积，进而提高首屏性能
+- **路由懒加载**。懒加载的本质实际上就是代码分离。把代码分离到不同的 bundle 中，然后按需加载或并行加载这些文件。单页面应用，可能会有很多的路由引入，打包后产物很大。当进入首页时，加载的资源过多，页面会出现白屏的情况，不利于用户体验，通过路由懒加载，需要时再异步加载资源，减少首页产物体积，提高首屏性能。
+- **Code Split 代码分割**。根据产物包的体积、引用次数等做分包优化，减少产物体积，有效利用浏览器缓存，提高首屏性能。
+- **CDN 动态加载 polyfill**。polyfill 通过 CDN 加载， 减小产物体积，提高首屏性能。
+- **依赖外置并 CDN 加载**。公共依赖外置，防止将某些 import 的包打包到 bundle 中，在运行时去从外部获取这些扩展依赖(external dependencies)，并且通过 CDN 加载，减小产物体积，提高首屏性能。
+
+提高构建速度，提升开发体验
+
+- **缩小文件搜索范围**。约束 Loader 执行范围，使用 noParse 跳过文件编译，设置 resolve 缩小搜索范围，提高构建速度，提高开发体验。
+- **持久化缓存**。提高二次构建速度，提高构建速度，提升开发体验。
+- **并行构建**。多进程多线程并行构建，提高构建速度，提升开发体验。
+
+## 压缩 HTML/JS/CSS
+
+### 压缩 HTML
+
+使用 HtmlWebpackPlugin 插入引用，根据模版生成 HTML，通过 `HtmlMinifierTerser` 压缩 HTML。
+
+某些场景如 SSG 或官网一类偏静态的应用中就存在大量可被优化的 HTML 代码，为此社区也提供了一些相关的工程化工具，例如 `html-minifier-terser`。
+
+html-minifier-terser 是一个基于 JavaScript 实现的、高度可配置的 HTML 压缩器，支持一系列 压缩特性。我们可以借助 html-minimizer-webpack-plugin 插件接入 html-minifier-terser 压缩器。
+
+html-minifier-terser 提供的默认配置有点过于保守，例如 `removeComments` —— 用于移除代码备注的配置，或者 `useShortDoctype` 用于简化 `<doctype>` 标签的配置，默认竟然都是 false，这放在当下浏览器功能已经非常强劲，兼容性问题已经被大大抹平的背景下，有点大可不必了。因此，建议你使用时先到官网仔细了解各项配置，尽可能开启更多压缩功能。
+
+### 压缩 CSS
+
+使用 `CssMinimizerWebpackPlugin` 压缩 CSS。这个插件使用 [cssnano](https://cssnano.co/) 优化和压缩 CSS。就像 [optimize-css-assets-webpack-plugin](https://github.com/NMFR/optimize-css-assets-webpack-plugin) 一样，但在 source maps 和 assets 中使用查询字符串会更加准确，支持缓存和并发模式下运行。
+
+- CssMinimizerPlugin.cssnanoMinify：默认值，使用 [cssnano](https://link.juejin.cn/?target=https%3A%2F%2Fcssnano.co%2F) 压缩代码，不需要额外安装依赖；
+- CssMinimizerPlugin.cssoMinify：使用 [csso](https://link.juejin.cn/?target=https%3A%2F%2Fgithub.com%2Fcss%2Fcsso) 压缩代码，需要手动安装依赖 yarn add -D csso；
+- CssMinimizerPlugin.cleanCssMinify：使用 [clean-css](https://link.juejin.cn/?target=https%3A%2F%2Fgithub.com%2Fclean-css%2Fclean-css) 压缩代码，需要手动安装依赖 yarn add -D clean-css；
+- CssMinimizerPlugin.esbuildMinify：使用 [ESBuild](https://link.juejin.cn/?target=https%3A%2F%2Fesbuild.github.io%2F) 压缩代码，需要手动安装依赖 yarn add -D esbuild；
+- CssMinimizerPlugin.parcelCssMinify：使用 [parcel-css](https://link.juejin.cn/?target=https%3A%2F%2Fgithub.com%2Fparcel-bundler%2Fparcel-css) 压缩代码，需要手动安装依赖 yarn add -D @parcel/css。
+
+其中 `parcel-css` 与 `ESBuild` 压缩性能相对较佳，但两者功能与兼容性稍弱，多数情况下推荐使用 `cssnano`。
+
+[CssMinimizerWebpackPlugin](https://webpack.docschina.org/plugins/css-minimizer-webpack-plugin/)
+
+### 压缩 JavaScript
+
+[Terser](https://link.juejin.cn/?target=https%3A%2F%2Fgithub.com%2Fterser%2Fterser) 是当下 [最为流行](https://link.juejin.cn/?target=https%3A%2F%2Fnpmtrends.com%2Fbabel-minify-vs-terser-vs-uglify-js) 的 ES6 代码压缩工具之一，支持 [Dead-Code Eliminate](https://link.juejin.cn/?target=https%3A%2F%2Fen.wikipedia.org%2Fwiki%2FDead-code_elimination)、删除注释、删除空格、代码合并、变量名简化等等[一系列](https://link.juejin.cn/?target=https%3A%2F%2Fgithub.com%2Fterser%2Fterser%23compress-options)代码压缩功能。Terser 的前身是大名鼎鼎的 [UglifyJS](https://link.juejin.cn/?target=https%3A%2F%2Fgithub.com%2Fmishoo%2FUglifyJS)，它在 UglifyJS 基础上增加了 ES6 语法支持，并重构代码解析、压缩算法，使得执行效率与压缩率都有较大提升。
+
+Webpack5.0 后默认使用 Terser 作为 JavaScript 代码压缩器，简单用法只需通过 optimization.minimize 配置项开启压缩功能即可。
+
+[terser-webpack-plugin](https://link.juejin.cn/?target=https%3A%2F%2Fgithub.com%2Fwebpack-contrib%2Fterser-webpack-plugin) 插件并不只是 Terser 的简单包装，它更像是一个代码压缩功能骨架，底层还支持使用 SWC、UglifyJS、ESBuild 作为压缩器，使用时只需要通过 minify 参数切换即可。不同压缩器功能、性能差异较大，据我了解，ESBuild 与 SWC 这两个基于 Go 与 Rust 编写的压缩器性能更佳，且效果已经基本趋于稳定，虽然功能还比不上 Terser，但某些构建性能敏感场景下不失为一种不错的选择。
+
+压缩代码的目的:
+
+- 压缩混淆代码
+- 降低浏览加载资源体积
+- 降低页面渲染时间
+- 防止反向编译工程的可能性
+
+代码压缩的重点就在于“保持功能性”的前提下尽可能“删除”不必要的字符，原理虽不复杂但必须对语言特性有比较深的理解才能实现，所幸社区已经提供了各种各样的压缩工具，我们只需要简单配置就能轻松接入。
+
+在 Webpack 中需要使用 `optimization.minimizer` 数组接入代码压缩插件，比较常用的插件有：
+
+- `terser-webpack-plugin`：用于压缩 ES6 代码的插件；
+- `css-minimizer-webpack-plugin`：用于压缩 CSS 代码的插件；
+- `html-minifier-terser`：用于压缩 HTML 代码的插件。
+
+这些插件用法非常相似，都支持 `include/test/exclude` 配置项，用于控制压缩功能的应用范围；也都支持 `minify` 配置项，用于切换压缩器，借助这个配置我们可以使用性能更佳的工具，如 ESBuild 执行压缩。
+
+## 分离 CSS 样式
 
 通过 `css-loader`，`style-loader`，`postcss-loader`，`less-loader/sass-loader(node-sass/fast-sass-loader)` 等一系列 loader 打包好了 css，但是它们都内联到了 js 中，这样会存在以下几个问题：
 
-- 使得 css 无法缓存
-- 增加了 js 文件体积
+- 使得 css 无法利用缓存
+- 增加了 js 文件体积，以及无法与 JS 并行加载
 - 未样式化元素闪动（FOUC）问题
 
-发生 FOUC 是因为浏览器需要一段时间才能加载 JavaScript，并且到那时才会应用样式。将 CSS 分离到自己的文件可以让浏览器单独管理它，并将 css 的加载放在 js 加载前(即通常将 js 的引入放在 `<body>` 尾部)，从而避免了这个问题。
+发生 FOUC 的原因：当使用单文件组件时，组件内的 CSS 会以 style 标签的方式通过 JavaScript 动态注入。这有一些小小的运行时开销，如果你使用服务端渲染，这会导致一段 “无样式内容闪烁 (fouc) ” 。将所有组件的 CSS 提取到同一个文件可以避免这个问题，也会让 CSS 更好地进行压缩和缓存。
 
-**mini-css-extract-plugin** 分离样式，生成单独的 css 样式文件。它可以将多个 CSS 文件聚合为一个。出于这个原因，它配备了一个 loader(MiniCssExtractPlugin.loader) 来专门处理这个过程。然后，插件会获取 loader 抽取的结果并发出单独的文件。由于这个过程会产生比较大的开销，所以，MiniCssExtractPlugin 只会作用于编译阶段，它不适用于热模块更换（HMR）。鉴于这个插件只是在生产环境中使用，所以也不是什么大的问题。
+作者：我是你的超级英雄
+链接：<https://juejin.cn/post/6844903913410314247>
+来源：稀土掘金
+著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+
+[MiniCssExtractPlugin](https://webpack.docschina.org/plugins/mini-css-extract-plugin) 分离样式，生成单独的 css 样式文件。它可以将多个 CSS 文件聚合为一个。出于这个原因，它配备了一个 loader(MiniCssExtractPlugin.loader) 来专门处理这个过程。然后，插件会获取 loader 抽取的结果并发出单独的文件。由于这个过程会产生比较大的开销，所以，MiniCssExtractPlugin 只会作用于编译阶段，它不适用于热模块更换（HMR）。鉴于这个插件只是在生产环境中使用，所以也不是什么大的问题。
+
+推荐 `production` 环境的构建将 CSS 从你的 bundle 中分离出来，这样可以使用 CSS/JS 文件的并行加载。 这可以通过使用 `mini-css-extract-plugin` 来实现，因为它可以创建单独的 CSS 文件。 对于 `development` 模式（包括 `webpack-dev-server`），你可以使用 [style-loader](https://webpack.docschina.org/loaders/style-loader/)，因为它可以使用多个 标签将 CSS 插入到 DOM 中，并且反应会更快。
 
 ::: tip 注意
 
@@ -27,17 +107,42 @@
 - 图片 文件使用 `[name]_[hash:8].[ext]`
 :::
 
-## 静态资源内联
+## 按需引入
 
-```html
-<head>
-    ${ require('raw-loader!./meta.html')}
-    <title>Document</title>
-    <script>${ require('raw-loader!babel-loader!../../node_modules/lib-flexible/flexible.js')}</script>
-</head>
+在项目中，如果我们直接引入整个组件库、工具库等，会导致项目的体积太大，通过按需引入，引入需要的组件，以达到减小项目体积的目的。
+
+- babel-plugin-import
+- babel-plugin-component
+
+按需引入原理
+
+```js
+import { Button } from "antd"
+// 经插件转变为
+import Button from "antd/lib/Button"
+const Button = require("antd/lib/Button")
 ```
 
-## 图片内联与压缩
+- 第一步：在插件中拿到我们在插件调用时传递的参数`libraryName`
+- 第二步：获取`import`节点，找出引入模块是`libraryName`的语句
+- 第三步：进行批量替换旧节点
+
+
+## 利用 Tree-Shaking
+
+始终使用 ESM，避免无意义的赋值、尽量不写带有副作用的代码、禁止 Babel 转译模块导入导出语句、优化导出值的粒度、使用支持 Tree Shaking 的包、在异步模块中使用 Tree-Shaking等手段，利用 Tree-Shaking，减小产物体积。
+
+Tree-Shaking 的实现大致上可以分为三个步骤：
+
+- 「构建」阶段，「收集」 模块导出变量并记录到模块依赖关系图 ModuleGraph 对象中；
+- 「封装」阶段，遍历所有模块，「标记」 模块导出变量有没有被使用；
+- 使用代码优化插件 —— 如 Terser，「删除」无效导出代码。
+
+详细了解参考[Tree-Shaking](/devops/webpack/tree-shaking.html#定)
+
+## 图片内联或使用 CDN
+
+小体积图片可利用一些 loader 将小图像转为 base64 形式的字符串，内敛到产物中，从而减少 HTTP 请求。但目前的网站大多使用 HTTP2，所以图片内联优化收效甚微，有时还会有反作用。因为图片内联增加了产物体积，所以生产环境尽量将图片上传图床，并利用 CDN 加载。图片的优化对于有大量图片的网站（例如，电商，设计）来说比较重要，后续文章会有专门的章节讲解。
 
 加载大量小的资源会使基于 HTTP/1 的应用变慢，因为每个请求都会产生开销。HTTP/2 在这方面有所改善，并且在某种程度上改变了这种情况。除了使用 HTTP/2 外，webpack 也有一些优化办法：
 
@@ -120,248 +225,94 @@
 
 2. **响应式图片**：根据客户端设备情况下发适当分辨率的图片，有助于减少网络流量。Webpack 中有不少能够自动生成响应式图片的组件，例如： [resize-image-loader](https://link.juejin.cn/?target=https%3A%2F%2Fwww.npmjs.com%2Fpackage%2Fresize-image-loader)、[html-loader-srcset](https://link.juejin.cn/?target=https%3A%2F%2Fwww.npmjs.com%2Fpackage%2Fhtml-loader-srcset)、[responsive-loader](https://link.juejin.cn/?target=https%3A%2F%2Fwww.npmjs.com%2Fpackage%2Fresponsive-loader) 等。
 
-## 压缩混淆净化 HTML/JS/CSS
+## 优化 SourceMap
 
-### 压缩 HTML
+开发环境推荐： cheap-module-eval-source-map
 
-使用 HtmlWebpackPlugin 插入引用，根据模版生成 HTML，压缩 HTML。
+生产环境推荐： cheap-module-source-map
 
-- filename：表示输出的文件名
-- template：模版文件
-- removeComments：移除 HTML 中的注释
-- collapseWhitespace：删除空白符与换行符
-- inlineSource：插入到 HTML 的 CSS、JS 文件要内联，即不是以 link、script 形式引入
-- inject：是否能注入内容到输出的页面
-- chunks：指定插入某些模块
-- hash：每次会在插入的文件后面加上 hash，用于处理缓存
-- 其他：favicon、meta、title 页面内使用 `<%= htmlWebpackPlugin.options.title %>` 即可
+一般开发环境开启，线上环境关闭，线上排查问题时可将 sourcemap 上传错误监控系统。
 
-### 压缩净化 CSS
+- eval：使用 eval 包裹模块代码，包裹最后有 sourcemap 信息
+- source map：产生 `.map` 文件，包括行列信息，loader 也有对应的 sourcemap
+- cheap：不包含列信息，只有行信息，没有列信息，loader 也没有对应的 sourcemap，对应的都是 loader 转换后的代码，不是纯正的源代码
+- inline：将 `.map` 作为 DataURL 嵌入，不单独生成 `.map` 文件，不推荐使用，因为这样会造成源代码体积巨大
+- module：包含 loader 的 sourcemap
 
-- css-loader?minimize。css-loader 内置了 cssnano，只需要使用 css-loader?minimize 就可以开启 cssnano 压缩。
-- PurifyCSSPlugin。需要配置 extract-text-webpack-plugin 使用，它主要的作用是可以去除没有用到的 CSS 代码，类似 JS 的 TreeShaking。PurifyCSSPlugin 已停止维护，使用 PurgecssPlugin 替代，配合 MiniCssExtractPlugin 使用。
-- MiniCssExtractPlugin 用于提取 CSS。
-- OptimizeCssAssetsWebpackPlugin 用于压缩 CSS。
+(inline-)(cheap-)(module-)(eval-)source-map 按序组合
 
-### 压缩净化 JavaScript
+## 路由懒加载（异步加载）
 
-webpack4 只要在生产模式下，JS 代码就会自动压缩。
+对于大的 Web 应用来讲，将所有的代码都放在一个文件中显然是不够有效的，特别是当你的某些代码块是在某些特殊的时候才会被使用到。Webpack 异步加载，将代码分割成单独 Chunks，当代码运行到需要它们的时候再进行加载。
 
-- Webpack 内置 UglifyJS(UglifyjsWebpackPlugin) 插件
-- ParallelUglifyPlugin
-- TerserWebpackPlugin(webpack4 替代推荐)
+适用的场景：
 
-在 Webpack 4 中，通过两个配置字段控制压缩过程：optimization.minimize 字段切换压缩处理器，而 optimization.minimizer 数组用来配置压缩处理器。
+- 抽离相同代码到单个共享块（公共模块） common chunk
+- 脚本懒加载，使得初始加载的文件更小
 
-会分析 JavaScript 代码语法树，理解代码的含义，从而做到去除无效代码、去掉日志输出代码、缩短变量名等优化。产环境必备:
+而 Webpack 异步加载就是根据 Async Chunk，当涉及到动态代码拆分时，Webpack 提供了两个类似的技术：
 
-- 压缩混淆代码
-- 降低浏览加载资源体积
-- 降低页面渲染时间
-- 防止反向编译工程的可能性
+- 使用 Webpack 特定的 require.ensure - 不推荐，历史遗留，主要支持 CommonJS 规范
+- import() 语法实现动态导入 - 推荐
 
-### 使用 TreeShaking
+以 Vue 为例，Vue 是单页面应用，可能会有很多的路由引入 ，这样使用 webpcak 打包后的文件很大，当进入首页时，加载的资源过多，页面会出现白屏的情况，不利于用户体验。如果我们能把不同路由对应的组件分割成不同的代码块，然后当路由被访问的时候才加载对应的组件，这样就更加高效了。这样会大大提高首屏显示的速度，但是可能其他的页面的速度就会降下来。对于每个路由都使用懒加载的方式引入，则每个模块都会被单独打为一个 js，首屏只会加载当前模块引入的 js。
 
-webpack4 生产环境默认开启。
+最终目标是得到一个按需加载的分割点。分割内部也可以再次分割，您可以根据分割构建整个应用程序。这样做的好处是，应用程序的初始有效负载会更小。
 
-TreeShaking 可以去除无用代码，它依赖于 ES6 的 import、export 的模块化语法，最先在 Rollup 中出现，Webpack2.0 开始引入使用。适合用于 lodash、utils.js 等工具类较分散的文件。
-
-#### DCE (Elimination)
-
-- 代码不会被执行到，不可达
-- 代码执行的结果不会被用到
-- 代码只会影响死变量(只写不读)
-
-#### TreeShaking 原理
-
-- 利用 ES6 模块化语法
-  - 只能作为模块顶层的语句出现
-  - import 的模块只能时字符串常量(不能动态)
-  - import binding 时 immutable 的(不能修改)
-- 压缩阶段删除无用的代码
-
-它正常工作的前提是代码必须采用 ES6 的模块化语法，因为 ES6 模块化语法是静态的（在导入、导出语句中的路径必须是静态字符串，且不能放入其他代码块中）。
-
-在项目中使用大量第三方库时，我们会发现 TreeShaking 似乎不生效了，原因是大部分 NPM 中的代码都采用了 CommonJS 语法，这导致 TreeShaking 无法正常工作而降级处理。但幸运的是，有些库考虑到了这一点，这些库在发布到 NPM 上时会同时提供两份代码，一份采用 CommonJS 模块化语法，一份采用 ES6 模块化语法。
-
-以下是压缩 HTML/CSS/JS，分离CSS，文件指纹策略，移动端 rem + lib-flexible 适配方案 简单示例：
+Babel 本身不支持动态 import 语法，它需要 @babel/plugin-syntax-dynamic-import 配合才能工作。
 
 ```js
-const PATHS = {
-    src: path.join(__dirname, 'src')
-};
-
-module.exports = {
-    entry: {
-        index: './src/index.js',
-    },
-    output: {
-        path: path.join(__dirname, 'dist'),
-        filename: '[name]_[chunkhash:8].js'
-    },
-    mode: 'production',
-    module: {
-        rules: [
-            {
-                test: /.js$/,
-                use: 'babel-loader'
-            },
-            {
-                test: /.css$/,
-                use: [
-                    MiniCssExtractPlugin.loader,
-                    'css-loader'
-                ]
-            },
-            {
-                test: /.less$/,
-                use: [
-                    MiniCssExtractPlugin.loader,
-                    'css-loader',
-                    'less-loader',
-                    {
-                        loader: 'postcss-loader',
-                        options: {
-                            plugins: () => [
-                                require('autoprefixer')({
-                                    browsers: ['last 2 version', '>1%', 'ios 7']
-                                })
-                            ]
-                        }
-                    },
-                     {
-                        loader: 'px2rem-loader',
-                        options: {
-                            remUnit: 75,
-                            remPrecision: 8
-                        }
-                    }
-                ]
-            },
-            {
-                test: /.(png|jpg|gif|jpeg)$/,
-                use: [
-                    {
-                        loader: 'file-loader',
-                        options: {
-                            name: 'images/[name]_[hash:8].[ext]'
-                        }
-                    }
-                ]
-            },
-            {
-                test: /.(woff|woff2|eot|ttf|otf)$/,
-                use: [
-                    {
-                        loader: 'file-loader',
-                        options: {
-                            name: '[name]_[hash:8][ext]'
-                        }
-                    }
-                ]
-            }
-        ]
-    },
-    plugins: [
-        new MiniCssExtractPlugin({
-            filename: '[name]_[contenthash:8].css'
-        }),
-        new PurgecssPlugin({
-            paths: glob.sync(`${PATHS.src}/**/*`,  { nodir: true }), // 需要绝对路径
-        })
-        new OptimizeCSSAssetsPlugin({
-            assetNameRegExp: /\.css$/g,
-            /**
-             * cssnano 是一个 PostCSS 插件，可以添加到你的构建流程中，
-             * 用于确保最终生成的 用于生产环境的 CSS 样式表文件尽可能的小。
-             * 
-             * cssnano 基于 PostCSS 来处理 CSS 代码。因为很多 现代化的 CSS 工具都是基于 PostCSS 开发的，
-             * 因此你可以把这些工具组合起来 并生成一棵单一的抽象语法树（AST）。
-             * 这就意味着总的处理时间 减少了，因为 CSS 不再需要进行多次解析了
-             */
-            cssProcessor: require('cssnano'),
-            cssProcessorPluginOptions: {
-              // 预设
-              preset: ['default', {
-                  discardComments: {
-                    removeAll: true,
-                  },
-                  normalizeUnicode: false
-                }]
-              },
-              canPrint: true
-        }),
-        new HtmlWebpackPlugin({
-            template: path.join(__dirname, 'src/index.html'),
-            filename: 'index.html',
-            chunks: ['index'],
-            inject: true,
-            minify: {
-                html5: true,
-                collapseWhitespace: true,
-                preserveLineBreaks: false,
-                minifyCSS: true,
-                minifyJS: true,
-                removeComments: false
-            }
-        }),
-        new CleanWebpackPlugin(),
-        new HardSourceWebpackPlugin()
+// .babelrc
+{
+    "presets": [
+        [
+            "@babel/preset-env"
+        ],
+        "@babel/preset-react"
+    ],
+    "plugins": [
+        "@babel/plugin-syntax-dynamic-import"
     ]
-};
+}
+
+// 使用如点击按钮懒加载test，通过 webpackJsonp 方法发起一个 jsonp 请求懒加载脚本
+
+loadComponent(){
+  import('./test.js').then(()={})
+}
 ```
 
-::: danger 相关链接
+## Code Split 代码分割
 
-- [构建压缩](/devops/webpack/compress.html)
-:::
+Webpack 默认会将尽可能多的模块代码打包在一起，优点是能减少最终页面的 HTTP 请求数，但缺点也很明显：
 
-## 代码分割
+- 页面初始代码包过大，影响首屏渲染性能；
+- 无法有效应用浏览器缓存，特别对于 NPM 包这类变动较少的代码，业务代码哪怕改了一行都会导致 NPM 包缓存失效。
 
-代码分割以按需加载、分离基础库，提取公共代码。
-
-单页应用的一个问题在于使用一个页面承载复杂的功能，要加载的文件体积很大，不进行优化的话会导致首屏加载时间过长，影响用户体验。做按需加载可以解决这个问题。具体方法如下：
-
-将网站功能按照相关程度划分成几类。每一类合并成一个 Chunk，按需加载对应的 Chunk 例如，只把首屏相关的功能放入执行入口所在的 Chunk，这样首次加载少量的代码，其他代码要用到的时候再去加载。最好提前预估用户接下来的操作，提前加载对应代码，让用户感知不到网络加载
-
-目前，生产环境下的打包结果是单个 JavaScript 文件。如果更改了代码，则客户端也必须重新下载整个包，包括一些外部依赖包。最好的结果是只下载更改的部分。如果外部依赖包发生更改，则客户端应仅获取依赖包。对于应用本身的代码也是如此。在 Webpack4 我们可以使用 optimization.splitChunks.cacheGroups 来进行 **分割打包**。通过分割打包，您可以将外包依赖项单独打包，并从客户端级别缓存中受益。执行了该过程，应用程序的整个大小依然保持不变。尽管需要执行的请求越多，会产生轻微的开销，但缓存的好处弥补了这一成本。
-
-Webpack 提供了提取公共代码的分包插件，根据版本不同使用不同的插件：
+Webpack 提供了提取公共代码的分包插件，专门用于根据产物包的体积、引用次数等做分包优化，规避上述问题，特别适合生产环境使用。
 
 - Webpack 4+：SplitChunksPlugin
 - Webpack 3：CommonsChunkPlugin
 
-::: tip 注意
-要正确使打包结果无效，必须将哈希附加到生成的 bundle 中(使用文件指纹策略向输出文件名添加占位符)。
-:::
+最佳分包策略，包括：
 
-提取策略：
+- 针对 `node_modules` 资源：
+  - 可以将 `node_modules` 模块打包成单独文件(通过 `cacheGroups` 实现)，防止业务代码的变更影响 NPM 包缓存，同时建议通过 `maxSize` 设定阈值，防止 vendor 包体过大；
+  - 更激进的，如果生产环境已经部署 HTTP2/3 一类高性能网络协议，甚至可以考虑将每一个 NPM 包都打包成单独文件，具体实现可查看小册[示例](https://link.juejin.cn/?target=https%3A%2F%2Fgithub1s.com%2FTecvan-fe%2Fwebpack-book-samples%2Fblob%2F50c9a47ce3%2Fsplitchunks-seperate-npm%2Fwebpack.config.js%23L19-L20)；
 
-- 根据网站所使用的技术栈，找出网站的所有页面都需要用到的基础库，以采用 React 技术栈的网站为例，所有页面都会依赖 react、react-dom 等库，将它们提取到一个单独的文件 base.js 中，该文件包含了所有网页的基础运行环境。（为了长期缓存 base.js 文件）
-- 在剔除了个页面中被 base.js 包含的部分代码后，再找出所有页面都依赖的公共部分代码，将它们提取出来并放到 common.js 中。
-- 再为每个页面都生成一个单独的文件，而只包含各个页面单独需要的部分代码。
+- 针对业务代码：
+  - 设置 `common` 分组，通过 `minChunks` 配置项将使用率较高的资源合并为 Common 资源；
+  - 首屏用不上的代码，尽量以异步方式引入；
+  - 设置 `optimization.runtimeChunk` 为 `true`，将运行时代码拆分为独立资源。
 
-生成算法：
+Chunk 是 Webpack 实现模块打包的关键设计，Webpack 会首先为 Entry 模块、异步模块、Runtime 模块(取决于配置) 创建 Chunk 容器，之后按照 `splitChunks` 配置进一步优化、裁剪分包内容。
 
-- Webpack 先将 entry 中对应的 module 都生成一个新的 Chunk
-- 遍历 module 的依赖列表，将依赖的 module 也加入到 Chunk 中
-- 如果一个依赖 module 是动态引入的模块，那么就会根据这个 module 创建一个新的 Chunk，继续遍历依赖
-- 重复上面的过程，直至得到所有的 Chunks
-
-::: tip Chunk 和 Bundle 的关系
-
-- **Chunk（块）**：指若干个 JS Module 的集合
-- **Bundle**：形式上是块的集合，意义是代表一个可以运行的整体
-:::
+实践中，分包策略的好坏直接影响应用的运行性能，常用策略一是单独打包 `node_modules` 代码(习惯称为 `vendor`)，二是单独打包被频繁使用的模块(习惯称为 `common`)。
 
 - 使用 html-webpack-externals-plugin 基础库分离，通过 CDN 引入，不打入 bundle 中。
 - 使用 SplitChunksPlugin 不仅可以分离基础包，还可以提取公共带代码(推荐)。
 - 使用 DLLPlugin 预编译资源模块分离基础包(内置插件，更好的分包)
 - 使用 hard-source-webpack-plugin 是 DLL 的更好替代者
-
-- async 异步引入的库进行分离(默认)
-- inital 同步引入的库进行分离
-- all 所用引入的库进行分离(推荐)
 
 ```js
 plugins: [
@@ -432,51 +383,15 @@ plugins: [
 
 使用 HtmlWebpackExternalsPlugin 的方式分离基础包的缺点是一个基础库必须指定一个 CDN，当分离的基础包或业务包多时，会产生很多 `<script>` 插入 html 中；使用 SplitChunksPlugin 分离基础包的缺点是每次会对基础包进行分析。
 
-::: danger 相关链接
+::: tip Chunk 和 Bundle 的关系
 
-- [分包策略](/devops/webpack/split-chunks.html)
+- **Chunk（块）**：指若干个 JS Module 的集合
+- **Bundle**：形式上是块的集合，意义是代表一个可以运行的整体
 :::
 
-## 代码拆分
+分包原理与实践参考 [分包策略](/devops/webpack/split-chunks.html)
 
-对于大的 Web 应用来讲，将所有的代码都放在一个文件中显然是不够有效的，特别是当你的某些代码块是在某些特殊的时候才会被使用到。Webpack 有一个功能就是将你的代码库分割成 Chunks（语块），当代码运行到需要它们的时候再进行加载。
-
-适用的场景：
-
-- 抽离相同代码到单个共享块
-- 脚本懒加载，使得初始加载的文件更小
-
-Webpack 中以两种主要方式完成代码拆分：
-
-- CommonJS：require.ensure
-- ES6：动态 import（目前还没有原生支持，需要 Babel 转换）
-
-最终目标是得到一个按需加载的分割点。分割内部也可以再次分割，您可以根据分割构建整个应用程序。这样做的好处是，应用程序的初始有效负载会更小。
-
-Babel 本身不支持动态 import 语法，它需要 @babel/plugin-syntax-dynamic-import 配合才能工作。
-
-```js
-// .babelrc
-{
-    "presets": [
-        [
-            "@babel/preset-env"
-        ],
-        "@babel/preset-react"
-    ],
-    "plugins": [
-        "@babel/plugin-syntax-dynamic-import"
-    ]
-}
-
-// 使用如点击按钮懒加载test，通过 webpackJsonp 方法发起一个 jsonp 请求懒加载脚本
-
-loadComponent(){
-  import('./test.js').then(()={})
-}
-```
-
-## 动态 polyfill
+## CDN 动态加载 polyfill
 
 babel-ployfill 打包体积 88.49K，如果每个页面都要做兼容，都要 ployfill，体积就会变大。所以动态按需加载 polyfill。
 
@@ -492,49 +407,16 @@ babel-ployfill 打包体积 88.49K，如果每个页面都要做兼容，都要 
 <script src="https://polyfill.alicdn.com/polyfill.min.js?features=Promise%2CArray.prototype.includes"></script>
 ```
 
-## 激进合并
 
-Webpack 通过两个插件提供对生成的块的更多控制：AggressiveSplittingPlugin 和 AggressiveMergingPlugin。
 
-- AggressiveSplittingPlugin： 产生更多的小块 bundles，但同时会增加客户端的请求数量（HTTP2 采取多路复用，可以很好适应）
-- AggressiveMergingPlugin： 产生更少的 bundles
 
-如果你分成多个小的块，对于客户端缓存来说是比较有利的；但是，在 HTTP/1 环境中还会有额外的请求开销。目前，由于 HtmlWebpackPlugin 中的 BUG，如果启用该插件，这个方法不会起作用。
+## 依赖外置并 CDN 加载
 
-## PWA 优化策略
+`externals` 的主要作用是将部分模块排除在 Webpack 打包系统之外。使用 externals 时必须确保这些外置依赖代码已经被正确注入到上下文环境中，这在 Web 应用中通常可以通过 CDN 方式实现。
 
-在你第一次访问一个网站的时候，如果成功，做一个缓存，当服务器挂了之后，你依然能够访问这个网页 ，这就是 PWA。
+`externals` 声明了 react 与 lodash 两个外置依赖，并在后续的 `html-webpack-plugin` 模板中注入这两个模块的 CDN 引用，以此构成完整 Web 应用。
 
-```js
- cnpm i workbox-webpack-plugin -D
-
-const WorkboxPlugin = require('workbox-webpack-plugin') // 引入 PWA 插件
-const prodConfig = {
-  plugins: [
-    // 配置 PWA
-    new WorkboxPlugin.GenerateSW({
-      clientsClaim: true,
-      skipWaiting: true
-    })
-  ]
-}
-
-在入口文件加上
-// 判断该浏览器支不支持 serviceWorker
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker
-      .register('/service-worker.js')
-      .then(registration => {
-        console.log('service-worker registed')
-      })
-      .catch(error => {
-        console.log('service-worker registed error')
-      })
-  })
-}
-```
-
+虽然结果上看浏览器还是得消耗这部分流量，但结合 CDN 系统特性，一是能够就近获取资源，缩短网络通讯链路；二是能够将资源分发任务前置到节点服务器，减轻原服务器 QPS 负担；三是用户访问不同站点能共享同一份 CDN 资源副本。所以网络性能效果往往会比重复打包好很多。
 ## 缩小文件搜索范围
 
 - **优化 resolve.modules 配置**。指定第三方模块存放的绝对路径，避免层层查找，减少搜索步骤，减少模块搜索层级。
@@ -601,101 +483,34 @@ module.exports = {
 
 **resolve.mainFiles** **配置：**实际项目中应控制 resolve.mainFiles 数组数量，减少匹配次数
 
-## 构建缓存策略
+## 持久化缓存
 
-提升二次构建速度。node-module 中 .cache 文件下有缓存记录。缓存思路：
+webpack 的持久化缓存它能够将首次构建的过程与结果数据持久化保存到本地文件系统，在下次执行构建时跳过解析、链接、编译等一系列非常消耗性能的操作，直接复用上次的 Module/ModuleGraph/Chunk 对象数据，迅速构建出最终产物。
 
-- babel-loader 开启缓存
-- terser-webpack-plugin 开启缓存
-- 使用 cache-loader 或者 hard-source-webpack-plugin
+- Webpack5 通过配置 cache: 'filesystem' 来开启持久缓存
+- Webpack4 
+  - `cache-loader`：针对 Loader 运行结果的通用缓存方案；
+  - `hard-source-webpack-plugin`：针对 Webpack 全生命周期的通用缓存方案；
+  - `babel-loader`：针对 Babel 工具的专用缓存能力；
+  - `eslint-loader`/`eslint-webpack-plugin`：针对 ESLint 的专用缓存方案；
+  - `stylelint-webpack-plugin`：针对 StyleLint 的专用缓存方案。
 
-::: danger 相关链接
+持久缓存效果非常好，但是对于首次启动的项目来说没有任何提升。那么有没有办法直接提升首次构建速度？
 
-- [持久化缓存](/devops/webpack/cache.html)
-:::
+使用 `swc-loader / esbuild-loader` 替换 `babel-loader` 也可以一定程度上减少构建耗时。
 
-## 多进程/多线程构建与压缩
+ESBuild/SWC 效果也非常不错，但对于部分项目来说无法完全脱离 Babel ，即使使用了 ESBuild 或 SWC 后也会受到来自 node_modules 模块数量过多的影响无法达到更快的构建速度。
 
-影响前端发布速度的有两个方面，一个是构建，一个就是压缩，把这两个东西优化起来，可以减少很多发布的时间。
+关于构建中的缓存策略参考 [持久化缓存](/devops/webpack/cache.html)
 
-运行在 Node.js 之上的 webpack 是单线程模式的，也就是说，webpack 打包只能逐个文件处理，当 webpack 需要打包大量文件时，打包时间就会比较漫长。
+## 并行构建
 
-多进程/多实例构建的方案比较知名的有以下三种：
+受限于 Node.js 的单线程架构，原生 Webpack 对所有资源文件做的所有解析、转译、合并操作本质上都是在同一个线程内串行执行，CPU 利用率极低，因此，理所当然地，社区出现了一些以多进程方式运行 Webpack。
 
-- parallel-webpack
-- HappyPack(webpack3使用较多，不怎么维护了)
-- thread-loader(webpack4 用于替换 HappyPack)
-
-### 使用 HappyPack 多进程/多实例构建
-
-在 Webpack 构建过程中，实际上耗费时间大多数用在 loader 解析转换以及代码的压缩中，HappyPack 可利用多线程对文件进行打包（默认 CPU 核数 - 1），对多核 CPU 利用率更高。
-
-HappyPack 可以通过 HappyPackPool 线程池将任务分解给多个子进程，最后将结果发给主进程。JS 是单线程模型，只能通过这种多进程的方式提高性能。
-
-HappyPack  就能让 Webpack 做到这点，它把任务分解给 多个子进程 去并发的执行，子进程处理完后再把结果发送给主进程。
-
-HappyPack 的处理思路是开启多进程 Loader 转换，将原有的 Webpack 对 loader 的执行过程从单一进程的形式扩展多进程模式，原本的流程保持不变。使用 HappyPack 也有一些限制，它只兼容部分主流的 loader，具体可以查看官方给出的 兼容性列表。
-
-::: tip 注意
-由于 HappyPack 对 file-loader、url-loader 支持的不友好，所以不建议对这些 loader 使用。
-:::
-
-### 使用 thread-loader 多进程/多实例构建
-
-原理：每次 webpack 解析一个模块，thread-loader 会将它及它的依赖分配给 worker 线程中
-
-使用 thread-loader 或 HappyPack 多进程/多实例构建简单 DEMO：
-
-```js
-module.exports = {
-    entry: entry,
-    output: {
-        path: path.join(__dirname, 'dist'),
-        filename: '[name]_[chunkhash:8].js'
-    },
-    mode: 'production',
-    module: {
-        rules: [
-            {
-                test: /.js$/,
-                include: path.resolve('src'),
-                use: [
-                    {
-                         loader: 'thread-loader',
-                         options: {
-                             workers: 3
-                         }
-                     },
-                    'cache-loader',
-                    'babel-loader',
-                    'happypack/loader'
-                    'eslint-loader'
-                ]
-            },
-        ],
-        plugins: [
-          new HappyPack({
-            // 3) re-add the loaders you replaced above in #1:
-            loaders: [ 'babel-loader?cacheDirectory=true' ]
-        }),
-        ]
-    }
-```
-
-### 使用 TerserWebpackPlugin 多进程/多线程并行压缩
-
-`terser-webpack-plugin` 是一个使用 terser 压缩 JS 的 Webpack 插件。开启 parallel 参数，使用多进程并行运行来提高构建速度。默认并发运行数：`os.cpus().length - 1`。并行化可以显著提高构建速度，因此强烈建议使用。TerserWebpackPlugin 支持 ES6 语法的压缩，UglifyjsWebpackPlugin 不支持。
-
-```js
-optimization: {
-    minimizer: [
-        new TerserPlugin({
-            parallel: true,
-            cache: true
-        })
-    ]
-},
-```
+- [HappyPack](https://link.juejin.cn/?target=https%3A%2F%2Fgithub.com%2Famireh%2Fhappypack)：多进程方式运行资源加载(Loader)逻辑 - 已不再维护。
+- [Thread-loader](https://link.juejin.cn/?target=https%3A%2F%2Fwebpack.js.org%2Floaders%2Fthread-loader%2F)：Webpack 官方出品，同样以多进程方式运行资源加载逻辑。Thread-loader 放在其他 loader 之前，会将之后的 loader 放在一个单独的 worker 池中运行，将串行执行改为并行执行。HappyPack、Thread-loader 都面临着频繁的子进程创建、销毁所带来的性能问题。Thread-loader不能获取 compilation、compiler 等实例对象，也无法获取 Webpack 配置。Thread-loader、HappyPack 这类组件所提供的并行能力都仅作用于文件加载过程，对后续 AST 解析、依赖收集、打包、优化代码等过程均没有影响，理论收益还是比较有限的。
+- [Parallel-Webpack](https://link.juejin.cn/?target=https%3A%2F%2Fwww.npmjs.com%2Fpackage%2Fparallel-webpack)：多进程方式运行多个 Webpack 构建实例。这种实现，对单 entry 的项目没有任何收益，只会徒增进程创建成本；但特别适合 MPA 等多 entry 场景，或者需要同时编译出 esm、umd、amd 等多种产物形态的类库场景。
+- [TerserWebpackPlugin](https://link.juejin.cn/?target=https%3A%2F%2Fwww.npmjs.com%2Fpackage%2Fterser-webpack-plugin%23terseroptions)：支持多进程方式执行代码压缩、uglify 功能。
 
 ::: danger 相关链接
 
@@ -746,22 +561,6 @@ new webpack.DllReferencePlugin({
 ```
 
 在 Webpack4 中，`hard-source-webpack-plugin` 是 DLL 的更好替代者。hard-source-webpack-plugin 是 Webpack 的插件，为模块提供中间缓存步骤。为了查看结果，您需要使用此插件运行 Webpack 两次：第一次构建将花费正常的时间。第二次构建将显着加快（大概提升 90%的构建速度）。
-
-## 优化 SourceMap
-
-开发环境推荐： cheap-module-eval-source-map
-
-生产环境推荐： cheap-module-source-map
-
-一般开发环境开启，线上环境关闭，线上排查问题时可将 sourcemap 上传错误监控系统。
-
-- eval：使用 eval 包裹模块代码，包裹最后有 sourcemap 信息
-- source map：产生 `.map` 文件，包括行列信息，loader 也有对应的 sourcemap
-- cheap：不包含列信息，只有行信息，没有列信息，loader 也没有对应的 sourcemap，对应的都是 loader 转换后的代码，不是纯正的源代码
-- inline：将 `.map` 作为 DataURL 嵌入，不单独生成 `.map` 文件，不推荐使用，因为这样会造成源代码体积巨大
-- module：包含 loader 的 sourcemap
-
-(inline-)(cheap-)(module-)(eval-)source-map 按序组合
 
 ## 使用 Prepack 提前求值
 
@@ -894,6 +693,49 @@ module.exports = {
 }
 ```
 
+## 激进合并
+
+Webpack 通过两个插件提供对生成的块的更多控制：AggressiveSplittingPlugin 和 AggressiveMergingPlugin。
+
+- AggressiveSplittingPlugin： 产生更多的小块 bundles，但同时会增加客户端的请求数量（HTTP2 采取多路复用，可以很好适应）
+- AggressiveMergingPlugin： 产生更少的 bundles
+
+如果你分成多个小的块，对于客户端缓存来说是比较有利的；但是，在 HTTP/1 环境中还会有额外的请求开销。目前，由于 HtmlWebpackPlugin 中的 BUG，如果启用该插件，这个方法不会起作用。
+
+## PWA 优化策略
+
+在你第一次访问一个网站的时候，如果成功，做一个缓存，当服务器挂了之后，你依然能够访问这个网页 ，这就是 PWA。
+
+```js
+ cnpm i workbox-webpack-plugin -D
+
+const WorkboxPlugin = require('workbox-webpack-plugin') // 引入 PWA 插件
+const prodConfig = {
+  plugins: [
+    // 配置 PWA
+    new WorkboxPlugin.GenerateSW({
+      clientsClaim: true,
+      skipWaiting: true
+    })
+  ]
+}
+
+在入口文件加上
+// 判断该浏览器支不支持 serviceWorker
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker
+      .register('/service-worker.js')
+      .then(registration => {
+        console.log('service-worker registed')
+      })
+      .catch(error => {
+        console.log('service-worker registed error')
+      })
+  })
+}
+```
+
 ## 按需编译
 
  [lazyCompilation](https://link.juejin.cn/?target=https%3A%2F%2Fwebpack.js.org%2Fconfiguration%2Fexperiments%2F%23experimentslazycompilation) 用于实现 entry 或异步引用模块的**按需编译.**
@@ -916,12 +758,4 @@ module.exports = {
 
 ### 原理
 
-启动 lazyCompilation 后，代码中通过异步引用语句如 import('./xxx') 导入的模块（以及未被访问到的 entry）都不会被立即编译，而是直到页面正式请求该模块资源（例如切换到该路由）时才开始构建，效果与 Vite 相似，能够极大提升冷启速度。不过，lazyCompilation 还处于实验阶段，无法保证稳定性，接口形态也可能发生变更，建议只在开发环境使用。
-
-## 使用外置依赖
-
-`externals` 的主要作用是将部分模块排除在 Webpack 打包系统之外。，使用 externals 时必须确保这些外置依赖代码已经被正确注入到上下文环境中，这在 Web 应用中通常可以通过 CDN 方式实现。
-
-`externals` 声明了 react 与 lodash 两个外置依赖，并在后续的 `html-webpack-plugin` 模板中注入这两个模块的 CDN 引用，以此构成完整 Web 应用。
-
-虽然结果上看浏览器还是得消耗这部分流量，但结合 CDN 系统特性，一是能够就近获取资源，缩短网络通讯链路；二是能够将资源分发任务前置到节点服务器，减轻原服务器 QPS 负担；三是用户访问不同站点能共享同一份 CDN 资源副本。所以网络性能效果往往会比重复打包好很多。
+启动 lazyCompilation 后，代码中通过异步引用语句如 `import('./xxx')` 导入的模块（以及未被访问到的 entry）都不会被立即编译，而是直到页面正式请求该模块资源（例如切换到该路由）时才开始构建，效果与 Vite 相似，能够极大提升冷启速度。不过，lazyCompilation 还处于实验阶段，无法保证稳定性，接口形态也可能发生变更，建议只在开发环境使用。
