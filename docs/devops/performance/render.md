@@ -1,4 +1,4 @@
-# 渲染方面面优化
+# 渲染方面优化
 
 结合 **渲染进程(浏览器内核)** 即 **关键渲染路径** 优化首屏渲染，减少白屏。
 
@@ -222,7 +222,7 @@ dynamicScript.onload = function(){...}
 
 - 定义
   
-  当通过JS或者 CSS 修改元素的几何属性，例如改变元素的宽度、高度等，那么浏览器会触发重新布局，解析之后的一系列子阶段，这个过程就叫重排。无疑，重排需要更新完整的渲染流水线，所以开销也是最大的。
+  当通过 JS 或者 CSS 修改元素的几何属性，例如改变元素的宽度、高度等，那么浏览器会触发重新布局，解析之后的一系列子阶段，这个过程就叫重排。无疑，重排需要更新完整的渲染流水线，所以开销也是最大的。
 - 图示
 
 ![重排](/blog/images/javascript/重排.png)
@@ -239,13 +239,20 @@ dynamicScript.onload = function(){...}
 - 优化方案
   
   - 尽量不要在布局信息改变时做查询（会导致渲染队列强制刷新）。
-  - 合并多次DOM操作。比如用class来改变多个样式。
-  - 避免使用table。
-  - 使用fragment元素（createDocumentFragment）
+  - 合并多次 DOM 操作。比如用 class 来改变多个样式。
+  - 尽可能在 DOM 树的最末端改变 class;
+  - 避免使用 table 布局。
+  - 使用 fragment 元素（createDocumentFragment）
   - 让元素脱离文档流。即让当前元素有自己的图层。
-  - 多次修改时把dom 离线 ，修改完再显示。(display:none)
-  - 使用采用虚拟DOM的库，如Vue，React
+  - 多次修改时把 dom 离线 ，修改完再显示。(display:none)
+  - 使用采用虚拟 DOM 的库，如Vue，React
   - will-change: transform 启用硬件加速
+  - 将动画效果应用到position属性为absolute或fixed的元素上
+  - 避免使用 CSS 表达式（例如：calc()）
+
+js 方面：
+
+
 
 ### 重绘
 
@@ -697,6 +704,14 @@ Chromium 的官方文档中很详细的介绍了 pre-fetch：
 所谓预渲染，就是在项目的构建过程中，通过一些渲染机制，比如 puppeteer或则 jsdom 将页面在构建的过程中就渲染好，然后插入到 html 中，这样在页面启动之前首先看到的就是预渲染的页面了。
 
 可以用 `prerender-spa-plugin` 做预渲染，这样就可以在浏览器进行渲染，而不需要将 Vue 或者 React 代码部署到服务器上。
+
+预渲染的作用:
+
+- 大型单页应用的性能瓶颈：JS下载+解析+执行
+
+- SSR的主要问题：牺牲TTFB 请求过程，来补救首次加载 First Paint 实现起来，也很复杂
+
+- Pre-rendering 打包时提前渲染页面，没有服务端参与
 
 预渲染有什么缺点呢？
 

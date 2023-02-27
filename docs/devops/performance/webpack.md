@@ -8,15 +8,15 @@
 - **压缩 HTML/JS/CSS**。利用 AST 压缩混淆代码，压缩的过程中还伴随着 tree-shaking。目的是减小产物体积，减小页面加载和渲染时间，防止反向编译工程的可能性，进而提高首屏性能。
 - **分离 CSS 样式，成单独 bundle**。避免大量 CSS 内联 JS，减小 JS Bundle 体积与样式闪动，提高资源下载速度；利用浏览器强缓存，减少静态资源的网络请求，进而提高首屏性能。
 - **按需引入**。组件库、工具库按需引入，减小产物体积，进而提高首屏性能。
-- **利用 Tree-Shaking**。始终使用 ESM，避免无意义的赋值、尽量不写带有副作用的代码、禁止 Babel 转译模块导入导出语句、优化导出值的粒度、使用支持 Tree Shaking 的包、在异步模块中使用 Tree-Shaking等手段，利用 Tree-Shaking，减小产物体积，进而提高首屏性能。
+- **利用 Tree-Shaking**。始终使用 ESM，避免无意义的赋值、尽量不写带有副作用的代码、禁止 Babel 转译模块导入导出语句、优化导出值的粒度、使用支持 Tree Shaking 的包、在异步模块中使用 Tree-Shaking 等手段，利用 Tree-Shaking，减小产物体积，进而提高首屏性能。
 - **图片内联或使用 CDN**。HTTP1.1 经常将小体积图片利用一些 loader 将小图像转为 base64 形式的字符串，内敛到产物中，从而减少 HTTP 请求。但目前的网站大多使用 HTTP2，所以图片内联优化收效甚微，有时还会有反作用，因为图片内联增加了产物体积，所以生产环境尽量将图片上传图床，并利用 CDN 加载，减小产物体积，进而提高首屏性能。
 - **优化 SourceMap**。生产环境用 `cheap-module-source-map`，减少 SourceMap 体积，进而减小产物体积，进而提高首屏性能
 - **路由懒加载**。懒加载的本质实际上就是代码分离。把代码分离到不同的 bundle 中，然后按需加载或并行加载这些文件。单页面应用，可能会有很多的路由引入，打包后产物很大。当进入首页时，加载的资源过多，页面会出现白屏的情况，不利于用户体验，通过路由懒加载，需要时再异步加载资源，减少首页产物体积，提高首屏性能。
 - **Code Split 代码分割**。根据产物包的体积、引用次数等做分包优化，减少产物体积，有效利用浏览器缓存，提高首屏性能。
-- **CDN 动态加载 polyfill**。polyfill 通过 CDN 加载， 减小产物体积，提高首屏性能。
+- **CDN 动态加载 polyfil（动态垫片）**。polyfill 通过 CDN 加载， 减小产物体积，提高首屏性能。
 - **依赖外置并 CDN 加载**。公共依赖外置，防止将某些 import 的包打包到 bundle 中，在运行时去从外部获取这些扩展依赖(external dependencies)，并且通过 CDN 加载，减小产物体积，提高首屏性能。
 
-提高构建速度，提升开发体验
+减少打包时间，提高开发体验
 
 - **缩小文件搜索范围**。约束 Loader 执行范围，使用 noParse 跳过文件编译，设置 resolve 缩小搜索范围，提高构建速度，提高开发体验。
 - **持久化缓存**。提高二次构建速度，提高构建速度，提升开发体验。
@@ -131,6 +131,8 @@ const Button = require("antd/lib/Button")
 ## 利用 Tree-Shaking
 
 始终使用 ESM，避免无意义的赋值、尽量不写带有副作用的代码、禁止 Babel 转译模块导入导出语句、优化导出值的粒度、使用支持 Tree Shaking 的包、在异步模块中使用 Tree-Shaking等手段，利用 Tree-Shaking，减小产物体积。
+
+你需要明确知道你的代码是否有副作用，关于副作用的定义是，在导入时会执行特殊行为的代码（修改全局对象、立即执行的代码等），而不是仅仅暴露一个 export 或多个 export。举例说明，例如 polyfill，它影响全局作用域，并且通常不提供 export。
 
 Tree-Shaking 的实现大致上可以分为三个步骤：
 
@@ -575,8 +577,36 @@ module.exports = {
 
 ## 使用 Scope Hoisting
 
-webpack4 生产环境默认开启 ModuleConcatenationPlugin。
 
+默认情况下 Webpack 会将模块打包成一个个单独的函数，例如：
+
+```js
+// common.js
+export default "common";
+
+// index.js
+import common from './common';
+console.log(common);
+```
+
+经过 Webpack 打包后会生成：
+
+```js
+"./src/common.js":
+  ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+     const __WEBPACK_DEFAULT_EXPORT__ = ("common");
+     __webpack_require__.d(__webpack_exports__, {
+      /* harmony export */
+      "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+      /* harmony export */
+    });
+  }),
+"./src/index.js":
+  ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+      var _common__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__( /*! ./common */ "./src/common.js");
+      console.log(_common__WEBPACK_IMPORTED_MODULE_0__)
+  })
+```
 现象：
 
 - 构建后代码存在大量的函数闭包包裹代码，导致体积增大，模块越多越明显。
@@ -584,28 +614,87 @@ webpack4 生产环境默认开启 ModuleConcatenationPlugin。
 
 译作“作用域提升”，是在 Webpack3 中推出的功能，它分析模块间的依赖关系，尽可能将被打散的模块合并到一个函数中，但不能造成代码冗余，所以只有被引用一次的模块才能被合并。由于需要分析模块间的依赖关系，所以源码 **必须是采用了ES6 模块化的**，否则 Webpack 会降级处理不采用 Scope Hoisting。将所有模块的代码按照引用顺序放在一个函数作用域里，然后适当的重命名一些变量以防止变量名冲突。
 
+这种处理方式需要将每一个模块都包裹进一段相似的函数模板代码中，好看是好看，但浪费网络流量啊。为此，Webpack 提供了 Scope Hoisting 功能，用于 **将符合条件的多个模块合并到同一个函数空间** 中，从而减少产物体积，优化性能。例如上述示例经过 Scope Hoisting 优化后，生成代码：
+
 ```js
-const ModuleConcatenationPlugin = require('webpack/lib/optimize/ModuleConcatenationPlugin');
-module.exports = {
-    //...
-    plugins:[
-        new ModuleConcatenationPlugin();
-    ],
-    resolve:{
-        mainFields:['jsnext:main','browser','main']
-    }
-}
+((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+    ;// CONCATENATED MODULE: ./src/common.js
+    /* harmony default export */ const common = ("common");
+    
+    ;// CONCATENATED MODULE: ./src/index.js
+    console.log(common);
+})
 ```
 
-默认情况下 Webpack 会将模块打包成一个个单独的函数。这种处理方式需要将每一个模块都包裹进一段相似的函数模板代码中，好看是好看，但浪费网络流量啊。为此，Webpack 提供了 `Scope Hoisting` 功能，用于 **将符合条件的多个模块合并到同一个函数空间** 中，从而减少产物体积，优化性能。
-
-Webpack 提供了三种开启 `Scope Hoisting` 的方法：
+Webpack 提供了三种开启 Scope Hoisting 的方法：
 
 - 使用 `mode = 'production'` 开启生产模式；
 - 使用 `optimization.concatenateModules` 配置项；
 - 直接使用 `ModuleConcatenationPlugin` 插件。
 
+```js
+const ModuleConcatenationPlugin = require('webpack/lib/optimize/ModuleConcatenationPlugin');
+
+module.exports = {
+    // 方法1： 将 `mode` 设置为 production，即可开启
+    mode: "production",
+    // 方法2： 将 `optimization.concatenateModules` 设置为 true
+    optimization: {
+        concatenateModules: true,
+        usedExports: true,
+        providedExports: true,
+    },
+    // 方法3： 直接使用 `ModuleConcatenationPlugin` 插件
+    plugins: [new ModuleConcatenationPlugin()]
+};
+```
+
 三种方法最终都会调用 `ModuleConcatenationPlugin` 完成模块分析与合并操作。
+
+与 Tree-Shaking 类似，Scope Hoisting 底层基于 ES Module 方案的 [静态特性](https://link.juejin.cn/?target=https%3A%2F%2Fstackoverflow.com%2Fquestions%2F52965907%2Fwhat-is-the-meaning-of-static-import-in-es6)，推断模块之间的依赖关系，并进一步判断模块与模块能否合并，因此在以下场景下会失效：
+
+1. **非 ESM 模块**
+
+遇到 AMD、CMD 一类模块时，由于导入导出内容的动态性，Webpack 无法确保模块合并后不会产生意料之外的副作用，因此会关闭 Scope Hoisting 功能。这一问题在导入 NPM 包尤其常见，许多框架都会自行打包后再上传到 NPM，并且默认导出的是兼容性更佳的 CommonJS 包，因而无法使用 Scope Hoisting 功能，此时可通过 `mainFileds` 属性尝试引入框架的 ESM 版本：
+
+```js
+module.exports = {
+  resolve: {
+    // 优先使用 jsnext:main 中指向的 ES6 模块化语法的文件
+    mainFields: ['jsnext:main', 'browser', 'main']
+  },
+};
+```
+
+1. **模块被多个 Chunk 引用**
+
+如果一个模块被多个 Chunk 同时引用，为避免重复打包，Scope Hoisting 同样会失效，例如：
+
+```js
+// common.js
+export default "common"
+
+// async.js
+import common from './common';
+
+// index.js 
+import common from './common';
+import("./async");
+```
+
+示例中，入口 `index.js` 与异步模块 `async.js` 同时依赖 `common.js` 文件，`common.js` 无法被合并入任一 Chunk，而是作为生成为单独的作用域，最终打包结果：
+
+```js
+ "./src/common.js":
+  (() => {
+    var __WEBPACK_DEFAULT_EXPORT__ = ("common");
+  }),
+ "./src/index.js":
+  (() => {
+    var _common__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__( /*! ./common */ "./src/common.js");
+    __webpack_require__.e( /*! import() */ "src_async_js").then(__webpack_require__.bind(__webpack_require__, /*! ./async */ "./src/async.js"));
+  }),  
+```
 
 ## 语言包优化
 

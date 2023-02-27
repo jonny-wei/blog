@@ -1,4 +1,4 @@
-# V18 - useMutableSource
+# V18 - useSyncExternalStore
 
 订阅外部数据源
 
@@ -36,7 +36,7 @@ useSyncExternalStore(
 - getSnapshot 可以理解成一个带有记忆功能的选择器。当 store 变化的时候，会通过 getSnapshot 生成新的状态值，这个状态值可提供给组件作为数据源使用，getSnapshot 可以检查订阅的值是否改变，改变的话那么会触发更新。
 - getServerSnapshot 用于 hydration 模式下的 getSnapshot。
 
-## useSyncExternalStore
+## useSyncExternalStore 应用
 
 用 useSyncExternalStore 配合 redux ，来简单实现订阅外部数据源功能。
 
@@ -75,7 +75,7 @@ function Index(){
 
 有了 useSyncExternalStore 这个 hooks ，可以通过外部数据到内部数据的映射，当数据变化的时候，可以通知订阅函数 subscribe 去触发更新。
 
-## useSyncExternalStore
+## useSyncExternalStore 原理
 
 ```js
 // react-reconciler/src/ReactFiberHooks.new.js

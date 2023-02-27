@@ -83,7 +83,7 @@ const sidebar = {
       children: [
         "",
         "warmup/vue-symbols",
-        "warmup/vue-test",
+        "warmup/vue-optimization",
         "warmup/vue-router",
         "warmup/vue-vuex",
       ],
@@ -180,7 +180,7 @@ const sidebar = {
         "warmup/react-state-v18",
         "warmup/react-transition",
         "warmup/react-suspense",
-        "warmup/react-useMutableSource",
+        "warmup/react-useSyncExternalStore",
         "warmup/react-ssr",
       ],
     },
@@ -262,6 +262,7 @@ const sidebar = {
         "performance/render",
         "performance/code",
         "performance/analysis",
+        "performance/optimization"
       ],
     },
     {
