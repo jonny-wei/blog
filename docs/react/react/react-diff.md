@@ -14,11 +14,23 @@ React 的更新会经历两个阶段：render 阶段 和 commit 阶段。render 
 
 因此，diff 阶段不会直接变更 DOM，而是留到 commit 阶段再做变更。
 
-React Diff 的三个前提策略：
+React 如何知道哪些 DOM 节点需要被更新呢？
 
-- Tree Diff（树策略）: 对树进行分层比较，两棵树只会对同一层次的节点进行比较。Web UI 中 DOM 节点跨层级的移动操作特别少，可以忽略不计。
+在`render`阶段的`beginWork`函数中，会将上次更新产生的 Fiber 节点与本次更新的 JSX 对象（对应`ClassComponent`的`this.render`方法返回值，或者`FunctionComponent`执行的返回值）进行比较。根据比较的结果生成`workInProgress Fiber`，即本次更新的 Fiber 节点。即，**React 将上次更新的结果与本次更新的值比较，只将变化的部分体现在 DOM 上**。这个比较的过程，就是 Diff。
+
+由于 Diff 操作本身也会带来性能损耗，React文档中提到，即使在最前沿的算法中，将前后两棵树完全比对的算法的复杂程度为 O(n^3 )，其中 n 是树中元素的数量。
+
+::: tip  O(n³)  由来
+
+关于 O(n³) 的由来。由于左树中任意节点都可能出现在右树，所以必须在对左树深度遍历的同时，对右树进行深度遍历，找到每个节点的对应关系，这里的时间复杂度是 O(n²)，之后需要对树的各节点进行增删移的操作，这个过程简单可以理解为加了一层遍历循环，因此再乘一个 n。
+
+:::
+
+为了降低算法复杂度，React 的 diff 会预设三个限制：
+
+- Tree Diff（树策略）: 只对同级元素进行Diff。如果一个DOM节点在前后两次更新中跨越了层级，那么 React 不会尝试复用他。 因为，Web UI 中 DOM 节点跨层级的移动操作特别少，可以忽略不计。
 - Component Diff（组件策略）: 拥有相同类的两个组件将会生成相似的树形结构，拥有不同类的两个组件将会生成不同的树形结构
-- Element Diff（元素策略）：对于同一层级的一组子节点，它们可以通过唯一 id 进行区分。
+- Element Diff（元素策略）：对于同一层级的一组子节点，它们可以通过唯一 id 进行区分。开发者可以通过 key 属性来暗示哪些子元素在不同的渲染下能保持稳定。
 
 React 进行 `tree diff`、`component diff` 和 `element diff`进行算法优化是基于上面三个前提策略。事实证明上面的三个前提策略是非常有效的。
 
@@ -351,9 +363,15 @@ function reconcileChildrenArray(
 
 - 只剩旧子节点
 
+  - 说明多余的 `oldFiber` 在这次更新中已经不存在了，所以需要遍历剩下的 oldFiber，依次执行删除操作（`Fiber.effectTag = Deletion`）
+
 - 只剩新子节点
 
+  - 说明老的 DOM 节点都复用了，这时还有新加入的节点，意味着本次更新有新节点插入，我们只需要遍历剩下的 newChildren 依次执行插入操作（`Fiber.effectTag = Placement`）
+
 - 新旧子节点都有剩
+
+  - 说明有节点在这次更新中改变了位置，需要移动节点。由于有节点交换了位置，所以不能再用位置索引对比前后的节点，那么怎样才能将同一个节点在两次更新中对应上呢？这时候就需要用 key 属性了。为了快速的找到 key 对应的 oldFiber，将所有还没处理的 oldFiber 放进以 key 属性为 key，以 Fiber 为 value 的 map，空间换时间。
 
 ![diff2](/blog/images/react/diff2.png)
 
@@ -371,6 +389,8 @@ function reconcileChildrenArray(
 
 #### 新旧子节点都有剩
 
+由于有节点交换了位置，所以不能再用位置索引对比前后的节点，那么怎样才能将同一个节点在两次更新中对应上呢？这时候就需要用 key 属性了。为了快速的找到 key 对应的 oldFiber，将所有还没处理的 oldFiber 放进以 key 属性为 key，以 Fiber 为 value 的 map，空间换时间。
+
 这种情况下，需要一个快速的方法帮助我们快速找到某个 ReactElement 在上一次渲染时生成的 fiber 节点。因此，我们需要一个 `existingChildren Map`，这个 Map **保存了旧 fiber 的 key 到 旧 fiber 的映射关系**，我们可以**通过新的 ReactElement 的 key 快速在这个 Map 中找到对应的旧 fiber**：
 
 - 能找到，则能**复用旧 fiber** 以生成新 fiber
@@ -382,10 +402,11 @@ function reconcileChildrenArray(
 
 其实，旧 fiber 上有 index 属性，index 属性记录了在上一次渲染时该 fiber 所在的位置索引。
 
-- **oldIndex**：旧 fiber 上的 index 属性
-- **lastPlacedIndex**：把遍历新子节点过程中访问过的最大 oldIndex
+- **oldIndex**：当前可复用节点在旧节点上的位置索引
+- **lastPlacedIndex**：把遍历新子节点过程中访问过的最大 oldIndex。该变量表示当前最后一个可复用节点，对应的 oldFiber 在上一次更新中所在的位置索引。我们通过这个变量判断节点是否需要移动。
 
-那么，只要当前新子节点有对应的旧 fiber，且 `oldIndex < lastPlacedIndex`，就可以认为该新子节点对应的 DOM 节点需要往后移动，并打上一个 Placement 标志，以便于在 commit 阶段识别出这个需要移动 DOM 节点的 fiber。
+如果 `oldIndex >= lastPlacedIndex` 代表该可复用节点不需要移动，并将 `lastPlacedIndex = oldIndex`;
+如果 `oldIndex < lastplacedIndex` 该可复用节点之前插入的位置索引小于这次更新需要插入的位置索引，代表该节点需要向右移动。那么，只要当前新子节点有对应的旧 fiber，且 `oldIndex < lastPlacedIndex`，就可以认为该新子节点对应的 DOM 节点需要往后移动，并打上一个 Placement 标志，以便于在 commit 阶段识别出这个需要移动 DOM 节点的 fiber。
 
 #### 遍历流程
 
@@ -395,7 +416,7 @@ function reconcileChildrenArray(
   - 如果能在 existingChildren Map 中找到对应的旧 fiber，根据旧 fiber 生成新 fiber；如果不能，生成新 fiber，并打上 Placement 标志
   - 从 existingChildren Map 中删除已处理的节点
   - 如果新子节点有对应的旧 fiber
-    - 当 oldIndex < lastPlacedIndex 时，给新 fiber 打上 Placement 标志；否则，令 lastPlacedIndex = newIndex
+    - 当 `oldIndex < lastPlacedIndex` 时，给新 fiber 打上 Placement 标志；否则，令 `lastPlacedIndex = newIndex`
   - 如果新子节点没有对应的旧 fiber，创建一个新 fiber 并 打上 Placement 标志
 
 - 遍历 existingChildren Map，将 Map 中所有节点添加到父节点的 deletions 数组中
@@ -460,7 +481,7 @@ Vue 2 的双端 diff 是旧的一组 VNode（旧子节点）和新的一组 VNod
 
 React 在源码注释中解释了**为什么不使用双端 diff**：
 
-由于双端 diff 需要向前查找节点，但每个 fiber 节点上都没有反向指针，即前一个 fiber 通过 sibling 属性指向后一个 fiber，只能从前往后遍历，而不能反过来（你可以在上文的各个示例图中看到这种实现），因此该算法无法通过双端搜索来进行优化。React 想看下现在用这种方式能走多远，如果这种方式不理想，以后再考虑实现双端 diff。React 认为对于列表反转和需要进行双端搜索的场景是少见的。
+由于双端 diff 需要向前查找节点，但每个 fiber 节点上都没有反向指针，即前一个 fiber 通过 sibling 属性指向后一个 fiber，只能从前往后遍历，而不能反过来（你可以在上文的各个示例图中看到这种实现），因此该算法无法通过双端搜索来进行优化。React 想看下现在用这种方式能走多远，如果这种方式不理想，以后再考虑实现双端 diff。React 认为对于列表反转和需要进行双端搜索的场景是少见的。单链表无法使用双指针，所以无法对算法使用双指针优化。
 
 [一文吃透 React 和 Vue 的多节点 diff 原理](https://juejin.cn/post/7161063643105198093#heading-23)
 
