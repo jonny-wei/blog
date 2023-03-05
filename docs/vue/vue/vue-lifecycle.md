@@ -117,9 +117,9 @@ beforeDestroyed 钩子函数在 Vue 实例销毁后调用。调用后，Vue 实�
 
 | 生命周期 | 描述   | 最佳实践|
 | :----- | :---- | :----|
-| beforeCreate | 组件实例被创建之初，组件的属性生效之前。在实例初始化之后，数据观测 (data observer) 和 event/watcher 事件配置之前被调用 | 常用于初始化非响应式变量 |
-| created | 组件实例已经完全创建，实例已完成以下的配置：数据观测 (data observer)，属性绑定和方法的运算，watch/event 事件回调，但真实 dom 还没有生成，$el 还不可用 | 常用于简单的 AJAX 请求，页面的初始化 |
-| beforeMount| 在挂载开始之前被调用，相关的 render 函数首次被调用  |
+| beforeCreate | 组件实例被创建之初，组件的属性生效之前。在实例初始化之后，数据观测 (data observer) 和 event/watcher 事件配置之前被调用。数据初始化并未完成，无法访问 props、data | 常用于初始化非响应式变量，插件开发中执行一些初始化任务 |
+| created | 组件初始化完毕，实例已完成以下的配置：数据观测 (data observer)，属性绑定和方法的运算，watch/event 事件回调，但真实 dom 还没有生成，`$el` 还不可用 | 常用于简单的 AJAX 请求，页面的初始化 |
+| beforeMount| 在挂载开始之前被调用，相关的 render 函数首次被调用，在此阶段可获取到 `vm.el`，此阶段 `vm.el` 虽已完成`DOM` 初始化，但并未挂载在 `el` 选项上  |
 | mounted| el 被新创建的 `vm.$el` 替换，并挂载到实例上去之后调用该钩子。注意 mounted 不会保证所有的子组件也都一起被挂载。如果你希望等到整个视图都渲染完毕，可以在 mounted 内部使用 `vm.$nextTick`, 该钩子在服务器端渲染期间不被调用。| 常用于获取 VNode 信息和操作，AJAX 请求|
 | beforeUpdate | 数据更新时调用，发生在虚拟 DOM 打补丁之前。这里适合在更新之前访问现有的 DOM，比如手动移除已添加的事件监听器。该钩子在服务器端渲染期间不被调用，因为只有初次渲染会在服务端进行。| 适合在更新之前访问现有的 DOM，比如手动移除已添加的事件监听器|
 | update| 组件数据更新之后。由于数据更改导致的虚拟 DOM 重新渲染和打补丁，在这之后会调用该钩子。当这个钩子被调用时，组件 DOM 已经更新，所以你现在可以执行依赖于 DOM 的操作。然而在大多数情况下，你应该避免在此期间更改状态。如果要相应状态改变，通常最好使用计算属性或 watcher 取而代之。注意 updated 不会保证所有的子组件也都一起被重绘。如果你希望等到整个视图都重绘完毕，可以在 updated 里使用 `vm.$nextTick`。该钩子在服务器端渲染期间不被调用。 | 当 updated 钩子调用时，组件 DOM 的 data 已经更新，所以你现在可以执行依赖于 DOM 的操作。但是不要在此时修改 data，否则会再次触发 beforeUpdate、updated 这个两个钩子，导致进入死循环。|
@@ -127,6 +127,7 @@ beforeDestroyed 钩子函数在 Vue 实例销毁后调用。调用后，Vue 实�
 | deactivated  | keep-alive 专属，组件被销毁时调用。该钩子在服务器端渲染期间不被调用。  |
 | beforeDestory | 实例销毁之前调用。在这一步，**实例仍然完全可用**。该钩子在服务器端渲染期间不被调用。| 常用于销毁定时器、解绑全局事件、销毁插件对象等操作|
 | destoryed | 实例销毁后调用。该钩子被调用后，对应 Vue 实例的所有指令都被解绑，所有的事件监听器被移除，所有的子实例也都被销毁。该钩子在服务器端渲染期间不被调用。 |
+| errorCaptured | 捕获一个来自子孙组件的错误时被调用 | |
 
 ### errorCaptured
 
@@ -219,24 +220,3 @@ mounted(){
 
 当然 @hook 方法不仅仅是可以监听 mounted，其它的生命周期事件，例如：created，updated 等都可以监听。
 
-### Q6. v-model 的原理
-
-我们在 vue 项目中主要使用 v-model 指令在表单 input、textarea、select 等元素上创建双向数据绑定，我们知道 v-model 本质上不过是语法糖，v-model 在内部为不同的输入元素使用不同的属性并抛出不同的事件：
-
-- text 和 textarea 元素使用 value 属性和 input 事件；
-- checkbox 和 radio 使用 checked 属性和 change 事件；
-- select 字段将 value 作为 prop 并将 change 作为事件。
-
-以 input  表单元素为例：
-
-```html
-<input v-model='something'>
-    
-相当于
-
-<input v-bind:value="something" v-on:input="something = $event.target.value">
-```
-
-::: warning 参考文献
-[Vue Guidebook](https://tsejx.github.io/vue-guidebook/reactivity/lifecycle.html)
-:::

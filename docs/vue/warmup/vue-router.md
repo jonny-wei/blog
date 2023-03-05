@@ -27,6 +27,53 @@ history.replaceState() 方法的参数和 pushState() 方法一摸一样，区�
 
 - Abstract: 支持所有 JavaScript 运行环境，如 Node.js 服务器端。如果发现没有浏览器的 API，路由会自动强制进入这个模式。abstract 路由模式本身是用来在不支持浏览器 API 的环境中，充当 fallback，而不论是 hash 还是 history 模式都会对浏览器上的 url 产生作用，如果要实现在已存在的路由页面中内嵌其他的路由页面，而保持在浏览器当中依旧显示当前页面的路由 path，这就利用到了 abstract 这种与浏览器分离的路由模式。
 
+## 问题
+
+### Q1. 项目部署 404 问题
+
+前后端分离开发模式下，前后端是独立布署的，前端只需要将最后的构建物上传至目标服务器的web容器指定的静态目录下即可。
+
+404 错误意味着链接指向的资源不存在。
+
+问题在于为什么不存在？且为什么只有 history 模式下会出现这个问题？
+
+SPA 是一种网络应用程序或网站的模型，所有用户交互是通过动态重写当前页面，前面我们也看到了，不管我们应用有多少页面，构建物都只会产出一个 index.html。
+
+```text
+server {
+  listen  80;
+  server_name  www.xxx.com;
+
+  location / {
+    index  /dist/index.html;
+  }
+}
+```
+
+根据 nginx 配置得出，当我们在地址栏输入 www.xxx.com 时，这时会打开我们 dist 目录下的 index.html 文件，然后我们在跳转路由进入到 www.xxx.com/login
+
+关键在这里，当我们在 website.com/login 页执行刷新操作，nginx location 是没有相关配置的(单页应用，没有login.html)，所以就会出现 404 的情况。
+
+产生问题的本质是因为我们的路由是通过JS来执行视图切换的，当我们进入到子路由时刷新页面，web 容器没有相对应的页面此时会出现404，所以我们只需要配置将任意页面都重定向到 index.html，把路由交由前端处理。需要做的就是在你的服务器上添加一个简单的回退路由。如果 URL 不匹配任何静态资源，它应提供与你的应用程序中的 index.html 相同的页面：
+
+```text
+server {
+  listen  80;
+  server_name  www.xxx.com;
+
+  location / {
+    index  /dist/index.html;
+    try_files $uri $uri/ /index.html;
+  }
+}
+```
+
+为了避免这种情况，你应该在 Vue 应用里面覆盖所有的路由情况，然后在给出一个 404 页面。
+
+**为什么 hash 模式下没有这种问题**？
+
+`hash` 虽然出现在 `URL` 中，但不会被包括在 `HTTP` 请求中，对服务端完全没有影响，因此改变 `hash` 不会重新加载页面。
+`hash` 模式下，仅 `hash` 符号之前的内容会被包含在请求中，如 `website.com/#/login` 只有 `website.com` 会被包含在请求中 ，因此对于服务端来说，即使没有配置`location`，也不会返回 404 错误。
 
 [Vue Router](https://router.vuejs.org/zh/)
 

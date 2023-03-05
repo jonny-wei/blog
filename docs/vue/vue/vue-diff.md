@@ -10,7 +10,7 @@ Virtual DOM 可以看做一棵模拟 DOM 树的 JavaScript 树，其主要是通
 
 ### 虚拟 DOM 的优缺点
 
-#### 优点：
+#### 优点
 
 - **跨平台与分层设计**(主要原因)：虚拟 DOM 本质上是 JavaScript 对象，而真实 DOM 与平台强相关，相比之下虚拟 DOM 带来了分层设计、跨平台以及 SSR 等特性。至于 Virtual DOM 比 原生 DOM 谁的性能好，需要 “控制变量法” 才能比较。这是为什么要设计虚拟 DOM 的主要原因。虚拟 DOM 抽象了原本的渲染过程，实现了跨平台的能力，而不仅仅局限于浏览器的 DOM，可以是安卓和 iOS 的原生组件，也可以是小程序，也可以是各种 GUI。
 - **以最小的代价更新变化的视图**。整棵 DOM 树实现代价太高，能否只更新变化的部分的视图。虚拟 DOM 能通过 patch 准确地转换为真实 DOM，并且方便进行 diff。
@@ -18,7 +18,7 @@ Virtual DOM 可以看做一棵模拟 DOM 树的 JavaScript 树，其主要是通
 - **无需手动操作 DOM**：操作 DOM 慢，js 运行效率高。我们可以将 DOM 对比(diff 操作)放在 JS 层，提高效率。我们不再需要手动去操作 DOM，只需要写好 View-Model 的代码逻辑，框架会根据虚拟 DOM 和 数据双向绑定，帮我们以可预期的方式更新视图，极大提高我们的开发效率。
 - **组件的高度抽象化**：Vue.2x 引入 VirtualDOM 把渲染过程抽象化，从而使得组件的抽象能力也得到提升，并且可以适配 DOM 以外的渲染目标。不再依赖 HTML 解析器进行模版解析，可以进行更多的 AOT 工作提高运行时效率：通过模版 AOT 编译，Vue 的运行时体积可以进一步压缩，运行时效率可以进一步提升。**Virtual DOM 的优势不在于单次的操作，而是在大量、频繁的数据更新下，能够对视图进行合理、高效的更新**。为了实现高效的 DOM 操作，一套高效的虚拟 DOM diff 算法显得很有必要.
 
-#### 缺点:
+#### 缺点
 
 - 无法进行极致优化： 虽然虚拟 DOM + 合理的优化，足以应对绝大部分应用的性能需求，但在一些性能要求极高的应用中虚拟 DOM 无法进行针对性的极致优化。
 - 虽然 Vue 能够保证触发更新的组件最小化，但在单个组件内部依然需要遍历该组件的整个 Virtual DOM 树。
@@ -252,6 +252,7 @@ key 主要用在 Vue 的虚拟 DOM 的 diff 算法中，是 vnode 的唯一标�
 - 更快速，利用 key 的唯一性生成 map 对象(oldKeyToIdx 哈希表)来获取对应节点，比遍历方式更快
 
 ::: tip 小结
+
 - 用组件唯一的 id（一般由后端返回）作为它的 key，实在没有的情况下，可以在获取到列表的时候通过某种规则为它们创建一个 key，并保证这个 key 在组件整个生命周期中都保持稳定。
 
 - 别用 index 作为 key，和没写基本上没区别，因为不管你数组的顺序怎么颠倒，index 都是 0, 1, 2 这样排列，导致 Vue 会复用错误的旧子节点，做很多额外的工作。
@@ -470,6 +471,13 @@ key 主要用在 Vue 的虚拟 DOM 的 diff 算法中，是 vnode 的唯一标�
 </transition>
 ```
 
+- 如果不用  key，Vue 会采用就地复地原则：最小化 element 的移动，并且会尝试尽最大程度在同适当的地方对相同类型的 element，做 patch 或者 复用。
+- 如果使用了 key，Vue 会根据 key 的顺序记录 element，曾经拥有了 key 的 element 如果不再出现的话，会被直接 remove 或者destoryed
+
+用`+new Date()`生成的时间戳作为`key`，手动强制触发重新渲染
+
+- 当拥有新值的 rerender 作为 key 时，拥有了新 key 的组件出现了，那么旧 key 的组件会被移除，新 key 组件触发渲染
+
 ### Q2. keep-alive 原理
 
 keep-alive 主要用于保留组件状态或避免重新渲染。当然 keep-alive 不仅仅是能够保存页面/组件的状态，它还可以避免组件反复创建和渲染，有效提升系统性能。keep-alive 在 vue 中用于实现组件的缓存，当组件切换时不会对当前组件进行卸载，只是挂起。
@@ -477,6 +485,8 @@ keep-alive 主要用于保留组件状态或避免重新渲染。当然 keep-ali
 - include - 字符串或正则表达式。只有名称匹配的组件会被缓存。
 - exclude - 字符串或正则表达式。任何名称匹配的组件都不会被缓存。
 - max - 数字。最多可以缓存多少组件实例。**超出上限使用 LRU 的策略置换缓存数据**。其作用就是使用 LRU 的策略防止缓存大量组件，占用大量内存。
+- 首次进入组件时：`beforeRouteEnter` > `beforeCreate` > `created`> `mounted` > `activated` > ... ... > `beforeRouteLeave` > `deactivated`
+- 再次进入组件时：`beforeRouteEnter` >`activated` > ... ... > `beforeRouteLeave` > `deactivated`
 
 ::: tip LRU
 浏览器中的缓存是一种在本地保存资源副本，它的大小是有限的，当我们请求数过多时，缓存空间会被用满，此时，继续进行网络请求就需要确定缓存中哪些数据被保留，哪些数据被移除，这就是浏览器缓存淘汰策略，最常见的淘汰策略有 FIFO（先进先出）、LFU（最少使用）、LRU（最近最少使用）。
@@ -681,6 +691,39 @@ render () {
 - 最后并且很重要，将该组件实例的 keepAlive 属性值设置为 true。
 
 `<keep-alive>` 组件是一个抽象组件，它的实现通过自定义 render 函数并且利用了插槽，并且 `<keep-alive>` 缓存 vnode，了解组件包裹的子元素——也就是插槽是如何做更新的。且在 patch 过程中对于已缓存的组件不会执行 mounted，所以不会有一般的组件的生命周期函数但是又提供了 activated 和 deactivated 钩子函数。
+
+#### 缓存后如何获取数据？
+
+解决方案可以有以下两种：
+
+- beforeRouteEnter
+- actived
+
+**beforeRouteEnter**
+
+每次组件渲染的时候，都会执行`beforeRouteEnter`
+
+```go
+beforeRouteEnter(to, from, next){
+    next(vm=>{
+        console.log(vm)
+        // 每次进入路由执行
+        vm.getData()  // 获取数据
+    })
+},
+```
+
+**actived**
+
+在`keep-alive`缓存的组件被激活的时候，都会执行`actived`钩子
+
+```go
+activated(){
+   this.getData() // 获取数据
+},
+```
+
+注意：服务器端渲染期间`avtived`不被调用
 
 ::: warning 参考文献
 [VNode 节点](https://github.com/answershuto/learnVue/blob/master/docs/VNode%E8%8A%82%E7%82%B9.MarkDown)

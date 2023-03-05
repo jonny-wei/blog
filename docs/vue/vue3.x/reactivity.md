@@ -1,21 +1,24 @@
-# 响应式系统
+# 全新的响应式系统
 
+vue3.0 中，响应式数据弃用了 `Object.defineProperty` ，使用 `Proxy` 来代替。下文将主要通过以下三个方面来分析为什么 Vue 选择弃用 Object.defineProperty。
 
-vue3.0 中，响应式数据部分弃用了 Object.defineProperty，使用Proxy来代替它。下文将主要通过以下三个方面来分析为什么 Vue 选择弃用 Object.defineProperty。
+- [quanx响应式系统](#quanx响应式系统)
+  - [驳-无法响应数组](#驳-无法响应数组)
+  - [对数组的响应式处理](#对数组的响应式处理)
+  - [Object.defineProperty 与 Proxy](#objectdefineproperty-与-proxy)
+  - [总结](#总结)
 
-1. [Object.defineProperty 真的无法监测数组下标的变化吗？](#无法响应数组)
-2. [分析 Vue2.x 中对数组 Observe 部分源码](#对数组的observe做了哪些处理)
-3. [对比Object.defineProperty和 Proxy](#object-defineproperty与proxy)
+## 驳-无法响应数组
 
-## 无法响应数组
-
-一些技术博客认为 Object.defineProperty 有一个缺陷是无法监听数组变化：
+一些技术博客认为 `Object.defineProperty` 有一个缺陷是无法监听数组变化：
 
 >无法监控到数组下标的变化，导致直接通过数组的下标给数组设置值，不能实时响应。所以 Vue 才设置了 7 个变异数组（push、pop、shift、unshift、splice、sort、reverse）的 hack 方法来解决问题。
 
->Object.defineProperty的第一个缺陷是无法监听数组变化。然而 Vue 的文档提到了 Vue 是可以检测到数组变化的，但是只有以下八种方法，vm.items[indexOfItem] = newValue 这种是无法检测的。
+>Object.defineProperty的第一个缺陷是无法监听数组变化。然而 Vue 的文档提到了 Vue 是可以检测到数组变化的，但是只有以下七种方法，vm.items[indexOfItem] = newValue 这种是无法检测的。
 
-这种说法是有问题的，事实上，Object.defineProperty 本身是可以监控到数组下标的变化的，只是在 Vue 的实现中，从性能 / 体验的性价比考虑，放弃了这个特性。
+>...
+
+这些说法是有问题的，事实上，`Object.defineProperty` 本身是可以监控到数组下标的变化的，只是在 Vue 的实现中，从性能 / 体验的性价比考虑，放弃了这个特性。
 
 下面具体分析一下：
 
@@ -42,11 +45,12 @@ function observe(data) {
 let arr = [1, 2, 3]
 observe(arr)
 ```
-上面的代码对数组 arr 的每个属性通过 Object.defineProperty 进行劫持，下面我们对数组 arr 进行操作，看看哪些行为会触发数组的 getter 和 setter 方法。
+
+上面的代码对数组 arr 的每个属性通过 `Object.defineProperty` 进行劫持，下面我们对数组 arr 进行操作，看看哪些行为会触发数组的 getter 和 setter 方法。
 
 - **通过下标获取某个元素和修改某个元素的值**
 
-通过下标获取某个元素会触发 getter 方法, 设置某个值会触发 setter 方法。接下来，我们再试一下数组的一些操作方法，看看是否会触发。
+通过下标获取某个元素会触发 getter 方法, 设置某个值会触发 setter 方法。
 
 - **数组的 push 方法**
 
@@ -76,17 +80,15 @@ Object.defineProperty 在数组中的表现和在对象中的表现是一致的�
 - 通过 push 或 unshift 会增加索引，对于新增加的属性，需要再手动初始化才能被 observe。
 - 通过 pop 或 shift 删除元素，会删除并更新索引，也会触发 setter 和 getter 方法。
 
-所以，`Object.defineProperty 是有监控数组下标变化的能力的`，只是 Vue2.x 放弃了这个特性。
+所以，`Object.defineProperty 是有监控数组下标变化的能力的`，只是性能代价和获得的用户体验收益不成正比， Vue2.x 放弃了这个特性。
 
-## 对数组的observe做了哪些处理
+## 对数组的响应式处理
 
-Vue 的 Observer 类定义在 core/observer/index.js。
+Vue 的 Observer 对数组做了单独的处理。
 
-可以看到，Vue 的 Observer 对数组做了单独的处理。
+对于 Object 类型的数据，**Vue 在 defineReactive 方法中通过 `Object.defineProperty` 为其添加 getter/setter 追踪数据的变化，监测数据何时发生了变化**。由于局限于 Object.defineProperty 是对象属性层面上的数据劫持，不是对象层面的数据代理。Vue 无法检测 property 的添加或移除。由于 Vue 会**在初始化实例时**对 property 执行 getter/setter 转化，所以 property 必须在 `data` 对象上存在才能让 Vue 将它转换为响应式，不能在初始化完后添加或移除对象属性触发视图更新。
 
-hasProto 判断数组的实例是否有 proto 属性，如果有 proto 属性就会执行 protoAugment 方法，将 arrayMethods 重写到原型上。hasProto 的定义如下：
-
-arrayMethods 是对数组的方法进行重写，定义在 core/observer/array.js 中，下面是这部分源码的分析：
+对于 Array 类型的数据，出于`Object.defineProperty`对数组监听的缺陷和性能代价。 **Vue 通过拦截改变数组自身的 7 个方法，监测数据何时发生了变化**。对于新增加的元素，需要再手动调用 observeArray 为数组的每个新增元素添加响应式，实现数组深度侦测 ，其他方法的变更会在当前的索引上进行更新，所以不需要再执行 observeArray。但其导致 Vue 不能检测利用索引修改数组元素以及修改数组长度的变化。下面是这部分源码的分析：
 
 ```javascript
 /*
@@ -132,7 +134,8 @@ methodsToPatch.forEach(function (method) {
         inserted = args.slice(2)
         break
     }
-    // push，unshift，splice 三个方法触发后，在这里手动 observe，其他方法的变更会在当前的索引上进行更新，所以不需要再执行 ob.observeArray
+    // push，unshift，splice 三个方法触发后，在这里手动 observe，
+    // 其他方法的变更会在当前的索引上进行更新，所以不需要再执行 ob.observeArray
     if (inserted) ob.observeArray(inserted)
     // notify change
     ob.dep.notify()
@@ -141,21 +144,21 @@ methodsToPatch.forEach(function (method) {
 })
 ```
 
-## Object.defineProperty与Proxy
+## Object.defineProperty 与 Proxy
 
-面已经知道 Object.defineProperty 对数组和对象的表现是一致的，那么它和 Proxy 对比存在哪些优缺点呢？
+前面已经知道 `Object.defineProperty` 对数组和对象的表现是一致的，那么它和 Proxy 对比存在哪些优缺点呢？
 
-1. Object.defineProperty 只能劫持对象的属性，而 Proxy 是直接代理对象。
+1. `Object.defineProperty` 只能劫持对象的属性，而 `Proxy` 是直接代理对象（劫持整个对象），并返回一个新对象，我们可以只操作新的对象达到响应式目的
 
-由于 Object.defineProperty 只能对属性进行劫持，需要遍历对象的每个属性，如果属性值也是对象，则需要深度遍历。而 Proxy 直接代理对象，不需要遍历操作。
+由于 `Object.defineProperty` 只能对属性进行劫持，**需要遍历对象的每个属性，如果属性值也是对象，则需要深度遍历**。而  `Proxy` 直接代理对象，不需要遍历操作。
 
-2. Object.defineProperty 对新增属性需要手动进行 Observe。
+2. `Object.defineProperty` 对新增属性需要手动进行 `Observe`。
 
-由于 Object.defineProperty 劫持的是对象的属性，所以新增属性时，需要重新遍历对象，对其新增属性再使用 Object.defineProperty 进行劫持。
+由于 `Object.defineProperty` 劫持的是对象的属性，所以**新增属性时，需要重新遍历对象**，对其新增属性再使用 `Object.defineProperty` 进行劫持。
 
-也正是因为这个原因，使用 Vue 给 data 中的数组或对象新增属性时，需要使用 vm.$set 才能保证新增的属性也是响应式的。
+也正是因为这个原因，使用 Vue 给 data 中的数组或对象新增属性时，需要使用 `vm.$set` 才能保证新增的属性也是响应式的。
 
-下面看一下 Vue 的 set 方法是如何实现的，set 方法定义在 core/observer/index.js ，下面是核心代码。
+下面看一下 Vue 的 set 方法是如何实现的，下面是核心代码。
 
 ```typescript
 /**
@@ -192,15 +195,16 @@ export function set (target: Array<any> | Object, key: any, val: any): any {
 }
 ```
 
-在 set 方法中，对 target 是数组和对象分别做了处理。target 是数组时，会调用重写过的 splice 方法进行手动 Observe 。
+在 set 方法中，对 target 是数组和对象分别做了处理。target 是数组时，会调用重写过的 `splice` 方法进行手动 Observe 。
 
-对于对象，如果 key 本来就是对象的属性，则直接修改值触发更新，否则调用 defineReactive 方法重新定义响应式对象。
+对于对象，如果 key 本来就是对象的属性，则直接修改值触发更新，否则调用 `defineReactive` 方法重新定义响应式对象。
 
-如果采用 proxy 实现，Proxy 通过 set(target, propKey, value, receiver) 拦截对象属性的设置，是可以拦截到对象的新增属性的。
+如果采用 proxy 实现，Proxy 通过 `set(target, propKey, value, receiver)` 拦截对象属性的设置，是**可以拦截到对象的新增属性的**。
 
-不止如此，Proxy 对数组的方法也可以监测到，不需要像上面 vue2.x 源码中那样进行 hack。
+不止如此，**Proxy 对数组的方法也可以监测到，不需要像上面 vue2.x 源码中那样进行 hack**。
 
 3. Proxy支持 13 种拦截操作，这是 defineProperty 所不具有的。
+
 - get(target, propKey, receiver)：拦截对象属性的读取，比如 proxy.foo 和proxy['foo']。
 - set(target, propKey, value, receiver)：拦截对象属性的设置，比如proxy.foo = v 或 proxy['foo'] = v，返回一个布尔值。
 - has(target, propKey)：拦截 propKey in proxy 的操作，返回一个布尔值。
@@ -221,11 +225,10 @@ Proxy 作为新标准，从长远来看，JS 引擎会继续优化 Proxy，但 g
 
 5. Proxy 兼容性差
 
-Proxy 对于 IE 浏览器来说简直是灾难。
-并且目前并没有一个完整支持 Proxy 所有拦截方法的 Polyfill 方案，有一个 Google 编写的 proxy-polyfill 也只支持了 get、set、apply、construct 四种拦截，可以支持到 IE9+ 和 Safari 6+。
+Proxy 对于 IE 浏览器来说简直是灾难。并且目前并没有一个完整支持 Proxy 所有拦截方法的 Polyfill 方案，有一个 Google 编写的 proxy-polyfill 也只支持了 get、set、apply、construct 四种拦截，可以支持到 IE9+ 和 Safari 6+。defineProperty 能支持到 IE9，IE8 以下不支持。
 
 ## 总结
 
-1. Object.defineProperty 并非不能监控数组下标的变化，Vue2.x 中无法通过数组索引来实现响应式数据的自动更新是 Vue 本身的设计导致的，不是 defineProperty 的锅。
-2. Object.defineProperty 和 Proxy 本质差别是，defineProperty 只能对属性进行劫持，所以出现了需要递归遍历，新增属性需要手动 Observe 的问题。
+1. `Object.defineProperty` 并非不能监控数组下标的变化，Vue2.x 中无法通过数组索引来实现响应式数据的自动更新是 Vue 本身的设计导致的，不是 defineProperty 的锅。
+2. `Object.defineProperty` 和 Proxy 本质差别是，defineProperty 只能对属性进行劫持，所以出现了需要递归遍历，新增属性需要手动 Observe 的问题。
 3. Proxy 作为新标准，浏览器厂商势必会对其进行持续优化，但它的兼容性也是块硬伤，并且目前还没有完整的 polyfill 方案。

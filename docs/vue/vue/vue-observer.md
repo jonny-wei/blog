@@ -28,8 +28,6 @@
 - 使用 Object.defineProperty 数据劫持(vue2)
 - ES6 的 Proxy 数据代理(vue3)
 
-在 Vue2 中，基于 Object.defineProperty 对象属性级别的拦截，为每个属性设置 getter/setter。由于局限于 Object.defineProperty 是对象原型上的方法，并且是对象属性层面上的数据劫持，不是对象层面的数据代理。所以 Vue2 侦测数据的变化分为 Object 型的数据和 Array 型数据两种不同的侦测方式。
-
 ### 使 Object 类型的数据可观测
 
 定义一个 Observer 观察类(监听器)，判断数据是否是 Array 类型，如果不是那么就是 Object 类型数据，进而走 `this.walk(value)` 逻辑。在 walk 方法中
@@ -68,7 +66,7 @@ export class Observer {
  * @param { String } key 对象的key
  * @param { Any } val 对象的某个key的值
  * 通过 Object.defineProperty 方法实现了对 Object 数据的可观测，
- * 但是这个方法仅仅只能观测到 Object 数据的取值getter及设置值setter，
+ * 但是这个方法仅仅只能观测到 Object 数据的取值 getter及设置值setter（修改、更新已有属性），
  * 当我们向 Object 数据里添加一对新的 key/value 或删除一对已有的 key/value 时，它是无法观测到的，
  * 导致当我们对 Object 数据添加或删除值时，无法通知依赖，无法驱动视图进行响应式更新。
  * 
@@ -108,9 +106,15 @@ function defineReactive (obj,key,val) {
 
 ### 使 Array 类型的数据可观测
 
-Object 变化时通过 setter 来追踪的，只有某个数据发生了变化，就一定会触发这个数据上的 setter。但是 Array 型数据没有 setter。要想让 Array 型数据发生变化，那必然是操作了 Array，而 JS 中提供的操作数组的方法就那么几种，我们可以把这些方法都重写一遍。
+为什么针对数组，Vue2 没有直接通过 `Object.defineProperty` 监测，而是重写数组原型实现呢？
 
-为 Array.prototype 添加属性，重写 7 大方法。首先创建了继承自 Array 原型的空对象 arrayMethods，接着在 arrayMethods 上使用 object.defineProperty 方法将这些可以改变数组自身的 7 个方法遍历，逐个进行封装重写。
+其一，`Object.defineProperty` 本身是可以监测到数组下标的变化的，数组的索引相当于对象的 key，是可以监测到**通过下标获取某个元素和修改某个元素的值**的操作。但是不能监测到数组长度的变化，准确的说是**通过改变 length 而增加的长度不能监测到**，而数组的操作大多都要改变数组 length。
+
+其二，按照尤雨溪的回答就是性能代价和获得的用户体验收益不成正比。对数组的 key 进行 get 和 set 操作，性能代价和获得的用户体验收益不成正比。在 Vue 的实现中，从性能/体验的性价比考虑，放弃了这个特性。
+
+那么该如何进行数组的响应式呢？
+
+要想让 Array 型数据发生变化，那必然是操作了 Array。在 Vue 中，通过拦截改变数组自身的 7 个方法，实现监测数组的变化。
 
 - push
 - pop
@@ -119,6 +123,12 @@ Object 变化时通过 setter 来追踪的，只有某个数据发生了变化�
 - splice
 - sort
 - reverse
+
+对于Vue2 通过 `Object.defineProperty` 实现响应式，处理数组与对象是一视同仁的，只是在初始化时去改写`get`和`set`达到监测数组或对象的变化，对于新增的属性，需要手动再初始化。而数组出于 `Object.defineProperty`的缺陷和性能代价，做了特别处理：
+
+- 通过索引访问或设置对应元素的值时，可以触发 `getter` 和 `setter` 方法
+- 通过 `push` 、 `unshift` 或 `splice` 会增加索引，对于新增加的属性，需要再手动调用 `observeArray` 为数组的每个新增元素添加响应式，深度侦测 。
+- 通过 `pop` 或 `shift` 删除元素，会删除并更新索引，也会触发 `setter` 和 `getter` 方法。
 
 ```js
 const arrayProto = Array.prototype // 继承原型对象
@@ -140,6 +150,7 @@ const methodsToPatch = [
 methodsToPatch.forEach(function (method) {
   // cache original method 缓存原生方法
   const original = arrayProto[method]
+  // 新增对象的属性。为 arrayMethods 对象添加 method 属性
   def(arrayMethods, method, function mutator (...args) {
     // 改变this指向 拦截
     const result = original.apply(this, args)
@@ -164,6 +175,13 @@ methodsToPatch.forEach(function (method) {
   })
 })
 ```
+
+首先创建一个继承 Array 原型的空对象 arrayMethods，将数组模拟成一个对象。接着将那些可以改变数组自身的 7 个方法名绑定到新创建的 arrayMethods 对象中（即，方法名作为 key），在 arrayMethods 上使用 object.defineProperty 方法拦截重写。通过 `push` 、 `unshift` 或 `splice` 会增加数组元素时，对于新增加的元素，需要再手动调用 `observeArray` 为数组的每个新增元素添加响应式，深度侦测 。
+
+所以，Vue 不能检测以下数组的变动：
+
+1. 利用索引直接设置一个数组项时（修改数组已有元素），例如：`vm.items[indexOfItem] = newValue` - 本质原因 vue 的数组观测，只观测了产生数组变异的那 7 个方法，所以你可以通过 `splice` 修改数组元素从而触发响应式。
+2. 修改数组的长度时，例如：`vm.items.length = newLength` - `Object.defineProperty` 本身也不支持。
 
 Array 类型数据的侦测：
 
@@ -250,7 +268,13 @@ function copyAugment(target: Object, src: Object, keys: Array<string>): void {
 
 ### 小结
 
-**数据侦测的目的是**监测数据何时发生了变化，从而收集或更新依赖。为侦测数据的变化，使数据变得“可观测”，JavaScript 有两种办法：`使用 Object.defineProperty 数据劫持(vue2)` 和 `ES6 的 Proxy 数据代理(vue3)`。在 Vue2 中，是基于 `Object.defineProperty` 实现数据劫持。由于局限于 Object.defineProperty 是对象原型上的方法，并且是对象属性层面上的数据劫持，不是对象层面的数据代理。所以 Vue2 侦测数据的变化分为 Object 型的数据和 Array 型数据两种不同的侦测方式。对于 Object 类型的数据，**Vue 在 defineReactive 方法中通过 `Object.defineProperty` 为其添加 getter/setter 追踪数据的变化，监测数据何时发生了变化**；对于 Array 类型的数据，**Vue 通过拦截重写数组原型上可以改变数组的 7 大操作数组方法监测数据何时发生了变化**。以上实现了数据的侦测，知道数据何时发生了变化，从而知道在什么时候收集依赖，在什么时候更新依赖。
+**数据侦测的目的是**监测数据何时发生了变化，从而收集或更新依赖。为侦测数据的变化，使数据变得“可观测”，JavaScript 有两种办法：`使用 Object.defineProperty 数据劫持(vue2)` 和 `ES6 的 Proxy 数据代理(vue3)`。在 Vue2 中，是基于 `Object.defineProperty` 实现数据劫持。
+
+对于 Object 类型的数据，**Vue 在 defineReactive 方法中通过 `Object.defineProperty` 为其添加 getter/setter 追踪数据的变化，监测数据何时发生了变化**。由于局限于 Object.defineProperty 是对象属性层面上的数据劫持，不是对象层面的数据代理。Vue 无法检测 property 的添加或移除。由于 Vue 会**在初始化实例时**对 property 执行 getter/setter 转化，所以 property 必须在 `data` 对象上存在才能让 Vue 将它转换为响应式，不能在初始化完后添加或移除对象属性触发视图更新。
+
+对于 Array 类型的数据，出于`Object.defineProperty`对数组监听的缺陷和性能代价。 **Vue 通过拦截改变数组自身的 7 个方法，监测数据何时发生了变化**。对于新增加的元素，需要再手动调用 observeArray 为数组的每个新增元素添加响应式，实现数组深度侦测 ，其他方法的变更会在当前的索引上进行更新，所以不需要再执行 observeArray。但其导致 Vue 不能检测利用索引修改数组元素以及修改数组长度的变化。
+
+以上实现了数据的侦测，知道数据何时发生了变化，从而知道在什么时候收集依赖，在什么时候更新依赖。
 
 ## 依赖收集与更新
 
@@ -403,9 +427,13 @@ Vue 的渲染都是基于这个响应式系统的。在 Vue 的创建过程中�
 
 ## 总结
 
-**数据侦测的目的是**监测数据何时发生了变化，从而收集或更新依赖。为侦测数据的变化，使数据变得“可观测”，JavaScript 有两种办法：`使用 Object.defineProperty 数据劫持(vue2)` 和 `ES6 的 Proxy 数据代理(vue3)`。在 Vue2 中，是基于 `Object.defineProperty` 实现数据劫持。由于局限于 Object.defineProperty 是对象原型上的方法，并且是对象属性层面上的数据劫持，不是对象层面的数据代理。所以 Vue2 侦测数据的变化分为 Object 型的数据和 Array 型数据两种不同的侦测方式。对于 Object 类型的数据，**Vue 在 defineReactive 方法中通过 `Object.defineProperty` 为其添加 getter/setter 追踪数据的变化，监测数据何时发生了变化**；对于 Array 类型的数据，**Vue 通过拦截重写数组原型上可以改变数组的 7 大操作数组方法监测数据何时发生了变化**。以上实现了数据的侦测，知道数据何时发生了变化，从而知道在什么时候收集依赖，在什么时候更新依赖。在 getter 中收集依赖，在 setter 中通知依赖更新。
+**数据侦测的目的是**监测数据何时发生了变化，从而收集或更新依赖。为侦测数据的变化，使数据变得“可观测”，JavaScript 有两种办法：`使用 Object.defineProperty 数据劫持(vue2)` 和 `ES6 的 Proxy 数据代理(vue3)`。
 
-那么这些依赖存放在哪里呢？为了使代码解耦，提供接口等因素用Vue 定义了一个依赖管理器 Dep 类(发布者，被观察者)代替依赖数组管理依赖。在依赖管理器中添加依赖，删除依赖，以及通知依赖更新。剩下的问题就是：我们在 getter 中收集的依赖到底是谁的问题。谁用到了这个数据谁就是依赖。当属性发生变化后，我们要通知用到数据的地方，而使用这个数据的地方有很多，而且类型还不一样，既有可能是模板，也有可能是用户写的一个 watch（computed watcher，user watcher实例），这时需要抽象出一个能集中处理这些情况的类。然后，我们在依赖收集阶段 **只收集这个封装好的类的实例进来**，通知也只通知它一个，再由它负责通知其他地方。
+对于 Object 类型的数据，**Vue 在 defineReactive 方法中通过 `Object.defineProperty` 为其添加 getter/setter 追踪数据的变化，监测数据何时发生了变化**。由于局限于 Object.defineProperty 是对象属性层面上的数据劫持，不是对象层面的数据代理。Vue 无法检测 property 的添加或移除。由于 Vue 会**在初始化实例时**对 property 执行 getter/setter 转化，所以 property 必须在 `data` 对象上存在才能让 Vue 将它转换为响应式，不能在初始化完后添加或移除对象属性触发视图更新。
+
+对于 Array 类型的数据，出于`Object.defineProperty`对数组监听的缺陷和性能代价。 **Vue 通过拦截改变数组自身的 7 个方法，监测数据何时发生了变化**。对于新增加的元素，需要再手动调用 observeArray 为数组的每个新增元素添加响应式，实现数组深度侦测 ，其他方法的变更会在当前的索引上进行更新，所以不需要再执行 observeArray。但其导致 Vue 不能检测利用索引修改数组元素以及修改数组长度的变化。
+
+那么这些依赖存放在哪里呢？为了使代码解耦，提供接口等因素用 Vue 定义了一个依赖管理器 Dep 类(发布者，被观察者)代替依赖数组管理依赖。在依赖管理器中添加依赖，删除依赖，以及通知依赖更新。剩下的问题就是：我们在 getter 中收集的依赖到底是谁的问题。谁用到了这个数据谁就是依赖。当属性发生变化后，我们要通知用到数据的地方，而使用这个数据的地方有很多，而且类型还不一样，既有可能是模板，也有可能是用户写的一个 watch（computed watcher，user watcher实例），这时需要抽象出一个能集中处理这些情况的类。然后，我们在依赖收集阶段 **只收集这个封装好的类的实例进来**，通知也只通知它一个，再由它负责通知其他地方。
 
 为此 Vue 又定义了一个 Watcher 类(订阅者，观察者)。所谓的依赖，其实就是 Watcher 实例。当外界通过 Watcher 读取数据时，便会触发 getter 从而将 Watcher 添加到依赖中，哪个 Watcher 触发了 getter，就把哪个 Watcher 收集到 Dep 中。当数据发生变化时，会循环依赖列表，把所有的 Watcher 都通知一遍。依赖管理器 Dep 主要用来收集订阅者，主要作用是用来存放 Watcher 观察者对象。它用来收集依赖、删除依赖和向依赖发送消息等。在 mount 阶段的时候，会创建一个 Watcher 类的对象。这个 Watcher 实际上是连接 Vue 组件与 Dep 的桥梁。每一个 Watcher 对应一个 vue component。
 
@@ -424,17 +452,35 @@ Watcher 巧妙地把 Observer 和 Directive 关联起来，实现了数据一旦
 
 ### Q1：为什么 Object 和 Array 型数据会有两种不同的变化侦测方式？
 
-在 Vue2 中，基于 Object.defineProperty 对象属性级别的拦截，为每个属性设置 getter/setter。由于局限于 Object.defineProperty 是对象原型上的方法，并且是对象属性层面上的数据劫持，不是对象层面的数据代理，同理无法对数组进行劫持。所以 Vue2 侦测数据的变化分为 Object 型的数据和 Array 型数据两种不同的侦测方式。
+对于 Object 类型的数据，**Vue 在 defineReactive 方法中通过 `Object.defineProperty` 为其添加 getter/setter 追踪数据的变化，监测数据何时发生了变化**。由于局限于 Object.defineProperty 是对象属性层面上的数据劫持，不是对象层面的数据代理。Vue 无法检测 property 的添加或移除。由于 Vue 会**在初始化实例时**对 property 执行 getter/setter 转化，所以 property 必须在 `data` 对象上存在才能让 Vue 将它转换为响应式，不能在初始化完后添加或移除对象属性触发视图更新。
+
+对于 Array 类型的数据，出于`Object.defineProperty`对数组监听的缺陷和性能代价。 **Vue 通过拦截改变数组自身的 7 个方法，监测数据何时发生了变化**。对于新增加的元素，需要再手动调用 observeArray 为数组的每个新增元素添加响应式，实现数组深度侦测 ，其他方法的变更会在当前的索引上进行更新，所以不需要再执行 observeArray。但其导致 Vue 不能检测利用索引修改数组元素以及修改数组长度的变化。
+
+`Object.defineProperty` 本身是可以监测到数组下标的变化的，数组的索引相当于对象的 key，是可以监测到**通过下标获取某个元素和修改某个元素的值**的操作。但是不能监测到数组长度的变化，准确的说是**通过改变length**而增加的长度不能监测到。
+
+对于 `Object.defineProperty` 来说，处理数组与对象是一视同仁的，只是在初始化时去改写`get`和`set`达到监测数组或对象的变化，对于新增的属性，需要手动再初始化。对于数组来说，只不过特别了点，push、unshift 值也会新增索引，对于新增的索引也是可以添加observe 从而达到监听的效果；pop、shift 值会删除更新索引，也会触发 defineProperty 的 get 和 set。对于重新赋值 length 的数组，不会新增索引，因为不清楚新增的索引有多少，根据`ecma`规范定义，索引的最大值为`2^32 - 1`，不可能循环去赋值索引的。
+
+所以，按照尤雨溪的回答就是性能代价和获得的用户体验收益不成正比。对数组的索引进行 get 和 set 操作，性能代价和获得的用户体验收益不成正比。在 Vue 的实现中，从性能/体验的性价比考虑，放弃了 `Object.defineProperty` 对数组的监测。
 
 ### Q2：怎么实现对象和数组的监听？
 
-Object.defineProperty() 只能对属性进行数据劫持，不能对整个对象进行劫持，同理无法对数组进行劫持。对于 Object 类型的数据，**Vue 在 defineReactive 方法中通过 `Object.defineProperty` 为其添加 getter/setter 追踪数据的变化，监测数据何时发生了变化**；对于 Array 类型的数据，**Vue 通过拦截重写数组原型上可以改变数组的 7 大操作数组方法监测数据何时发生了变化**。
+对于 Object 类型的数据，**Vue 在 defineReactive 方法中通过 `Object.defineProperty` 为其添加 getter/setter 追踪数据的变化，监测数据何时发生了变化**。由于局限于 Object.defineProperty 是对象属性层面上的数据劫持，不是对象层面的数据代理。Vue 无法检测 property 的添加或移除。由于 Vue 会**在初始化实例时**对 property 执行 getter/setter 转化，所以 property 必须在 `data` 对象上存在才能让 Vue 将它转换为响应式，不能在初始化完后添加或移除对象属性触发视图更新。
+
+对于 Array 类型的数据，出于`Object.defineProperty`对数组监听的缺陷和性能代价。 **Vue 通过拦截改变数组自身的 7 个方法，监测数据何时发生了变化**。对于新增加的元素，需要再手动调用 observeArray 为数组的每个新增元素添加响应式，实现数组深度侦测 ，其他方法的变更会在当前的索引上进行更新，所以不需要再执行 observeArray。但其导致 Vue 不能检测利用索引修改数组元素以及修改数组长度的变化。
+
+所以 Vue2 响应式的有一写缺点
+
+1. 深度监听，需要递归到底，计算量大
+2. 无法监听新增属性/删除属性（所以需要使用 Vue.set 和 Vue.delete 等手段）
+3. 无法原生监听数组，需要特殊处理
+
+Vue3 用 Proxy 实现响应式。
 
 ### Q3：如何解决对象新增或删除属性不能响应的问题？
 
 通过 Object.defineProperty 数据劫持存在以下几个问题：
 
-- Object.defineProperty 只能对属性进行数据劫持，不能对整个对象进行劫持，同理无法对数组进行劫持。
+- Object.defineProperty 只能对对象的属性进行数据劫持，不能对整个对象进行劫持。
 - 通过 Object.defineProperty 方法实现了对 Object 数据的可观测，但是这个方法仅仅只能观测到 Object 数据的取值及设置值（getter/setter），无法检测到对象属性的添加或删除，导致当我们对 Object 数据添加或删除值时，无法通知依赖，无法驱动视图进行响应式更新。
 - 对于 Array 只要是通过数组原型上的方法对数组进行操作就都可以侦测到，但是在日常开发中，还可以通过数组的下标来操作数据，例如通过修改数组长度，用索引直接设置一个数组项，这也是无法侦测到的。
 - 只有在 Vue 初始化实例时对属性执行 getter/setter 转化，所以属性必须在 data 对象上存在才能让 Vue 将它转换为响应式的。
@@ -453,10 +499,10 @@ Vue 不允许动态添加根级别的响应式 property。为了解决这一问�
 - Vue.set( target, propertyName/index, value )
 - Vue.delete( target, propertyName/index )
 
-Vue 不允许在已创建的实例上动态添加新的响应式属性。若想实现数据与视图同步更新，可采取下面三种解决方案：
+Vue 不允许在已创建的实例上动态添加新的响应式属性。若想实现数据与视图同步更新，可采取下面几种种解决方案：
 
 - Vue.set( target, propertyName/index，value)
-- Object.assign() / deepClone() 浅拷贝与深拷贝
+- Object.assign() / deepClone() 浅拷贝与深拷贝等创建新对象
 - 利用扩展运算符，以新对象替换老对象。
 - $forceUpdate()
 - Vue.observable(object) 让一个对象可响应。Vue 内部会用它来处理 data 函数返回的对象。2.6.0 新增。
@@ -536,8 +582,8 @@ this.someObject = Object.assign({}, this.someObject, { a: 1, b: 2 })
 使用 `$forceUpdate()` 在 Vue 中做一次强制更新，`$forceUpdate()` 迫使 vue 重新渲染。仅仅影响实例本身和插入插槽内容的子组件，而不是所有子组件。
 
 - 如果为对象添加少量的新属性，可以直接采用 `Vue.set()`
-- 如果需要为新对象添加大量的新属性，则通过 `Object.assign()` 创建新对象
-- 如果你需要进行强制刷新时，可采取 `$forceUpdate()` (不建议)
+- 如果需要为新对象添加大量的新属性，则通过 `Object.assign()` 、扩展运算符等创建新对象
+- 如果你需要进行强制刷新时，可采取 `$forceUpdate()` (不建议，而且仅仅影响实例本身和插入插槽内容的子组件，而不是所有子组件。)
 - vue3 是用过 proxy 实现数据响应式的，直接动态添加新属性仍可以实现数据响应式
 
 ### Q4：发布订阅设计模式
@@ -577,19 +623,75 @@ Vue 实例的数据对象。Vue 将会递归将 data 的 property 转换为 gett
 data: vm => ({ a: vm.myProp })
 ```
 
-### Q6: Proxy 与 Object.defineProperty 优劣对比
+综上，
 
-Proxy 的优势如下:
+- 根实例对象`data`可以是对象也可以是函数（根实例是单例），不会产生数据污染情况
+- 组件实例对象`data`必须为函数，目的是为了防止多个组件实例对象之间共用一个`data`，产生数据污染。采用函数的形式，`initData`时会将其作为工厂函数都会返回全新`data`对象
 
-- Proxy 可以直接监听对象而非属性；
-- Proxy 可以直接监听数组的变化；
-- Proxy 有多达 13 种拦截方法,不限于 apply、ownKeys、deleteProperty、has 等等是 Object.defineProperty 不具备的；
-- Proxy 返回的是一个新对象,我们可以只操作新的对象达到目的,而 Object.defineProperty 只能遍历对象属性直接修改；
-- Proxy 作为新标准将受到浏览器厂商重点持续的性能优化，也就是传说中的新标准的性能红利；
+### Q6. Vue.observable 的理解
 
-Object.defineProperty 的优势如下:
+`Vue.observable`，让一个对象变成响应式数据。`Vue` 内部会用它来处理 `data` 函数返回的对象。返回的对象可以直接用于渲染函数和计算属性内，并且会在发生变更时触发相应的更新。也可以作为最小化的跨组件状态存储器。
 
-- 兼容性好，支持 IE9，而 Proxy 的存在浏览器兼容性问题,而且无法用 polyfill 磨平，因此 Vue 的作者才声明需要等到下个大版本( 3.0 )才能用 Proxy 重写。
+在 `Vue 2.x` 中，被传入的对象会直接被 `Vue.observable` 变更，它和被返回的对象是同一个对象
+
+在 `Vue 3.x` 中，则会返回一个可响应的代理，而对源对象直接进行变更仍然是不可响应的
+
+在非父子组件通信时，可以使用通常的`bus`或者使用`vuex`，但是实现的功能不是太复杂，而使用上面两个又有点繁琐。这时，`observable`就是一个很好的选择：
+
+```js
+// 引入vue
+import Vue from 'vue
+// 创建state对象，使用observable让state对象可响应
+export let state = Vue.observable({
+  name: '张三',
+  'age': 38
+})
+// 创建对应的方法
+export let mutations = {
+  changeName(name) {
+    state.name = name
+  },
+  setAge(age) {
+    state.age = age
+  }
+}
+
+// 使用
+<template>
+  <div>
+    姓名：{{ name }}
+    年龄：{{ age }}
+    <button @click="changeName('李四')">改变姓名</button>
+    <button @click="setAge(18)">改变年龄</button>
+  </div>
+</template>
+import { state, mutations } from '@/store
+export default {
+  // 在计算属性中拿到值
+  computed: {
+    name() {
+      return state.name
+    },
+    age() {
+      return state.age
+    }
+  },
+  // 调用mutations里面的方法，更新数据
+  methods: {
+    changeName: mutations.changeName,
+    setAge: mutations.setAge
+  }
+}
+```
+
+### Q7. Vue3 为什么采用 Proxy？
+
+1. `Object.defineProperty` 只能对属性进行劫持，需要遍历对象的每个属性，如果属性值也是对象，则需要深度遍历。而 `Proxy` 直接代理对象（劫持整个对象），不需要遍历操作。
+2. `Object.defineProperty` 对新增属性需要手动进行 `Observe`。Proxy 通过 set 是可以拦截到对象的新增属性的、`Proxy`可以直接监听数组的变化
+3. Proxy 支持 13 种拦截操作，这是 defineProperty 所不具有的。
+4. Proxy 作为新标准，从长远来看，JS 引擎会继续优化 Proxy，但 getter 和 setter 基本不会再有针对性优化。
+5. `Proxy` 不兼容IE，也没有 `polyfill`, `defineProperty` 能支持到 IE9
+
 
 ::: warning 参考文献
 [深入理解vue响应式原理 8000字](https://mp.weixin.qq.com/s/SypAULMnbaSu8MSm2Ugl6g)

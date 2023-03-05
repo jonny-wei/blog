@@ -139,7 +139,7 @@ Vue 初始化主要就干了以下几件事情：合并配置，初始化生命�
   }
 ```
 
-Vue 初始化主要就干了几件事情，合并配置，初始化生命周期，初始化事件中心，初始化渲染，初始化 data、props、computed、watcher 等等。
+Vue 初始化主要就干了几件事情，合并配置，初始化生命周期，初始化事件中心，初始化渲染，执行 beforeCreate 钩子，初始化依赖注入内容、初始化 prop、methods、data、computed、watcher ，解析组件配置项上的 provide 对象，执行 created 钩子, 最后 mount 挂载真实 DOM 。
 
 ### Vue 实例挂载 - `$mount`
 
@@ -1324,16 +1324,41 @@ createChildren 的逻辑很简单，实际上是遍历子虚拟节点，递归�
 
 ### 小结
 
-Vue 如何实现数据驱动？ Vue如何将模板和数据渲染成最终的 DOM？Vue 初始化的过程是怎样的？new Vue() 发生了什么？
+- Vue 如何实现数据驱动？
+- Vue 如何将模板和数据渲染成最终的 DOM？
+- Vue 初始化的过程是怎样的？
+- new Vue() 发生了什么？
+- 生命周期过程过程是什么？
 
 ![vue初始化过程](/blog/images/vue/vue初始化过程.png)
 
-1. _init() 初始化数据、状态等 初始化完毕执行
-2. $mount()  执行mountComponent, $mount 扩展把 template 和 el 编译 render 函数
-3. mountComponent() 里面定义了updateComponent 并 new watcher 实例。new watcher 会走一次 get 方法 触发依赖收集 ，通知 watcher.update。
-4. updateComponent(): 先走 _render 函数把节点转化成 vnode 传给_update()
-5. _update(): 最终是把虚拟 dom 转化为真实 dom。经过一系列新旧节点对比，走 patch() 打补丁
-6. patch(): createElm() 创建子组件 执行他们的 init 方法（里面是解析->优化->生成）
+1. `_init()` 初始化数据、状态等
+   - 处理组件配置项
+      - 初始化根组件时进行了选项合并操作，将全局配置合并到根组件的局部配置上
+      - 初始化每个子组件时做了一些性能优化，将组件配置对象上的一些深层次属性放到 `vm.$options` 选项中，以提高代码的执行效率
+   - 初始化组件实例的关系属性，比如 `$parent`、`$children`、`$root`、`$refs` 等
+   - 处理自定义事件
+   - 调用 `beforeCreate` 钩子函数
+   - 初始化组件的 `inject` 配置项，得到 `ret[key] = val` 形式的配置对象，然后对该配置对象进行浅层的响应式处理（只处理了对象第一层数据），并代理每个 key 到 vm 实例上
+   - 数据响应式，处理 props、methods、data、computed、watch 等选项
+   - 解析组件配置项上的 provide 对象，将其挂载到 vm._provided 属性上
+   - 调用 `created` 钩子函数
+   - 如果发现配置项上有 el 选项，则自动调用 mount 方法，反之，没提供 el 选项则必须调用 `$mount`
+2. compile 编译。`$mount()`  执行 `mountComponent`, $mount 扩展把 template 和 el 编译 `render` 函数
+   - Parse 解析
+      - Parse 会用正则等方式解析 template 模版中的指令、class、style 等数据，形成 AST。
+   - Optimize 优化
+     - Optimize 的主要作用是标记 static 静态节点，这时 Vue 在编译过程中的优化，后面当 update 更新界面时，会有一个 patch 的过程，diff 算法会直接跳过静态节点，从而减少了比较的过程，优化了 patch 的性能。
+   - Generate 生成
+     - Generate 是将 AST 转化成 render functio字符串的过程，得到结果是 render 的字符串以及 staticRenderFns 字符串。
+  在经历过 Parse、Optimize 与 Generate 这三个阶段之后，组件中就会得到用于渲染 VNode 所需的 render 函数了。
+
+3. 定义 `updateComponent` 更新函数。mountComponent() 里面定义了 `updateComponent` 并 new watcher 实例。new watcher 会走一次 get 方法 触发依赖收集 ，通知 watcher.update。
+4. 执行 `render` 生成虚拟 `DOM`。updateComponent() 先走 _render 函数把节点转化成 vnode 传给 `_update()`
+5. 转化为真实 DOM _update(): 最终是把虚拟 dom 转化为真实 dom。经过一系列新旧节点对比，走 patch() 打补丁
+6. 打补丁 patch(): createElm() 创建子组件 执行他们的 init 方法（里面是解析->优化->生成）
+
+结合 [生命周期过程](/vue/vue/vue-lifecycle.html) 进一步理解。
 
 ## 问题
 
@@ -1356,7 +1381,7 @@ Vue 如何实现数据驱动？ Vue如何将模板和数据渲染成最终的 DO
 
 `beforeCreate`之前，主要是在处理`vm`实例上的各种属性配置和自定义事件属性。首先合并了组件的配置项挂载到全局`vm.$options`上。初始化组件实例关系属性：`$paren`t、`$children`、`$root`、`$refs`等等；初始化自定义事件监听；最后初始化组件插槽，作用域插槽，`render`函数等（createElement），同时定义了组件`$attr`、`$listeners`属性。
 
-所以，在 beforeCreate 钩子内不能通过 this 访问 data 中定义的变量，因为在 vue 初始化阶段，beforeCreate 阶段 data 中的变量还没有被挂载到 this 上，这个时候访问值会是 undefined。beforeCreate 这个钩子在平时业务开发中用的比较少，而像插件内部的 install 方法通过 Vue.use 方法安装时一般会选在 beforeCreate 这个钩子内执行，vue-router 和 vuex 就是这么干的。
+所以，在 beforeCreate 钩子内不能通过 this 访问 prop、data 等。因为在 vue 初始化阶段，beforeCreate 阶段 data 中的变量还没有被挂载到 this 上，这个时候访问值会是 undefined。beforeCreate 这个钩子在平时业务开发中用的比较少，而像插件内部的 install 方法通过 Vue.use 方法安装时一般会选在 beforeCreate 这个钩子内执行，vue-router 和 vuex 就是这么干的。
 
 ### Q3：created 钩子函数前完成了什么？
 
@@ -1366,12 +1391,14 @@ Vue 如何实现数据驱动？ Vue如何将模板和数据渲染成最终的 DO
 
 inject 配置项是注入数据，在后续的 computed、data 中有可能会用到 inject 的数据，proive 配置项是解析数据，需要等待响应式数据和方法初始化完成后执行，所以顺序不能变。
 
-### Q5：methods内的方法可以使用箭头函数么吗？
+### Q5：methods 内的方法可以使用箭头函数么吗？
 
 不可以使用箭头函数的，因为箭头函数的`this`是定义时就绑定的。在`vue`的内部，`methods`内每个方法的上下文是当前的`vm`组件实例，`methods[key].bind(vm)`，而如果使用使用箭头函数，函数的上下文就变成了父级的上下文，也就是`undefined`了，结果就是通过`undefined`访问任何变量都会报错。
 
 ### Q6: 父子组件钩子的执行顺序？
+
 首先会执行父组件的初始化过程，所以会依次执行beforeCreate、created、在执行挂载前又会执行beforeMount钩子，不过在生成真实dom的__patch__过程中遇到嵌套子组件后又会转为去执行子组件的初始化钩子beforeCreate、created，子组件在挂载前会执行beforeMounte，再完成子组件的Dom创建后执行mounted。这个父组件的__patch__过程才算完成，最后执行父组件的mounted钩子，这就是它们的执行顺序。执行顺序如下：
+
 ```js
 parent beforeCreate
 parent created
@@ -1383,3 +1410,35 @@ parent beforeMounte
 parent mounted
 ```
 
+### Q7. Vue 的 mixin 及合并策略 ?
+
+`mixin`（混入），提供了一种非常灵活的方式，来分发 `Vue` 组件中的可复用功能。本质其实就是一个`js`对象，它可以包含我们组件中任意功能选项，如`data`、`components`、`methods`、`created`、`computed`等等。我们只要将共用的功能以对象的方式传入 `mixins`选项中，当组件使用 `mixins`对象时所有`mixins`对象的选项都将被混入该组件本身的选项中来。在`Vue`中可以**局部混入**或**全局混入**。全局混入常用于插件的编写。
+
+::: tip 注意
+
+当组件存在与`mixin`对象相同的选项的时候，进行递归合并的时候**组件的选项会覆盖`mixin`的选项**。是如果相同选项为**生命周期钩子**的时候，会合并成一个数组（队列），**先执行`mixin`的钩子，再执行组件的钩子**。
+
+:::
+
+关于`Vue`的几种类型的合并策略
+
+- 替换型
+
+  - 替换型合并有 `inject`、`props`、`methods`、`computed`。同名的会被后者替代。
+
+- 合并型
+
+  - 合并型有：`data`
+
+    `mergeData`函数遍历了要合并的 data 的所有属性，然后根据不同情况进行合并：
+
+    - 当目标 data 对象**不包含当前属性时**，**调用 `set` 方法**进行合并（set方法其实就是一些合并重新赋值的方法）
+    - 当目标 data 对象**包含当前属性并且当前值为纯对象时**，**递归合并**当前对象值，这样做是为了防止对象存在新增属性。
+
+- 队列型
+
+  - 队列型合并有：全部生命周期钩子和`watch`。生命周期钩子和`watch`被合并为一个数组，然后正序遍历一次执行。
+
+- 叠加型
+
+  - 叠加型合并有：`component`、`directives`、`filters`。叠加型主要是通过原型链进行层层的叠加。
