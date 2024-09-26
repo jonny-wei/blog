@@ -1,8 +1,8 @@
-# 全新的响应式系统
+# 响应式系统方面
 
 vue3.0 中，响应式数据弃用了 `Object.defineProperty` ，使用 `Proxy` 来代替。下文将主要通过以下三个方面来分析为什么 Vue 选择弃用 Object.defineProperty。
 
-- [quanx响应式系统](#quanx响应式系统)
+- [响应式系统方面](#响应式系统方面)
   - [驳-无法响应数组](#驳-无法响应数组)
   - [对数组的响应式处理](#对数组的响应式处理)
   - [Object.defineProperty 与 Proxy](#objectdefineproperty-与-proxy)
@@ -74,7 +74,7 @@ unshift 操作会导致原来索引为 0、1、2、3 的值发生变化，这就
 
 **到这里，我们可以简单地总结一下结论：**
 
-Object.defineProperty 在数组中的表现和在对象中的表现是一致的，数组的索引就可以看做是对象中的 key。
+`Object.defineProperty` 在数组中的表现和在对象中的表现是一致的，数组的索引就可以看做是对象中的 key。
 
 - 通过索引访问或设置对应元素的值时，可以触发 getter 和 setter 方法。
 - 通过 push 或 unshift 会增加索引，对于新增加的属性，需要再手动初始化才能被 observe。
@@ -146,7 +146,7 @@ methodsToPatch.forEach(function (method) {
 
 ## Object.defineProperty 与 Proxy
 
-前面已经知道 `Object.defineProperty` 对数组和对象的表现是一致的，那么它和 Proxy 对比存在哪些优缺点呢？
+前面已经知道 `Object.defineProperty` 对数组和对象的表现是一致的，那么它和 `Proxy` 对比存在哪些优缺点呢？
 
 1. `Object.defineProperty` 只能劫持对象的属性，而 `Proxy` 是直接代理对象（劫持整个对象），并返回一个新对象，我们可以只操作新的对象达到响应式目的
 
@@ -203,7 +203,7 @@ export function set (target: Array<any> | Object, key: any, val: any): any {
 
 不止如此，**Proxy 对数组的方法也可以监测到，不需要像上面 vue2.x 源码中那样进行 hack**。
 
-3. Proxy支持 13 种拦截操作，这是 defineProperty 所不具有的。
+3. Proxy 支持 13 种拦截操作，这是 defineProperty 所不具有的。
 
 - get(target, propKey, receiver)：拦截对象属性的读取，比如 proxy.foo 和proxy['foo']。
 - set(target, propKey, value, receiver)：拦截对象属性的设置，比如proxy.foo = v 或 proxy['foo'] = v，返回一个布尔值。
@@ -221,7 +221,7 @@ export function set (target: Array<any> | Object, key: any, val: any): any {
 
 4. 新标准性能红利
 
-Proxy 作为新标准，从长远来看，JS 引擎会继续优化 Proxy，但 getter 和 setter 基本不会再有针对性优化。
+Proxy 作为新标准，从长远来看，JS 引擎会继续优化 Proxy，但 getter 和 setter 基本不会再有针对性优化。Proxy 减少了内存使用和代理开销，处理嵌套对象时更高效。
 
 5. Proxy 兼容性差
 

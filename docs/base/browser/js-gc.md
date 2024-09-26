@@ -1,4 +1,4 @@
-# 垃圾回收机制
+# 内存泄漏与垃圾回收
 
 垃圾回收（garbage collection）简称为GC。
 
@@ -36,7 +36,7 @@ delete object2.prev;
 
 为了避免这种类型的内存泄漏，我们可以使用**手动内存管理**，通过**delete 关键字**来删除创建循环引用的属性。避免此类内存泄漏的另一种方法是**使用 WeakMap 和 WeakSet**，它们允许您创建对对象和变量的弱引用。
 
-### 事件监听
+### 事件监听未移除
 
 将事件侦听器附加到元素时，它会创建对侦听器函数的引用，该函数可以防止垃圾收集器释放元素使用的内存。如果在不再需要该元素时未删除侦听器函数，这可能会导致内存泄漏。
 
@@ -66,7 +66,7 @@ button.removeEventListener("click", function() {
 button.removeAllListeners();
 ```
 
-### 全局变量
+### 引用全局变量
 
 创建全局变量时，可以从代码中的任何位置访问它，这使得很难确定何时不再需要它。这可能会导致变量在不再需要后很长时间仍保留在内存中。
 
@@ -100,7 +100,6 @@ myFunction();
 另一种方法是使用 JavaScript 的 let 和 const 代替 var，这允许您创建块范围的变量。用 let 和 const 声明的变量只能在定义它们的块内访问，并且当它们超出范围时将被自动垃圾收集。
 
 ```js
-
 {
   let myData = {
     largeArray: new Array(1000000).fill("some data"),
@@ -111,6 +110,115 @@ myFunction();
   // ...
 }
 ```
+
+### 定时器未清除
+
+如果在定时器中使用闭包而不清除定时器，可能会导致内存泄漏。
+
+```js
+function startTimer() {
+    let largeData = new Array(1000000).fill('*');
+    setInterval(function() {
+        console.log(largeData);
+    }, 1000);
+}
+startTimer(); // largeData 会一直保持引用
+
+
+// 解决 清除定时器
+let timerId = setInterval(...);
+clearInterval(timerId);
+```
+
+### 组件的销毁和创建频繁
+
+在单页应用中，组件的销毁和创建频繁，若不清理闭包可能会导致内存泄漏。
+
+```js
+function createComponent() {
+    let largeData = new Array(1000000).fill('*');
+    return function() {
+        console.log(largeData);
+    };
+}
+let component = createComponent();
+// 若组件被销毁，确保清理 largeData 的引用
+component = null; // 允许垃圾回收
+```
+
+### 回调地狱
+
+在复杂的回调中，若不小心引用了外部变量，可能导致内存泄漏。
+
+解决方案：确保在回调中不持有外部变量的引用，或在不需要时清理引用。
+
+```js
+function fetchData() {
+    let largeData = new Array(1000000).fill('*');
+    someAsyncOperation(function() {
+        console.log(largeData); // 可能导致内存泄漏
+    });
+}
+```
+
+### 闭包中大对象的引用未释放
+
+在闭包内使用了较大的对象，若引用未被清除，会造成内存泄漏。
+
+解决方案：在合适的时候设置 largeObject 为 null。
+
+```js
+function outerFunction() {
+    let largeObject = { data: new Array(1000000).fill('*') };
+    return function innerFunction() {
+        console.log(largeObject);
+    };
+}
+const myFunc = outerFunction(); // largeObject 无法被回收
+```
+
+## 内存泄漏排查
+
+### 使用浏览器开发者工具
+
+1. Memory 面板
+    - 快照：可以拍摄内存快照，观察对象的保留情况。比较不同快照之间的变化，以识别哪些对象未被释放。
+    - 步骤：
+      - 打开开发者工具，切换到 "Memory" 面板。
+      - 选择 "Take snapshot" 拍摄快照。
+      - 执行一些操作，然后再次拍摄快照。
+      - 比较两个快照，查看哪些对象仍然存在且未被释放。
+2. Allocation Timeline
+    - 监测内存分配：通过录制性能，监测内存分配情况，观察内存使用的变化。
+    - 步骤：
+      - 在 "Performance" 面板中，点击 "Record" 按钮。
+      - 执行一系列操作。
+      - 停止录制，查看内存使用图表，分析内存高峰。
+3. 使用 Profiler
+    - CPU 和内存分析：使用 Profiler 观察函数的调用频率和内存使用情况，找出性能瓶颈。
+    - 步骤：
+      - 进入 "Profiler" 面板，选择 "Record"。
+      - 执行相关操作，停止记录。
+      - 查看函数调用栈，分析哪些函数占用了过多的内存。
+
+### 手动检测和审查代码
+
+1. 代码审查
+    - 检查引起内存泄露的诱因的代码，例如：检查闭包、检查事件监听器等。
+2. 单元测试
+    - 内存检测测试：在单元测试中添加内存使用情况监测，确保在组件卸载后不会发生内存泄漏。
+3. 强制垃圾回收
+    - Chrome DevTools：在 Memory 面板中手动触发垃圾回收，观察内存变化。
+    - 使用 `window.performance.memory`：获取当前内存使用情况，以便监测。
+
+### 使用性能监测等工具
+
+1. 性能监测和分析
+   - 持续监测， 在开发过程中定期检查内存使用情况，使用工具如 Lighthouse 分析应用性能。
+   - 长时间测试，在应用运行较长时间后，监测内存使用，找出增长原因。
+2. 工具分析
+   - `memwatch-next`：用于 Node.js 应用，监测内存使用情况并报告潜在的泄漏。
+   - `why-did-you-render`：用于 React 应用，帮助分析组件渲染和内存使用情况。
 
 ## 垃圾回收方式
 

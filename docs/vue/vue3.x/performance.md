@@ -128,7 +128,7 @@ vue 第 3 大版本将支持 tree-shaking，这将意味着你如果不使用 vu
 在当前版本中，无论我们使用 Vue 核心中的哪些功能，所有未使用的功能最终都会进入我们的生产代码中，因为 vue 实例
 是作为单个对象导出的，并且打包器无法检测出代码中使用了对象的哪些属性。在 2.x 版本中，很多函数都挂载在全局 Vue 对象上，比如 `$nextTick`、`$set` 等函数，因此虽然我们可能用不到，但打包时只要引入了 vue 这些全局函数仍然会打包进 bundle 中。
 
-而在 Vue3 中，所有的 API 都通过 ES6 模块化的方式引入，这样就能让 webpack 或 rollup 等打包工具在打包时对没有用到 API 进行剔除，最小化 bundle 体积
+而在 Vue3 中，所有的 API 都通过 ES6 模块化的方式引入，这样就能让 webpack 或 rollup 等打包工具在打包时对没有用到 API 进行剔除，最小化 bundle 体积。采用模块化设计，支持按需导入，能有效减少最终包体积，提高加载速度。相反，Vue2 于全局 API，打包时无法去除未使用的代码，增大了包体积。
 
 ```javascript
  // Vue 2.x - whole `Vue` object is bundled for production

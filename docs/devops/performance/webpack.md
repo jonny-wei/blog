@@ -127,7 +127,6 @@ const Button = require("antd/lib/Button")
 - 第二步：获取`import`节点，找出引入模块是`libraryName`的语句
 - 第三步：进行批量替换旧节点
 
-
 ## 利用 Tree-Shaking
 
 始终使用 ESM，避免无意义的赋值、尽量不写带有副作用的代码、禁止 Babel 转译模块导入导出语句、优化导出值的粒度、使用支持 Tree Shaking 的包、在异步模块中使用 Tree-Shaking等手段，利用 Tree-Shaking，减小产物体积。
@@ -261,7 +260,7 @@ Tree-Shaking 的实现大致上可以分为三个步骤：
 
 最终目标是得到一个按需加载的分割点。分割内部也可以再次分割，您可以根据分割构建整个应用程序。这样做的好处是，应用程序的初始有效负载会更小。
 
-Babel 本身不支持动态 import 语法，它需要 @babel/plugin-syntax-dynamic-import 配合才能工作。
+Babel 本身不支持动态 import 语法，它需要 `@babel/plugin-syntax-dynamic-import` 配合才能工作。
 
 ```js
 // .babelrc
@@ -282,6 +281,38 @@ Babel 本身不支持动态 import 语法，它需要 @babel/plugin-syntax-dynam
 loadComponent(){
   import('./test.js').then(()={})
 }
+```
+
+有时候我们想把某个路由下的所有组件都打包在同个异步块 (chunk) 中。只需要使用命名 chunk：
+
+```js
+// webpack 会将任何一个异步模块与相同的块名称组合到相同的异步块中。
+const UserDetails = () =>
+  import(/* webpackChunkName: "group-user" */ './UserDetails.vue')
+const UserDashboard = () =>
+  import(/* webpackChunkName: "group-user" */ './UserDashboard.vue')
+const UserProfileEdit = () =>
+  import(/* webpackChunkName: "group-user" */ './UserProfileEdit.vue')
+
+  
+// 或者
+// vite.config.js
+export default defineConfig({
+  build: {
+    rollupOptions: {
+      // https://rollupjs.org/guide/en/#outputmanualchunks
+      output: {
+        manualChunks: {
+          'group-user': [
+            './src/UserDetails',
+            './src/UserDashboard',
+            './src/UserProfileEdit',
+          ],
+        },
+      },
+    },
+  },
+})
 ```
 
 ## Code Split 代码分割
@@ -409,9 +440,6 @@ babel-ployfill 打包体积 88.49K，如果每个页面都要做兼容，都要 
 <script src="https://polyfill.alicdn.com/polyfill.min.js?features=Promise%2CArray.prototype.includes"></script>
 ```
 
-
-
-
 ## 依赖外置并 CDN 加载
 
 `externals` 的主要作用是将部分模块排除在 Webpack 打包系统之外。使用 externals 时必须确保这些外置依赖代码已经被正确注入到上下文环境中，这在 Web 应用中通常可以通过 CDN 方式实现。
@@ -419,6 +447,7 @@ babel-ployfill 打包体积 88.49K，如果每个页面都要做兼容，都要 
 `externals` 声明了 react 与 lodash 两个外置依赖，并在后续的 `html-webpack-plugin` 模板中注入这两个模块的 CDN 引用，以此构成完整 Web 应用。
 
 虽然结果上看浏览器还是得消耗这部分流量，但结合 CDN 系统特性，一是能够就近获取资源，缩短网络通讯链路；二是能够将资源分发任务前置到节点服务器，减轻原服务器 QPS 负担；三是用户访问不同站点能共享同一份 CDN 资源副本。所以网络性能效果往往会比重复打包好很多。
+
 ## 缩小文件搜索范围
 
 - **优化 resolve.modules 配置**。指定第三方模块存放的绝对路径，避免层层查找，减少搜索步骤，减少模块搜索层级。
@@ -490,7 +519,7 @@ module.exports = {
 webpack 的持久化缓存它能够将首次构建的过程与结果数据持久化保存到本地文件系统，在下次执行构建时跳过解析、链接、编译等一系列非常消耗性能的操作，直接复用上次的 Module/ModuleGraph/Chunk 对象数据，迅速构建出最终产物。
 
 - Webpack5 通过配置 cache: 'filesystem' 来开启持久缓存
-- Webpack4 
+- Webpack4
   - `cache-loader`：针对 Loader 运行结果的通用缓存方案；
   - `hard-source-webpack-plugin`：针对 Webpack 全生命周期的通用缓存方案；
   - `babel-loader`：针对 Babel 工具的专用缓存能力；
@@ -577,7 +606,6 @@ module.exports = {
 
 ## 使用 Scope Hoisting
 
-
 默认情况下 Webpack 会将模块打包成一个个单独的函数，例如：
 
 ```js
@@ -607,6 +635,7 @@ console.log(common);
       console.log(_common__WEBPACK_IMPORTED_MODULE_0__)
   })
 ```
+
 现象：
 
 - 构建后代码存在大量的函数闭包包裹代码，导致体积增大，模块越多越明显。
