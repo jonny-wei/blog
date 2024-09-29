@@ -152,7 +152,17 @@ const sidebar = {
       title: "VueNext",
       sidebarDepth: 1,
       collapsable: false,
-      children: ["vue3/vue-router4", "vue3/pinia", "vue3/ssr"],
+      children: [
+        "vue3/reactivity",
+        "vue3/diff",
+        "vue3/components",
+        "vue3/inner-components",
+        "vue3/compiler",
+        "vue3/hooks",
+        "vue3/vue-router4",
+        "vue3/pinia",
+        "vue3/ssr",
+      ],
     },
   ],
   react: [

@@ -64,6 +64,10 @@ render ---> VNode ---> createElm/removeElm/patch(diff) ----> UI
 
 ![生命周期钩子](/blog/images/vue/vue生命周期钩子.png)
 
+### Vue3 生命周期
+
+![vue3生命周期](/blog/images/vue/vue3生命周期.png)
+
 Vue实例的生命周期大致可分为4个阶段：
 
 - 初始化阶段：为 Vue 实例上初始化一些属性，事件以及响应式数据；
@@ -112,6 +116,8 @@ created 阶段的网络请求与 mounted 请求的区别：前者页面视图未
 beforeDestroy 钩子函数在实例销毁钱调用，在这步，实例仍然可用。
 
 beforeDestroyed 钩子函数在 Vue 实例销毁后调用。调用后，Vue 实例指示的所有东西都会解绑定，所有的事件监听器会被移除，所有的子实例也会被销毁。
+
+[Vue3 生命周期钩子 API](https://cn.vuejs.org/api/composition-api-lifecycle.html)
 
 ### 小结
 
@@ -167,7 +173,12 @@ errorCaptured (err: Error, vm: Component, info: string) => ?boolean
 
 - 销毁过程
 
-    父 beforeDestroy -> 子 beforeDestroy -> 子 destroyed -> 父 destroyed
+    父 beforeDestroy -> 子 beforeDestroy -> 子 destroyed -> 父 destroyed、
+
+综上：
+
+- 父组件的生命周期钩子在子组件之前执行，确保父组件的状态在子组件被创建时是可用的。
+- 在更新和卸载阶段，父组件的钩子在子组件之前执行，保持了父子组件的顺序。
 
 ### Q3. 在哪个生命周期内调用异步请求？
 
@@ -219,4 +230,3 @@ mounted(){
 ```
 
 当然 @hook 方法不仅仅是可以监听 mounted，其它的生命周期事件，例如：created，updated 等都可以监听。
-

@@ -14,6 +14,8 @@ vue 组件间通信方式：
 - 子组件通过 `$emit` 触发自定义事件，`$emit` 第二个参数为传递的数值
 - 父组件绑定监听器获取到子组件传递过来的参数
 
+[Vue props](https://cn.vuejs.org/guide/components/props.html)
+
 ## $emit / $on
 
 eventBus 中央事件总线
@@ -42,6 +44,8 @@ Vue 2.4 版本后有了新方法。在创建高级别的组件或封装第三方
 - 包含了父级作用域中不作为 prop 被识别 (且获取) 的特性绑定 ( class 和 style 除外)。
 - 可以通过 `v-bind="$attrs"` 传⼊内部组件
 
+[Vue 透传 attrs](https://cn.vuejs.org/guide/components/attrs.html)
+
 ## Provider / Inject
 
 Vue 2.2 版本以后新增了这两个 API 。 这对选项需要一起使用，以允许一个祖先组件向其所有子孙后代注入一个依赖，不论组件层次有多深，并在其上下游关系成立的时间里始终生效。
@@ -54,6 +58,8 @@ Provider / Inject 在项目中需要有较多公共传参时使用还是颇为�
 
 - 在祖先组件定义 provide 属性，返回传递的值
 - 在后代组件通过 inject 接收组件传递过来的值
+
+[Vue 依赖注入](https://cn.vuejs.org/guide/components/provide-inject.html)
 
 ## $parent / $children
 

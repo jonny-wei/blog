@@ -16,6 +16,8 @@ this.myObject[key] = value
 这种改进尤为重要，因为 Vue 必须使用 getters/setters 来递归地遍历所有对象及其属性，并转换它们。由于 `Object.defineProperty` 只能对属性进行劫持，**需要遍历对象的每个属性，如果属性值也是对象，则需要深度遍历**。而  `Proxy` 直接代理对象，不需要遍历操作。使用代理后，这一过程就变得容易很多。
 使用 JS 代理后，Vue3 会放弃对 IE 的支持（不包括 Edge）, 如果需要支持IE，使用兼容版本。
 
+[Vue3 深入响应式系统](https://cn.vuejs.org/guide/extras/reactivity-in-depth.html)
+
 ## diff 算法的优化
 
 预编译优化。
@@ -81,6 +83,8 @@ export function render(...) {
     )
 }
 ```
+
+[Vue3 渲染机制](https://cn.vuejs.org/guide/extras/rendering-mechanism.html)
 
 ## 事件侦听器缓存
 

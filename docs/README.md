@@ -4,12 +4,12 @@ heroImage: /hero.jpg
 heroText: 前端那些事儿
 tagline: 我命由我不由天，学习吧少年！
 actionText: 阅读文章
-actionLink: /vue/vue/vue-render.html
+actionLink: /react/react/react-reconciler.html
 features:
 - title: 前端基础
   details: JavaScript，TypeScript，CSS等基础与进阶知识，网络与浏览器渲染原理。
 - title: Vue 全家桶
-  details: Vue，VueRouter，Vuex 等底层源码解析，Vue 相关知识点总结。
+  details: Vue，VueRouter，Vuex、Pinia等底层源码解析，Vue 相关知识点总结。
 - title: React 全家桶
   details: React，Redux，Mobx 等底层源码解析，React 相关知识点总结 。
 - title: Node

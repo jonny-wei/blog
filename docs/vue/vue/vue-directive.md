@@ -12,6 +12,10 @@ Vue对于自定义指令定义对象提供了几个钩子函数，这几个钩�
 
 有了每个状态的钩子函数，这样我们就可以让指令在不同状态下做不同的事情。
 
+:::tip Vue3 中新指令
+[v-memo](<https://cn.vuejs.org/api/built-in-directives.html#v-memo>)
+:::
+
 ```js
 // 注册
 Vue.directive('my-directive', {
@@ -162,7 +166,6 @@ function _update (oldVnode, vnode) {
 - dirsWithPostpatch: 保存需要触发 componentUpdated 指令钩子函数的指令列表。
 
 另外，你可能还看到了在定义新旧指令集合的变量中调用了 normalizeDirectives 函数，其实该函数是用来模板中使用到的指令从存放指令的地方取出来，并将其格式进行统一化。
-
 
 ## 应用场景
 
@@ -386,6 +389,9 @@ v-show 相比于 v-if 的性能优势是在组件的更新阶段，如果仅仅�
 - 如果条件出现在循环内部，即，循环过程中需要条件判断，可通过计算属性 `computed` 提前过滤掉那些不需要显示的项。
 
 PS：Vue3 中当 `v-if` 与 `v-for` 一起使用时，`v-if` 具有比 `v-for` 更高的优先级。
+
+[v-for 与 v-memo](https://cn.vuejs.org/api/built-in-directives.html#v-memo)
+
 ### Q3. v-model 的原理
 
 我们在 vue 项目中主要使用 v-model 指令在表单 input、textarea、select 等元素上创建双向数据绑定，我们知道 v-model 本质上不过是语法糖，v-model 在内部为不同的输入元素使用不同的属性并抛出不同的事件：
