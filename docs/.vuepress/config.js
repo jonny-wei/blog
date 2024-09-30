@@ -286,7 +286,15 @@ const sidebar = {
       title: "跨端技术",
       collapsable: false,
       sidebarDepth: 1,
-      children: ["", "h5/jsbridge", "h5/webview", "h5/pwa", "h5/mobile-fit"],
+      children: [
+        "",
+        "h5/webview",
+        "h5/jsbridge",
+        "h5/mobile-fit",
+        "h5/rn",
+        "h5/rn-fabric",
+        "h5/rn-multithreads"
+      ],
     },
     {
       title: "小程序",
