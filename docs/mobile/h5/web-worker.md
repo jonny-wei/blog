@@ -241,7 +241,6 @@ Structured Clone 通过复制内存的方式简单有效地隔离不同线程内
 
 Transfer Memory **以失去控制权来换取高效传输**, 通过内存独占给多线程并发加锁. 但只能转让 [ArrayBuffer](https://link.juejin.cn?target=https%3A%2F%2Fdeveloper.mozilla.org%2Fen-US%2Fdocs%2FWeb%2FJavaScript%2FReference%2FGlobal_Objects%2FArrayBuffer) 等大小规整的二进制(Raw Binary)数据; 对矩阵数据(如 RGB 图片)比较适用. 实践上也要考虑从 JS Object 生成二进制数据的运算成本.
 
-
 #### Shared Array Buffers
 
 [Shared Array Buffer](https://link.juejin.cn/?target=https%3A%2F%2Fdeveloper.mozilla.org%2Fen-US%2Fdocs%2FWeb%2FJavaScript%2FReference%2FGlobal_Objects%2FSharedArrayBuffer) 是共享内存, 线程A 和线程B 可以**同时访问和操作**同一块内存空间. 数据都共享了, 也就没有传输什么事了。
@@ -300,7 +299,7 @@ Worker 的应用场景, 本质上是从主线程中剥离逻辑, 让主线程专
 
 Android 和 iOS 的原生开发中, [主线程负责 UI 工作](https://link.juejin.cn?target=https%3A%2F%2Fdeveloper.android.com%2Ftopic%2Fperformance%2Fthreads); 前端领域热门的小程序, 实现原理上就是[渲染和逻辑的完全分离](https://link.juejin.cn?target=https%3A%2F%2Fwechat-miniprogram.github.io%2Fkbone%2Fdocs%2Fguide%2Fprinciple.html)。
 
-
+[Service Worker 实践指南](https://mp.weixin.qq.com/s/JdG-FP04s0gUnN8dWcxFgg)
 
 [Web Worker 现状](https://mp.weixin.qq.com/s/WP2RT6VBPtD5bpq3WaEpeQ)
 

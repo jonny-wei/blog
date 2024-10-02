@@ -4,6 +4,8 @@
 
 ![webview3](/blog/images/mobile/webview3.png)
 
+[WebView有难度的场景 - 浅谈Web容器设计的边界和目标](https://mp.weixin.qq.com/s/2WC4OsT7Wk_Rnh6KvQPpuQ)
+
 ## 简介
 
 `WebView` 用来展示网页的 `view` 组件，该组件是你运行自己的浏览器或者在你的线程中展示线上内容的基础。使用 `Webkit` 渲染引擎来展示，并且支持前进后退等基于浏览历史，放大缩小，等更多功能。简单来说 `WebView` 是手机中内置了一款高性能 `Webkit` 内核浏览器，在 SDK 中封装的一个组件。不过没有提供地址栏和导航栏，只是单纯的展示一个网页界面。

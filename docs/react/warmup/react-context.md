@@ -409,3 +409,11 @@ context解决了：
 2. 解决了改变 value ，组件全部重新渲染的缺陷。
 
 react-redux 就是通过 Provider 模式把 redux 中的 store 注入到组件中的。
+
+### Q2. 如何解决 Context Provider 提供的对象可能引起的重复渲染问题？
+
+当 Context Provider 接收的 value 发生变化的时候，React 会向下深度优先遍历组件树，找到消费了该 Context 的组件并标志为需要更新，在组件更新的 render 阶段，这些消费了该 Context 的组件就会重新渲染，读取到最新的 Context 值。我们通常传递给 Context Provider 的 value 是一个对象，对象里包含多个字段，然而这种常见的场景却可能导致多次不必要的重复渲染。
+
+解决方案： [use-context-selector](https://www.npmjs.com/package/use-context-selector)，它可以让我们从 context value 中选择你会用到的状态，且只有在这些被选择的状态更新时，才会使组件重新渲染。
+
+[从 0 实现 use-context-selector](https://mp.weixin.qq.com/s/vp7Jfxh7AmseD6L1NVpvZA)

@@ -1,4 +1,4 @@
-# 认识 package.json
+# 包管理 及 package.json
 
 在 `Node.js` 中，模块是一个库或框架，也是一个 `Node.js` 项目。`Node.js` 项目遵循模块化的架构，当我们创建了一个 `Node.js` 项目，意味着创建了一个模块，这个模块必须有一个描述文件，即 `package.json`。
 
@@ -217,6 +217,13 @@
 
 所以, 我个人比较推荐的一个做法是:`把 package-lock.json`一起提交到仓库中去, 不需要 `ignore`。但是在执行 `npm publish` 命令的时候,也就是发布一个库的时候, 它其实应该是被忽略的不应该被发布出去的。
 
+## 包管理
+
+[NPM 依赖管理的复杂性](https://mp.weixin.qq.com/s/UyOX30WSXh-LjvrIM9wa0A)
+
+[包管理工具的演进](https://mp.weixin.qq.com/s/beP1bxgbTT1Z91KS3svDvw)
+
+[npm vs npx - 基本区别是什么](https://mp.weixin.qq.com/s/m8mnxTDNVbBV8VOSawHJ2Q)
 
 [package.json 配置完全解读](https://juejin.cn/post/7145001740696289317#heading-45)
 

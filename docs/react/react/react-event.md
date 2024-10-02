@@ -507,6 +507,8 @@ if (inCapturePhase) {
 
 ![事件系统6](/blog/images/react/事件系统6.png)
 
+[React17 事件机制](https://mp.weixin.qq.com/s/lCHeWE5DrbxEYIdG60aIsw)
+
 ## 问题
 
 ### Q1. 为什么要用不同的事件插件处理不同的 React 事件?

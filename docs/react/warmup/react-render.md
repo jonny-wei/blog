@@ -1089,6 +1089,8 @@ if(!hook.current){
 }
 ```
 
+[深度解析 React 性能优化 API](https://mp.weixin.qq.com/s/svGYB3HvmLDMerlM50BhAg)
+
 ## 问题
 
 ### Q1. useCallback 和 useMemo 有什么区别？

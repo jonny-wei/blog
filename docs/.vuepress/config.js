@@ -54,26 +54,17 @@ const sidebar = {
       collapsable: false,
       sidebarDepth: 1,
       children: [
-        "css-basis/css-rule",
-        "css-basis/css-box",
-        "css-basis/css-bfc",
-        "css-basis/css-ifc",
-        "css-basis/css-cc",
-        "css-basis/css-layout",
-        "css-basis/css-knowledge",
-        "css-basis/css-isuess",
+        "css/css-rule",
+        "css/css-box",
+        "css/css-bfc",
+        "css/css-ifc",
+        "css/css-cc",
+        "css/css-layout",
+        "css/css-text",
+        "css/css-knowledge",
+        "css/css-issues",
       ],
-    },
-    {
-      title: "CSS进阶",
-      collapsable: false,
-      sidebarDepth: 1,
-      children: [
-        "css-advanced/animation",
-        "css-advanced/canvas",
-        "css-advanced/css-text",
-      ],
-    },
+    }
   ],
   vue: [
     {
@@ -278,7 +269,10 @@ const sidebar = {
       title: "代码与包管理",
       sidebarDepth: 1,
       collapsable: false,
-      children: ["git/git", "git/package"],
+      children: [
+        "git/git",
+        "git/package",
+      ],
     },
   ],
   mobile: [
@@ -291,6 +285,7 @@ const sidebar = {
         "h5/webview",
         "h5/jsbridge",
         "h5/mobile-fit",
+        "h5/web-worker",
         "h5/rn",
         "h5/rn-fabric",
         "h5/rn-multithreads"
@@ -322,10 +317,14 @@ const sidebar = {
       ],
     },
     {
-      title: "其他",
+      title: "前端方案",
       collapsable: false,
       sidebarDepth: 1,
-      children: ["others/web-worker", "others/service-worker"],
+      children: [
+        "plan/i18n",
+        "plan/virtual-list",
+        "plan/masonry",
+      ],
     },
   ],
   // code: [

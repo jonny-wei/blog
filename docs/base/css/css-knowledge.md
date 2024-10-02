@@ -176,3 +176,39 @@
 [超详细讲解H5移动端适配](https://juejin.cn/post/7085931616136069156)
 
 [数据大屏适配方案](https://juejin.cn/post/7163932925955112996)
+
+## CSS 动画
+
+[CSS3常见动画有哪些？实现方式？](https://mp.weixin.qq.com/s/azcij-vOQ16XOUnaF83npA)
+
+[requestAnimationFrame理解与实践](https://newbyvector.github.io/2018/05/01/2015-05-01/)
+
+[你可能不知道的Animation动画技巧与细节](https://juejin.cn/post/6889226357851553805)
+
+[浏览器动画帧渲染与执行机制探索](https://jelly.jd.com/article/5fda117df708c8014219e056)
+
+[CSS3动画之逐帧动画](https://jelly.jd.com/article/6006b1035b6c6a01506c87a7)
+
+[requestAnimationFrame，终结定时器动画时代！](https://juejin.cn/post/6844904126653202440)
+
+[CSS 和 JS 动画底层原理及如何优化其性能](https://juejin.cn/post/6844903630483488782)
+
+[前端也要懂物理 —— 惯性滚动篇](https://juejin.cn/post/6844904185121488910)
+
+[animation、transition、transform、translate傻傻分不清](https://juejin.cn/post/6844903615920898056#heading-3)
+
+[深入解析你不知道的 EventLoop 和浏览器渲染、帧动画、空闲回调](https://juejin.cn/post/6844904165462769678)
+
+## canvas
+
+[Canvas知识总结](https://juejin.cn/post/6948740584819392525)
+
+[高质量前端快照方案：来自页面的「自拍」](https://juejin.cn/post/6844904019605848072#heading-12)
+
+[可视化研发之线的画法：直线，曲线，动画（Canvas版）](https://juejin.cn/post/6939742079295848462)
+
+[教你实现微信8.0『炸裂』的🎉表情特效](https://juejin.cn/post/6926010284578603021)
+
+[详解 Canvas 路径动画](https://juejin.cn/post/6924866572972457992)
+
+[一起聊聊canvas曲线那些事](https://jelly.jd.com/article/5fd321225fd2b30146b91a7f)
