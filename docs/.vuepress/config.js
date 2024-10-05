@@ -321,9 +321,13 @@ const sidebar = {
       collapsable: false,
       sidebarDepth: 1,
       children: [
+        // "plan/auth",
         "plan/i18n",
         "plan/virtual-list",
         "plan/masonry",
+        "plan/file-transfer",
+        "plan/webTransport",
+        "plan/webCodecs"
       ],
     },
   ],
