@@ -175,7 +175,7 @@ ModuleGraph: {
 
 Webpack5 内部的许多插件、Dependency 子类、Module 子类的实现都需要用到这些工具函数查找特定模块、依赖的信息，例如：
 
-- `SplitChunksPlugin` 在优化 `chunks` 处理中，需要使用 `moduleGraph.getExportsInfo` 查询各个模块的 `exportsInfo` (模块导出的信息集合，与 tree-shaking 强相关，后续会单出一篇文章讲解)信息以确定如何分离 chunk。
+- `SplitChunksPlugin` 在优化 `chunks` 处理中，需要使用 `moduleGraph.getExportsInfo` 查询各个模块的 `exportsInfo` (模块导出的信息集合，与 tree-shaking 强相关)信息以确定如何分离 chunk。
 - 在 `compilation.seal` 函数中，需要遍历 `entry` 对应的 dep 并调用 `moduleGraph.getModule` 获取完整的 `module` 定义。
 - ...
 

@@ -200,14 +200,14 @@ const sidebar = {
       ],
     },
   ],
-  node: [
-    {
-      title: "基础与实战",
-      sidebarDepth: 2,
-      collapsable: false,
-      children: [""],
-    },
-  ],
+  // node: [
+  //   {
+  //     title: "基础与实战",
+  //     sidebarDepth: 2,
+  //     collapsable: false,
+  //     children: [""],
+  //   },
+  // ],
   devops: [
     {
       title: "Webpack",
@@ -323,6 +323,9 @@ const sidebar = {
       children: [
         // "plan/auth",
         "plan/i18n",
+        "plan/color-thief",
+        "plan/pay",
+        "plan/tracker",
         "plan/virtual-list",
         "plan/masonry",
         "plan/file-transfer",
@@ -387,10 +390,10 @@ module.exports = {
       { text: "前端基础", link: "/base/" },
       { text: "Vue", link: "/vue/" },
       { text: "React", link: "/react/" },
-      { text: "Node", link: "/node/" },
+      // { text: "Node", link: "/node/" },
       { text: "前端工程化", link: "/devops/" },
       { text: "泛客户端", link: "/mobile/" },
-      { text: "架构&方案", link: "/architecture/" },
+      { text: "架构与方案", link: "/architecture/" },
       // { text: "算法&编程", link: "/code/" },
       // { text: "前端周刊", link: "/weekly/" },
       {

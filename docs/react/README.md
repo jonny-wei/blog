@@ -88,13 +88,13 @@ fiber 对应关系：
 
 上面的 demo 暴露出了如下问题：
 
-1. 返回的 children 虽然是一个数组，但是数组里面的数据类型却是不确定的，有对象类型( 如ReactElement ) ，有数组类型(如 map 遍历返回的子节点)，还有字符串类型(如文本)；
-2. 法对 render 后的 React element 元素进行可控性操作。
+1. 返回的 children 虽然是一个数组，但是数组里面的数据类型却是不确定的，有对象类型( 如 ReactElement ) ，有数组类型(如 map 遍历返回的子节点)，还有字符串类型(如文本)；
+2. 无法对 render 后的 React element 元素进行可控性操作。
 
-针对上述问题，我们需要对 demo 项目进行改造处理，具体过程可以分为4步：
+针对上述问题，我们需要对 demo 项目进行改造处理，具体过程可以分为 4 步：
 
 1. 将上述 children 扁平化处理，将数组类型的子节点打开
-2. 干掉 children 中文本类型节点；
+2. 干掉 children 中文本类型节点
 3. 向 children 最后插入元素
 4. 克隆新的元素节点并渲染。
 
@@ -129,19 +129,19 @@ class Index extends React.Component{
         )
         console.log(reactElement)
         const { children } = reactElement.props
-        /* 第1步 ： 扁平化 children  */
+        /* 第1步: 扁平化 children  */
         const flatChildren = React.Children.toArray(children)
         console.log(flatChildren)
-        /* 第2步 ： 除去文本节点 */
+        /* 第2步: 除去文本节点 */
         const newChildren :any= []
         React.Children.forEach(flatChildren,(item)=>{
             if(React.isValidElement(item)) newChildren.push(item)
         })
-        /* 第3步，插入新的节点 */
+        /* 第3步: 插入新的节点 */
         const lastChildren = React.createElement(`div`,{ className :'last' } ,`say goodbye`)
         newChildren.push(lastChildren)
         
-        /* 第4步：修改容器节点 */
+        /* 第4步: 修改容器节点 */
         const newReactElement =  React.cloneElement(reactElement,{} ,...newChildren )
         return newReactElement
     }
@@ -151,19 +151,21 @@ class Index extends React.Component{
 }
 ```
 
-1. React.Children.toArray 扁平化，规范化 children 数组
+1. `React.Children.toArray` 扁平化，规范化 children 数组
 
-React.Children.toArray 可以扁平化、规范化 React.element 的 children 组成的数组，只要 children 中的数组元素被打开，对遍历 children 很有帮助，而且 React.Children.toArray 还可以深层次 flat 。
+`React.Children.toArray` 可以扁平化、规范化 `React.element` 的 children 组成的数组，只要 children 中的数组元素被打开，对遍历 children 很有帮助，而且 `React.Children.toArray` 还可以深层次 flat 。
 
-2. 遍历 children ，验证 React.element 元素节点，除去文本节点
+2. 遍历 children ，验证 `React.element` 元素节点，除去文本节点
 
-用 React.Children.forEach 去遍历子节点，如果是 react Element 元素，就添加到新的 children 数组中，通过这种方式过滤掉非 React element 节点。React.isValidElement 这个方法可以用来检测是否为 React element 元素，接收一个参数——待验证对象，如果是返回 true ， 否则返回 false 。React.Children.forEach 本身就可以把 children 扁平化,述第一步操作多此一举。`React.Children.forEach = React.Children.toArray + Array.prototype.forEach`。
+用 `React.Children.forEach` 去遍历子节点，如果是 React element 元素，就添加到新的 children 数组中，通过这种方式过滤掉非 React element 节点。`React.isValidElement` 这个方法可以用来检测是否为 React element 元素，接收一个参数——待验证对象，如果是返回 true ，否则返回 false 。
 
-3. 用 React.createElement ，插入到 children 最后
+`React.Children.forEach` 本身就可以把 children 扁平化。`React.Children.forEach = React.Children.toArray + Array.prototype.forEach`。
+
+3. 用 `React.createElement` ，插入到 children 最后
 
 4. 已经修改了 children，现在做的是，通过 cloneElement 创建新的容器元素
 
-为什么要用 `React.cloneElement` ，createElement 把上面写的 jsx，变成 element 对象; 而 cloneElement 的作用是以 element 元素为样板克隆并返回新的 `React element 元素`。返回元素的 props 是将新的 props 与原始元素的 props 浅层合并后的结果。这里 `React.cloneElement` 做的事情就是，把 `reactElement` 复制一份，再用新的 children 属性，从而达到改变 render 结果的目的。
+为什么要用 `React.cloneElement` ，`createElement` 把上面写的 jsx，变成 element 对象; 而 `cloneElement` 的作用是以 element 元素为样板克隆并返回新的 `React element 元素`。返回元素的 props 是将新的 props 与原始元素的 props 浅层合并后的结果。这里 `React.cloneElement` 做的事情就是，把 `reactElement` 复制一份，再用新的 children 属性，从而达到改变 render 结果的目的。
 
 ::: tip 可控 render
 在实际的业务中用的比较少，有一些封装高阶组件的场景可能会用到。开源组件库中比较常见，例如 `<ButtonGroup>` 等，一方面扩展、过滤组件props，另外一方面根据props参数拓展render。
@@ -210,7 +212,7 @@ function Index() {
 }
 ```
 
-`plugin-syntax-jsx` 已经向文件中提前注入了 `_jsxRuntime api`。不过这种模式下需要我们在 `.babelrc` 设置 runtime: automatic 。
+`plugin-syntax-jsx` 已经向文件中提前注入了 `_jsxRuntime api`。不过这种模式下需要我们在 `.babelrc` 设置  runtime: automatic 。
 
 ```js
 "presets": [    
@@ -246,7 +248,7 @@ function Index(){
 }
 ```
 
-### babel 编译过程
+### Babel 编译过程
 
 ```js
 const fs = require('fs')
@@ -295,7 +297,6 @@ function Index(){
 
 1. `JS` 可以被打包工具直接编译，不需要额外转换，`jsx`需要通过 `babel` 编译，它是`React.createElement` 的语法糖，使用 `jsx`等价于`React.createElement`
 2. `jsx` 是 `js` 的语法扩展，允许在 `html`中写 `JS`。`JS` 是原生写法，需要通过 `script` 标签引入
-
 
 ### Q2. `React.createElement` 和 `React.cloneElement` 到底有什么区别?
 
@@ -428,9 +429,7 @@ function MyComponent() {  return <div dangerouslySetInnerHTML={createMarkup()} /
 
 这些内容都包含在`Fiber节点`中。
 
-所以，在组件`mount`时，`Reconciler`根据`JSX`描述的组件内容生成组件对应的`Fiber节点`。
-
-在`update`时，`Reconciler`将`JSX`与`Fiber节点`保存的数据对比，生成组件对应的`Fiber节点`，并根据对比结果为`Fiber节点`打上`标记`。
+所以，在组件`mount`时，`Reconciler`根据`JSX`描述的组件内容生成组件对应的`Fiber节点`。在`update`时，`Reconciler`将`JSX`与`Fiber节点`保存的数据对比，生成组件对应的`Fiber节点`，并根据对比结果为`Fiber节点`打上`标记`。
 
 ### Q6. 为什么 React 要用 JSX？
 

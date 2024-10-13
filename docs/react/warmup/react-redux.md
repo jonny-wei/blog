@@ -30,35 +30,234 @@ redux 可以作为发布订阅模式的一个具体实现。redux 都会创建�
 
 redux 应用了前端领域为数不多的中间件 compose ，那么 redux 的中间件是用来做什么的？ 那就是强化 dispatch ， Redux 提供了中间件机制，使用者可以根据需要来强化 dispatch 函数，传统的 dispatch 是不支持异步的，但是可以针对 Redux 做强化，于是有了 `redux-thunk`，`redux-actions` 等中间件，包括 dvajs 中，也写了一个 redux 支持 promise 的中间件。
 
-### 核心 api
+### 核心 API
+
+- createStore
+- combineReducers
+- applyMiddleware
 
 #### createStore
 
-createStore redux中通过 createStore 可以创建一个 Store ，使用者可以将这个 Store 保存传递给 React 应用
+createStore redux 中通过 createStore 可以创建一个 Store ，使用者可以将这个 Store 保存传递给 React 应用
 
 ```js
-const Store = createStore(rootReducer,initialState,middleware)
+const Store = createStore(reducer, initialState, middleware)
 ```
 
-- reducers ： redux 的 reducer ，如果有多个那么可以调用 combineReducers 合并。
+- reducer ： redux 的 reducer ，如果有多个那么可以调用 combineReducers 合并。
 - initialState ：初始化的 state 。
 - middleware ：如果有中间件，那么存放 redux 中间件。
 
-#### combineReducers
-
-正常状态可以会有多个 reducer ，combineReducers 可以合并多个reducer。
+模拟实现 createStore 核心：
 
 ```js
-/* 将 number 和 PersonalInfo 两个reducer合并   */
-const rootReducer = combineReducers({ number:numberReducer,info:InfoReducer })
+function createStore(reducer, initialState) {
+    // 初始化状态
+    let state = initialState;
+    // 存储订阅者（监听器）
+    const listeners = [];
+
+    // 获取当前状态
+    function getState() {
+        return state;
+    }
+
+    // 派发一个动作，触发状态更新（执行 reducer 和 通知状态的订阅者）
+    function dispatch(action) {
+        // 调用 reducer 更新状态
+        state = reducer(state, action);
+        // 通知所有订阅者
+        listeners.forEach(listener => listener());
+    }
+
+    // 订阅状态
+    function subscribe(listener) {
+        // 添加订阅者
+        listeners.push(listener);
+
+        // 返回取消订阅的函数
+        return () => {
+            const index = listeners.indexOf(listener);
+            if (index >= 0) {
+                listeners.splice(index, 1);
+            }
+        };
+    }
+
+    // 派发一个初始化动作，设置初始状态
+    dispatch({ type: '@@redux/INIT' });
+
+    // 返回 store 对象
+    return {
+        getState,
+        dispatch,
+        subscribe
+    };
+}
+```
+
+#### combineReducers
+
+正常状态可以会有多个 reducer ，combineReducers 可以合并多个 reducer。
+
+```js
+/* 将 number 和 PersonalInfo 两个 reducer 合并   */
+const reducers = combineReducers({ number:numberReducer, info:InfoReducer })
+```
+
+模拟实现 combineReducers 核心：
+
+```js
+// 合并多个 reducer 纯函数，返回合并后的 reducer
+function combineReducers(reducers) {
+    // 过滤掉非函数类型的 reducer
+    const finalReducers = {};
+    Object.keys(reducers).forEach(key => {
+        if (typeof reducers[key] === 'function') {
+            finalReducers[key] = reducers[key];
+        }
+    });
+
+    // 获取所有 reducer 的键名
+    const finalReducerKeys = Object.keys(finalReducers);
+
+    /**
+     * 根据动作更新状态。
+     *
+     * @param {Object} state - 当前状态。
+     * @param {Object} action - 动作对象。
+     * @returns {Object} - 新的状态。
+     */
+    return function combination(state = {}, action) {
+        let hasChanged = false;
+        const nextState = {};
+
+        // 遍历每个 reducer 并更新状态
+        for (let i = 0; i < finalReducerKeys.length; i++) {
+            const key = finalReducerKeys[i];
+            const reducer = finalReducers[key];
+            const previousStateForKey = state[key];
+            const nextStateForKey = reducer(previousStateForKey, action);
+
+            nextState[key] = nextStateForKey;
+            hasChanged = hasChanged || nextStateForKey !== previousStateForKey;
+        }
+
+        // 如果状态没有变化，返回原来的 state
+        return hasChanged ? nextState : state;
+    };
+}
 ```
 
 #### applyMiddleware
 
-applyMiddleware 用于注册中间件，支持多个参数，每一个参数都是一个中间件。每次触发 action ，中间件依次执行。
+applyMiddleware 高阶函数，用于注册中间件，支持多个参数，每一个参数都是一个中间件。每次触发 action ，中间件依次执行。
 
 ```js
 const middleware = applyMiddleware(logMiddleware)
+```
+
+模拟实现中间件注册函数:
+
+```js
+// 将中间件函数数组 middlewares 注册到 store，返回强化后的 store 对象
+function applyMiddleware(...middlewares) {
+    return (createStore) => (reducer, initialState) => {
+        // 创建原始 store
+        const store = createStore(reducer, initialState);
+        // 初始化 dispatch 函数
+        let dispatch = () => {};
+
+        // 创建中间件 API 对象
+        const middlewareAPI = {
+            getState: store.getState,
+            dispatch: (action) => dispatch(action)
+        };
+
+        // 将中间件应用到 middlewareAPI
+        const chain = middlewares.map(middleware => middleware(middlewareAPI));
+
+        // 组合中间件
+        dispatch = compose(...chain)(store.dispatch);
+
+        // 返回增强后的 store
+        return {
+            ...store,
+            dispatch
+        };
+    };
+}
+
+// 函数组合
+function compose(...funcs) {
+    if (funcs.length === 0) {
+        return (arg) => arg;
+    }
+    if (funcs.length === 1) {
+        return funcs[0];
+    }
+    return funcs.reduce((a, b) => (...args) => a(b(...args)));
+}
+```
+
+测试用例：
+
+```js
+// 定义一些简单的 reducers (纯函数)
+const counterReducer = (state = { count: 0 }, action) => {
+    switch (action.type) {
+        case 'INCREMENT':
+            return { ...state, count: state.count + 1 };
+        case 'DECREMENT':
+            return { ...state, count: state.count - 1 };
+        default:
+            return state;
+    }
+};
+
+const userReducer = (state = { name: '' }, action) => {
+    switch (action.type) {
+        case 'SET_NAME':
+            return { ...state, name: action.name };
+        default:
+            return state;
+    }
+};
+
+// 组合 reducers  入参为 { key：value } reducers 映射对象
+const rootReducer = combineReducers({
+    counter: counterReducer,
+    user: userReducer
+});
+
+// 创建 store
+const store = createStore(rootReducer);
+
+// 测试初始状态
+console.log(store.getState()); // 应该输出 { counter: { count: 0 }, user: { name: '' } }
+
+// 派发动作
+store.dispatch({ type: 'INCREMENT' });
+store.dispatch({ type: 'SET_NAME', name: 'John Doe' });
+
+// 测试状态变化
+console.log(store.getState()); // 应该输出 { counter: { count: 1 }, user: { name: 'John Doe' } }
+
+// 测试中间件
+const loggerMiddleware = (store) => (next) => (action) => {
+    console.log('Dispatching:', action);
+    const result = next(action);
+    console.log('Next state:', store.getState());
+    return result;
+};
+
+const middlewareEnhancedStore = createStore(
+    rootReducer,
+    applyMiddleware(loggerMiddleware)
+);
+
+middlewareEnhancedStore.dispatch({ type: 'INCREMENT' });
+middlewareEnhancedStore.dispatch({ type: 'SET_NAME', name: 'Jane Doe' });
 ```
 
 ## Redux 基本用法
@@ -304,7 +503,7 @@ export default connect(mapStateToProps)(Index)
 
 ```js
 // react-redux/src/components/Provider.js
-const ReactReduxContext =  React.createContext(null)
+const ReactReduxContext = React.createContext(null)
 function Provider({ store, context, children }) {
    /* 利用useMemo，跟据store变化创建出一个contextValue 包含一个根元素订阅器和当前store  */ 
   const contextValue = useMemo(() => {
@@ -315,6 +514,7 @@ function Provider({ store, context, children }) {
       subscription
     } /* store 改变创建新的contextValue */
   }, [store])
+
   useEffect(() => {
     const { subscription } = contextValue
     /* 触发trySubscribe方法执行，创建listens */
@@ -323,6 +523,7 @@ function Provider({ store, context, children }) {
       subscription.tryUnsubscribe()  // 卸载订阅
     } 
   }, [contextValue])  /*  contextValue state 改变出发新的 effect */
+
   const Context = ReactReduxContext
   return <Context.Provider value={contextValue}>{children}</Context.Provider>
 }
@@ -379,11 +580,122 @@ React-Redux 采用了层层订阅的思想，上述内容讲到 Provider 里面�
 
 ![redux3](/blog/images/react/redux3.png)
 
+### connect 原理
+
+实现一个简易版的 connect 高阶函数助于理解其原理：
+
+```js
+import React from 'react';
+import { Component } from 'react';
+
+/**
+ * 将 Redux store 与 React 组件连接起来。
+ *
+ * @param {Function} [mapStateToProps] - 将 store 中的状态映射到组件的 props。
+ * @param {Function} [mapDispatchToProps] - 将 dispatch 函数映射到组件的 props。
+ * @returns {Function} - 返回一个高阶组件函数，用于包装原始组件。
+ */
+function connect(mapStateToProps = state => ({}), mapDispatchToProps = dispatch => ({ dispatch })) {
+    return (WrappedComponent) => {
+        class Connect extends Component {
+            constructor(props) {
+                super(props);
+                this.state = {
+                    store: null
+                };
+            }
+
+            componentDidMount() {
+                // 获取上下文中的 store
+                this.setState({ store: this.context.store });
+
+                // 订阅 store 的变化
+                this.unsubscribe = this.context.store.subscribe(() => {
+                    this.forceUpdate();
+                });
+            }
+
+            componentWillUnmount() {
+                // 取消订阅
+                if (this.unsubscribe) {
+                    this.unsubscribe();
+                }
+            }
+
+            render() {
+                const { store } = this.state;
+                if (!store) {
+                    return null;
+                }
+
+                // 获取当前状态
+                const stateProps = mapStateToProps(store.getState(), this.props);
+
+                // 获取 dispatch 函数
+                const dispatchProps = mapDispatchToProps(store.dispatch, this.props);
+
+                // 合并所有 props
+                const finalProps = {
+                    ...this.props,
+                    ...stateProps,
+                    ...dispatchProps
+                };
+
+                return <WrappedComponent {...finalProps} />;
+            }
+        }
+
+        // 设置上下文类型，以便访问 store
+        Connect.contextType = React.createContext().Context;
+
+        return Connect;
+    };
+}
+
+// 创建一个 React Context 以提供 store
+const storeContext = React.createContext();
+
+export { connect, storeContext };
+```
+
+使用
+
+```js
+import React from 'react';
+import { connect, storeContext } from './path/to/connect'; // 引入 connect 和 storeContext
+
+// 定义 mapStateToProps
+const mapStateToProps = (state) => ({
+    count: state.count
+});
+
+// 定义 mapDispatchToProps
+const mapDispatchToProps = (dispatch) => ({
+    increment: () => dispatch({ type: 'INCREMENT' }),
+    decrement: () => dispatch({ type: 'DECREMENT' })
+});
+
+// 使用 connect 将 Counter 组件与 store 连接起来
+const ConnectedCounter = connect(mapStateToProps, mapDispatchToProps)(Counter);
+
+// 渲染应用
+function App() {
+    return (
+        <storeContext.Provider value={store}>
+            <ConnectedCounter />
+        </storeContext.Provider>
+    );
+}
+
+export default App;
+```
+
 ### connect 控制更新
 
 ```js
 // react-redux/src/components/connectAdvanced.js
-function connect(mapStateToProps,mapDispatchToProps){
+// 返回的是一个 HOC
+function connect(mapStateToProps, mapDispatchToProps){
     const Context = ReactReduxContext
     /* WrappedComponent 为connect 包裹的组件本身  */   
     return function wrapWithConnect(WrappedComponent){
@@ -391,6 +703,7 @@ function connect(mapStateToProps,mapDispatchToProps){
           /* 选择器  合并函数 mergeprops */
           return selectorFactory(store.dispatch, { mapStateToProps,mapDispatchToProps })
         }
+
         /* 负责更新组件的容器 */
         function ConnectFunction(props){
           /* 获取 context内容 里面含有 redux中store 和父级subscription */
@@ -437,12 +750,12 @@ function connect(mapStateToProps,mapDispatchToProps){
           }
           /* memo 优化处理 */
           const Connect = React.memo(ConnectFunction) 
-        return hoistStatics(Connect, WrappedComponent)  /* 继承静态属性 */
+          return hoistStatics(Connect, WrappedComponent)  /* 继承静态属性 */
     }
 }
 ```
 
-connect 的逻辑还是比较复杂的，我总结一下核心流程:
+connect 的逻辑还是比较复杂的，总结一下核心流程:
 
 1. connect 中有一个 selector 的概念，selector 有什么用？就是通过 mapStateToProps ，mapDispatchToProps ，把 redux 中 state 状态合并到 props 中，得到最新的 props 。
 2. 上述讲到过，每一个 connect 都会产生一个新的 Subscription ，和父级订阅器建立起关联，这样父级会触发子代的 Subscription 来实现逐层的状态派发。

@@ -2,9 +2,9 @@
 
 React Streaming SSR（流式服务端渲染） 出现之前 React 的服务端渲染是这样做的：
 
-- 通过 renderToString 获取相关数据并在服务端为页面运行客户端 JavaScript，提前在服务器渲染成 HTML。
-- 将此 HTML 提供给客户端，这样客户端能够在 JavaScript 渲染完成前展示基本的静态 HTML 内容，从而实现快速的 First Contentful Paint，减少白屏等待的时间。
-- 这时还没有完成， 我们仍然需要下载并执行客户端 JavaScript 以将 JavaScript 逻辑连接到服务端生成的 HTML 以使页面具有交互性（这个过程就是 “注水”）。Hydration 完成后才是一个正常的 React 应用。
+- 服务端获取渲染所需数据，通过 ReactDOMServer.renderToString 在服务端将组件渲染成字符串形式的 HTML。
+- 将此 HTML 发送给客户端，这样客户端能够在 JavaScript 渲染完成前展示基本的静态 HTML 内容，从而实现快速的 FCP，减少白屏等待的时间。
+- 这时还没有完成， 我们仍然需要下载并执行客户端 JavaScript 以将 JavaScript 逻辑连接到服务端生成的 HTML 以使页面具有交互性（这个过程就是 “注水”）。使用 ReactDOM.hydrate 方法将服务端渲染的 HTML 与客户端 React 代码合并。 Hydration 完成后才是一个正常的 React 应用。
 
 但是这类 SSR 同样存在**弊端**：
 
@@ -14,7 +14,7 @@ React Streaming SSR（流式服务端渲染） 出现之前 React 的服务端�
 
 React 18 提供了一种新的 SSR 渲染模式： Streaming SSR。通过 Streaming SSR，实现以下两个功能，解决上述的缺陷：
 
-- **Streaming HTML**（流式渲染）：服务端可以**分段传输 HTML 到浏览器**，而不是像 React 18 以前一样，需要等待服务端渲染完成整个页面后才返回给浏览器。这样，浏览器可以更快的启动 HTML 的渲染，提高 FP、FCP 等性能指标。
+- **Streaming HTML**（流式 HTML）：服务端可以**分段传输 HTML 到浏览器**，而不是像 React 18 以前一样，需要等待服务端渲染完成整个页面后才返回给浏览器。这样，浏览器可以更快的启动 HTML 的渲染，提高 FP、FCP 等性能指标。
 - **Selective Hydration**（选择性注水）：在浏览器端 hydration 阶段，可以**只对已经完成渲染的区域做 hydration**，而不需要等待整个页面渲染完成、所有组件的 JS  bundle 加载完成，才能开始 hydration。这样可以更早的对已经完成渲染的区域做事件绑定，从而让页面获得更好的可交互性。
 
 React 中的 SSR 总是发生在几个步骤中：
@@ -30,7 +30,7 @@ React 中的 SSR 总是发生在几个步骤中：
 
 ### renderToNodeStream
 
-早在 React 16 中同样有一个用于流式传输的 API`renderToNodeStream`来返回一个可读的流（然后就可以将这个流 pipe 给 node.js 的 response 流）给客户端渲染，比原始的`renderToString`有着更短的 TFFB 时间（发出页面请求到接收到应答数据第一个字节所花费的毫秒数）。但是`renderToNodeStream`需要从 DOM 树自顶向下开始渲染，并不能等待某个组件的数据然后渲染其他部分的 HTML。
+早在 React 16 中同样有一个用于流式传输的 API`renderToNodeStream`来返回一个可读的流（然后就可以将这个流 pipe 给 node.js 的 response 流）给客户端渲染，比原始的`renderToString`有着更短的 TFFB 时间（发出页面请求到接收到应答数据第一个字节所花费的毫秒数）。但是`renderToNodeStream`需要从 DOM 树自顶向下开始渲染，并不能等待某个组件的数据然后渲染其他部分的 HTML。无法在流的部分内容准备好后立即发送部分内容，而必须等待整个流结束。
 
 ```js
 app.get("/", (req, res) => {
@@ -43,7 +43,7 @@ app.get("/", (req, res) => {
   stream.on("end", () => {
     // 流结束后再写入剩余的HTML部分
     res.write("</div></body></html>");
-    res.end();
+    res.end(); // 必须结束后才发送
   });
 });
 ```
@@ -93,7 +93,9 @@ function render(url, res) {
 }
 ```
 
-React Streaming SSR ，会先传输所有 `<Suspense>` 以上层级的可以同步渲染得到的 html 结构，当 `<Suspense>` 内的组件渲染完成后，会把这部分组件对应的渲染结果，连同一个 JS 函数再传输到浏览器端，这个 JS 函数会更新 dom ，得到最终的完整 HTML 结构。只有当 `<Suspense>` 的 children 需要被异步渲染时，SSR 返回的 HTML 才会被分段传输。
+React Streaming SSR，服务器会首先渲染不依赖于异步操作的组件，并将这些部分的 HTML 流式传输到客户端。对于被`<Suspense>` 包裹的组件，如果它们依赖于异步数据，服务器会等待这些数据变得可用，然后将这部分 HTML 和相关的 hydration 代码（一个 JS 函数）一起发送到客户端。客户端接收到这些代码后，会通过 hydration 过程将它们与 React 的内部状态同步并更新 DOM，得到完整的 HTML 结构使得应用变得可交互。如果 `<Suspense>` 的 children 不需要异步渲染，那么服务器渲染的 HTML 将一次性发送到客户端，只有需要异步渲染时 HTML 才会被分段传输。这样，可以优先传输那些不需要等待异步数据或代码加载的组件的 HTML，从而提升用户体验。
+
+此外，React 18 还引入了选择性 hydration 的概念，允许客户端在 JS 代码加载过程中，就开始对已经接收到的 HTML 进行 hydration。这意味着即使应用的某些部分的 JS 还未加载完成（不可交互），用户也可以开始与页面的其他部分交互。
 
 ## 选择性注水 （Selective Hydration）
 
@@ -200,7 +202,7 @@ React 18 弃用了 `renderToNodeStream` API，取而代之的是一个名为 `re
 
 **客户端选择性注水**：即使 HTML 被流式传输，页面也不会可交互的，除非页面的整个 JavaScript 被下载完。这就是选择性注水的用武之地。在客户端渲染期间避免页面上出现大型包的一种方法就是通过 `React.lazy` 进行代码拆分。它指定了应用的某个特定部分不需要同步加载，并且打包工具会将其拆分为单独的 `<script>` 标签。`React.lazy` 的限制是它不适用于服务端渲染。但在 React 18 中，`<Suspense>` 除了允许流式传输 HTML 之外，它还可以为应用的其余部分注水。所以，现在 `React.lazy` 在服务端开箱即用。当你将 lazy 组件包裹在 `<Suspense>` 中时，不仅告诉 React 你希望它被流式传输，而且即使包裹在 `<Suspense>` 中的组件仍在被流式传输，也允许其余部分注水。因此，在开始注水之前，不再需要等待所有 JavaScript 下载完毕。
 
-### React Server components
+### React Server Components(RSC)
 
 上面，我们介绍了如何通过将应用分解为更小的单元并分别对它们进行流式处理和选择性注水来提高服务端渲染性能。但是，如果有一种方法可以完全不需要对应用的某些部分进行注水呢？这就是全新的 Server Components 的用武之地。它旨在补充服务端渲染，允许拥有仅在服务端渲染且没有交互性的组件。
 
@@ -217,7 +219,6 @@ React 18 弃用了 `renderToNodeStream` API，取而代之的是一个名为 `re
 - **服务端组件与 Suspense 集成**：服务器组件可以通过 `<Suspense>` 逐步流式传输，允许我们在等待页面剩余部分加载时创建加载状态并快速显示重要内容。
 
 目前，服务端组件仍处于 alpha 阶段，而具有新 Suspense 架构的流式 SSR 所需的用于数据获取的 Suspense 还没有正式发布，将在 React 18 的小更新中发布。
-
 
 [如何在React18中利用Suspense实现服务端渲染](https://mp.weixin.qq.com/s/1joPNPZytROexglKv4IcrA)
 

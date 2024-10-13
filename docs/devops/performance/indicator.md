@@ -462,6 +462,9 @@ Google 提供了各个性能指标的基准线，有一定的参考意义。为�
 
 ![indicator6](/blog/images/devops/indicator6.png)
 
+[一文搞懂得物前端监控](https://mp.weixin.qq.com/s/bruENZY_hyNAetmxuc33SA)
+
+[前端白屏检测](https://mp.weixin.qq.com/s/06HcyA5KwMOUJxTtCoVbkQ)
 
 [如何衡量一个站点的性能好坏](https://juejin.cn/post/7130830761137012766#heading-1)
 

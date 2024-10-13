@@ -39,7 +39,6 @@ class Article extends Component {
   }
   // ...
 }
-复制代码
 ```
 
 看起来没什么问题，但这段代码还没有实现数据更新，我们再改一下：
@@ -116,7 +115,7 @@ function Article({ id }) {
 
 ## Suspense
 
-React 16.6 新增了 `<Suspense>` 组件，让你可以“等待”目标代码加载，并且可以直接指定一个加载的界面（像是个 spinner），让它在用户等待的时候显示。
+`<Suspense>` 组件，让你可以“等待”目标代码加载，并且可以直接指定一个加载的界面（像是个 spinner），让它在用户等待的时候显示。
 
 目前，Suspense 仅支持的使用场景是：通过 `React.lazy` 动态加载组件
 

@@ -4,7 +4,7 @@
 
 最新 React 18 中，用 useSyncExternalStore 代替了 useMutableSource 。具体内容可以参考 [useMutableSource → useSyncExternalStore](https://link.juejin.cn/?target=https%3A%2F%2Fgithub.com%2Freactwg%2Freact-18%2Fdiscussions%2F86) 。
 
-在 concurrent 模式下，render 可能会被执行多次，那么在读取外部数据源的会存在一个问题，比如一个 render 过程中读取了外部数据源状态 1 ，那么中途遇到更高优先级的任务，而中断了此次更新，就在此时改变了外部数据源，然后又恢复了此次更新，那么接下来又读取了数据源，由于中途发生了改变，所以这次读取的是外部数据源状态 2 ，那么一次更新中出现了这种表现不一致的情况。这个问题叫做 tearing 。
+在 concurrent 模式下，render 可能会被执行多次，那么在读取外部数据源的会存在一个问题，比如一个 render 过程中读取了外部数据源状态 1，那么中途遇到更高优先级的任务，而中断了此次更新(挂起)，就在此时改变了外部数据源，然后又恢复了此次更新，那么接下来又读取了数据源，由于中途发生了改变，所以这次读取的是外部数据源状态 2，那么一次更新中出现了这种表现不一致的情况。这个问题叫做 tearing 。
 
 [可在控制流中调用的 Hook - 实验性](https://mp.weixin.qq.com/s/DZVMvq_wwtjjCckci-tVaQ)
 
@@ -15,7 +15,6 @@ useSyncExternalStore 能够让 React 组件在 concurrent 模式下安全地有�
 现在用 useSyncExternalStore 不在需要把订阅到更新流程交给组件处理。如下：
 
 ```js
-)
 function App(){
      const state = useSyncExternalStore(store.subscribe,store.getSnapshot)
      return <div>...</div>

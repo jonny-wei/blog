@@ -28,7 +28,7 @@ Dead Code 一般具有以下几个特征
 
 ## 原理
 
-Webpack 中，Tree-shaking 的实现，一是需要先 「**标记**」 出模块导出值中哪些没有被用过；二是使用代码压缩插件 —— 如 [Terser](https://link.juejin.cn/?target=https%3A%2F%2Fwww.npmjs.com%2Fpackage%2Fterser-webpack-plugin) 删掉这些没被用到的导出变量。标记的效果就是删除那些没有被其它模块使用的“**导出语句**”，真正执行“**Shaking**”操作的是 Terser 插件。
+Webpack 中，Tree-shaking 的实现，一是需要先 「**标记**」 出模块导出值中哪些没有被用过；二是使用代码压缩插件 —— 如 [Terser](https://www.npmjs.com/package/terser-webpack-plugin) 删掉这些没被用到的导出变量。标记的效果就是删除那些没有被其它模块使用的“**导出语句**”，真正执行“**Shaking**”操作的是 Terser 插件。
 
 ::: tip 注意
 标记功能需要配置 `optimization.usedExports = true` 开启
@@ -47,9 +47,9 @@ Tree-Shaking 的实现大致上可以分为三个步骤：
 1. 将模块的所有 ESM 导出语句转换为 Dependency 对象，并记录到 `module` 对象的 `dependencies` 集合，转换规则：
    - 具名导出转换为 `HarmonyExportSpecifierDependency` 对象；
    - `default` 导出转换为 `HarmonyExportExpressionDependency` 对象。
-2. 所有模块都编译完毕后，触发 [compilation.hooks.finishModules](https://link.juejin.cn/?target=https%3A%2F%2Fwebpack.js.org%2Fapi%2Fcompilation-hooks%2F%23finishmodules) 钩子，开始执行 [FlagDependencyExportsPlugin](https://link.juejin.cn/?target=https%3A%2F%2Fgithub1s.com%2Fwebpack%2Fwebpack%2Fblob%2FHEAD%2Flib%2FFlagDependencyExportsPlugin.js) 插件回调；
-3. `FlagDependencyExportsPlugin` 插件 [遍历](https://link.juejin.cn/?target=https%3A%2F%2Fgithub1s.com%2Fwebpack%2Fwebpack%2Fblob%2FHEAD%2Flib%2FFlagDependencyExportsPlugin.js%23L51-L53) 所有 `module` 对象；
-4. [遍历](https://link.juejin.cn/?target=https%3A%2F%2Fgithub1s.com%2Fwebpack%2Fwebpack%2Fblob%2FHEAD%2Flib%2FFlagDependencyExportsPlugin.js%23L331-L333) `module` 对象的 `dependencies` 数组，找到所有 `HarmonyExportXXXDependency` 类型的依赖对象，将其转换为 `ExportInfo` 对象并记录到 ModuleGraph 对象中。
+2. 所有模块都编译完毕后，触发 [compilation.hooks.finishModules](https://webpack.js.org/api/compilation-hooks/#finishmodules) 钩子，开始执行 [FlagDependencyExportsPlugin](https://github1s.com/webpack/webpack/blob/HEAD/lib/FlagDependencyExportsPlugin.js) 插件回调；
+3. `FlagDependencyExportsPlugin` 插件 [遍历](https://github1s.com/webpack/webpack/blob/HEAD/lib/FlagDependencyExportsPlugin.js#L51-L53) 所有 `module` 对象；
+4. [遍历](https://github1s.com/webpack/webpack/blob/HEAD/lib/FlagDependencyExportsPlugin.js#L331-L333) `module` 对象的 `dependencies` 数组，找到所有 `HarmonyExportXXXDependency` 类型的依赖对象，将其转换为 `ExportInfo` 对象并记录到 ModuleGraph 对象中。
 
 经过 `FlagDependencyExportsPlugin` 插件处理后，所有 ESM 风格的模块导出信息都会记录到 ModuleGraph 体系内，后续操作就可以从 ModuleGraph 中直接读取出模块的导出值。
 

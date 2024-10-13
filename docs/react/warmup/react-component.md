@@ -1,6 +1,6 @@
 # React 组件及通信
 
-**React 组件本质**：UI + update + 常规的类和函数 = React 组件。组件承载了渲染视图的 UI 和更新视图的 setState 、 useState 等方法。React 在底层逻辑上会像正常实例化类和正常执行函数那样处理的组件。Component 加入updater, 通过 updater 控制 state 和更新视图。组件的数据结构本质是一个函数或者类，当你使用元素标签的方式进行调用时，函数或者类会被执行，最终返回一个 React 元素。
+**React 组件本质**：UI + update + 常规的类和函数 = React 组件。组件承载了渲染视图的 UI 和更新视图的 setState 、 useState 等方法。React 在底层逻辑上会像正常实例化类和正常执行函数那样处理的组件。Component 加入 updater, 通过 updater 控制 state 和更新视图。组件的数据结构本质是一个函数或者类，当你使用元素标签的方式进行调用时，函数或者类会被执行，最终返回一个 React 元素。
 
 ## React 组件
 
@@ -23,7 +23,6 @@ function constructClassInstance(
 }
 
 //函数组件的执行
-
 function renderWithHooks(
   current,          // 当前函数组件对应的 `fiber`， 初始化
   workInProgress,   // 当前正在工作的 fiber 对象
@@ -32,7 +31,7 @@ function renderWithHooks(
   secondArg,        // 函数组件其他参数
   nextRenderExpirationTime, //下次渲染过期时间
 ){
-     /* 执行我们的函数组件，得到 return 返回的 React.element对象 */
+     /* 执行我们的函数组件，得到 return 返回的 React.element 对象 */
      let children = Component(props, secondArg);
 }
 ```
@@ -61,7 +60,7 @@ Component.prototype.forceUpdate = function(callback) {
 }
 ```
 
-Component 底层 React 的处理逻辑是，类组件执行构造函数过程中会在实例上绑定 props 和 context ，初始化置空 refs 属性，原型链上绑定setState、forceUpdate 方法。对于 updater，React 在实例化类组件之后会单独绑定 update 对象
+Component 底层 React 的处理逻辑是，类组件执行构造函数过程中会在实例上绑定 props 和 context ，初始化置空 refs 属性，原型链上绑定 setState、forceUpdate 方法。对于 updater，React 在实例化类组件之后会单独绑定 update 对象。
 
 如果没有在 constructor 的 super 函数中传递 props，那么接下来 constructor 执行上下文中就获取不到 props ，这是为什么呢？
 
@@ -103,7 +102,7 @@ Index.prototype.handleClick = ()=> console.log(222) /* 方法: 绑定在 Index �
 
 上述绑定了两个 handleClick ，那么点击 div 之后会打印什么呢？结果是 111 。因为在 class 类内部，箭头函数是直接绑定在实例对象上的，而第二个 handleClick 是绑定在 prototype 原型链上的，它们的优先级是：实例对象上方法属性 > 原型链对象上方法属性。
 
-对于 pureComponent 会在 React 渲染优化章节，详细探讨。
+对于 pureComponent 会在 [React 渲染优化](/react/warmup/react-render.html#react-渲染控制)，详细探讨。
 
 ### 函数组件
 
@@ -118,7 +117,7 @@ function Index(){
 
 不要尝试给函数组件 prototype 绑定属性或方法，即使绑定了也没有任何作用，因为通过上面源码中 React 对函数组件的调用，是采用直接执行函数的方式，而不是通过 new 的方式。
 
-那么，函数组件和类组件本质的区别是什么呢？
+那么，**函数组件和类组件本质的区别**是什么呢？
 
 对于类组件来说，底层只需要实例化一次，实例中保存了组件的 state 等状态。对于每一次更新只需要调用 render 方法以及对应的生命周期就可以了。但是在函数组件中，每一次更新都是一次新的函数执行，一次函数组件的更新，里面的变量会重新声明。为了能让函数组件可以保存一些状态，执行一些副作用钩子，React Hooks 应运而生，它可以帮助记录 React 中组件的状态，处理一些额外的副作用。
 
@@ -130,7 +129,7 @@ function Index(){
 
 ```js
 /* 人类 */
-class Person extends React.Component{
+class Person extends React.Component {
     constructor(props){
         super(props)
         console.log('hello , i am person')
@@ -146,7 +145,7 @@ class Person extends React.Component{
     }
 }
 /* 程序员 */
-class Programmer extends Person{
+class Programmer extends Person {
     constructor(props){
         super(props)
         console.log('hello , i am Programmer too')
@@ -215,7 +214,7 @@ function Timer({content: Content}) {
     useEffect(() => {
         setTimeout(() => {
             changeTime((new Date).toLocaleTimeString())
- }, 1000)
+        }, 1000)
     }, [time])
 
     return (
@@ -246,7 +245,7 @@ function Timer({renderContent}) {
     useEffect(() => {
         setTimeout(() => {
             changeTime((new Date).toLocaleTimeString())
- }, 1000)
+        }, 1000)
     }, [time])
 
   // 这里直接调用传入的 renderContent 函数
@@ -328,7 +327,7 @@ function Father(){
 }
 ```
 
-### event bus事件总线
+### event bus 事件总线
 
 当然利用 eventBus 也可以实现组件通信，但是在 React 中并不提倡用这种方式，我还是更提倡用 props 方式通信。如果说非要用 eventBus，我觉得它更适合用 React 做基础构建的小程序，比如 Taro。接下来将上述 demo 通过 eventBus 方式进行改造。
 
@@ -423,24 +422,24 @@ export default function Father(){
 
 #### 2. 函数组件 forwardRef + useImperativeHandle
 
-对于函数组件，本身是没有实例的，但是 React Hooks 提供了，useImperativeHandle 一方面第一个参数接受父组件传递的 ref 对象，另一方面第二个参数是一个函数，函数返回值，作为 ref 对象获取的内容。一起看一下 useImperativeHandle 的基本使用。
+对于函数组件，本身是没有实例的，但是 React Hooks 提供了 useImperativeHandle 其第一个参数接受父组件传递的 ref 对象，第二个参数是一个函数，函数返回值，作为 ref 对象获取的内容。
 
-useImperativeHandle 接受三个参数：
+useImperativeHandle 则是用来自定义暴露给父组件的 ref 对象。它通常与 forwardRef 一起使用，让你可以控制子组件暴露给父组件的哪些方法和值。通过 useImperativeHandle，你可以返回一个对象，该对象包含子组件想要暴露给父组件的方法和属性。useImperativeHandle 接受三个参数：
 
-- 第一个参数 ref : 接受 forWardRef 传递过来的 ref 。
-- 第二个参数 createHandle ：处理函数，返回值作为暴露给父组件的 ref 对象。
-- 第三个参数 deps :依赖项 deps，依赖项更改形成新的 ref 对象。
+- 第一个参数 ref：接受 forwardRef 传递过来的 ref 。
+- 第二个参数 createHandle：处理函数，返回值作为暴露给父组件的 ref 对象。
+- 第三个参数 deps：依赖项 deps，依赖项更改形成新的 ref 对象。
 
-forwardRef + useImperativeHandle 可以完全让函数组件也能流畅的使用 Ref 通信。其原理图如下所示：
+forwardRef 是一个高阶函数，它接受一个函数组件或类组件，并返回一个新的组件。这个新的组件在渲染时会接收一个额外的 ref 参数，并将其传递给子组件 `fatherRef.current = sonRef.current`，组件通过 ref 就可以直接访问这些节点或组件。如果需要自定义 ref 的行为，可以使用 useImperativeHandle。forwardRef + useImperativeHandle 可以完全让函数组件也能流畅的使用 Ref 通信。其原理图如下所示：
 
 ![ref4](/blog/images/react/ref4.png)
 
 ```js
 // 子组件
-function Son (props,ref) {
+function Son (props, ref) {
     const inputRef = useRef(null)
     const [ inputValue , setInputValue ] = useState('')
-    useImperativeHandle(ref,()=>{
+    useImperativeHandle(ref, ()=>{
        const handleRefs = {
            onFocus(){              /* 声明方法用于聚焦input框 */
               inputRef.current.focus()
@@ -450,25 +449,26 @@ function Son (props,ref) {
            }
        }
        return handleRefs
-    },[])
+    }, [])
     return <div>
         <input placeholder="请输入内容"  ref={inputRef}  value={inputValue} />
     </div>
 }
 
-const ForwarSon = forwardRef(Son)
+const ForwardSon = forwardRef(Son)
+
 // 父组件
-class Index extends React.Component{
-    cur = null
-    handerClick(){
-       const { onFocus , onChangeValue } =this.cur
+class Index extends React.Component {
+    sonInstance = null
+    handlerClick(){
+       const { onFocus , onChangeValue } = this.sonInstance
        onFocus() // 让子组件的输入框获取焦点
        onChangeValue('let us learn React!') // 让子组件input  
     }
     render(){
         return <div style={{ marginTop:'50px' }} >
-            <ForwarSon ref={cur => (this.cur = cur)} />
-            <button onClick={this.handerClick.bind(this)} >操控子组件</button>
+            <ForwardSon ref={cur => (this.sonInstance = cur)} />
+            <button onClick={this.handlerClick.bind(this)} >操控子组件</button>
         </div>
     }
 }
@@ -528,25 +528,25 @@ class Index extends React.Component{
 - 无生命周期方法
 - 无法控制组件的重渲染，因为无法使用 `shouldComponentUpdate` 方法，当组件接受到新的属性时则会重渲染
 
-**总结：** 组件内部状态且与外部无关的组件，可以考虑用状态组件，这样状态树就不会过于复杂，易于理解和管理。当一个组件不需要管理自身状态时，也就是无状态组件，应该优先设计为函数组件。比如自定义的 `<Button/>`、 `<Input />` 等组件。
+**总结：** 对于像 `<Button />`、`<Input />`这样的组件，如果它们只是基于 props 渲染 UI，而不包含自己的状态逻辑，应该优先设计为函数组件。使用函数组件可以减少代码量，提高性能，因为它们更轻量级。对于无状态组件，可以使用 React.memo 进行包装，以避免不必要的渲染。
 
 #### 有状态组件
 
-在无状态组件的基础上，如果组件内部包含状态（state）且状态随着事件或者外部的消息而发生改变的时候，这就构成了有状态组件（Stateful Component）。有状态组件通常会带有生命周期（Lifecycle），用以在不同的时刻触发状态的更新。这种组件也是通常在写业务逻辑中最经常使用到的，根据不同的业务场景组件的状态数量以及生命周期机制也不尽相同。
+在无状态组件的基础上，如果组件内部包含状态且状态随着事件或者外部的消息而发生改变的时候，这就构成了有状态组件（Stateful Component）。有状态组件通常会带有生命周期（Lifecycle），用以在不同的时刻触发状态的更新。这种组件也是通常在写业务逻辑中最经常使用到的，根据不同的业务场景组件的状态数量以及生命周期机制也不尽相同。
 
 **特点：**
 
-- 是类组件
+- 是类组件或带有 hooks 的函数组件
 - 有继承
-- 可以使用this
-- 可以使用react的生命周期
+- 可以使用 this
+- 可以使用 react 的生命周期
 - 使用较多，容易频繁触发生命周期钩子函数，影响性能
-- 内部使用 state，维护自身状态的变化，有状态组件根据外部组件传入的 props 和自身的 state进行渲染。
+- 内部使用 state，维护自身状态的变化，有状态组件根据外部组件传入的 props 和自身的 state 进行渲染。
 
 **使用场景：**
 
 - 需要使用到状态的。
-- 需要使用状态操作组件的（无状态组件的也可以实现新版本react hooks也可实现）
+- 需要使用状态操作组件的（无状态组件的也可以实现新版本 react hooks 也可实现）
 
 **总结：** 类组件可以维护自身的状态变量，即组件的 state ，类组件还有不同的生命周期方法，可以让开发者能够在组件的不同阶段（挂载、更新、卸载），对组件做更多的控制。类组件则既可以充当无状态组件，也可以充当有状态组件。当一个类组件不需要管理自身状态时，也可称为无状态组件。
 
@@ -606,5 +606,9 @@ class NameForm extends React.Component {
 - 父子通信：`props/props callback`，`context`，`ref`，`event bus`，`状态管理库`。
 - 兄弟通信：`event bus`，`公共父组件 context`，`状态管理库`
 - 隔代（跨级）通信：`event bus`，`context`,`状态管理库`
+
+### Q4. 函数组件和类组件本质的区别是什么？
+
+对于类组件来说，底层只需要实例化一次，实例中保存了组件的 state 等状态。对于每一次更新只需要调用 render 方法以及对应的生命周期就可以了。但是在函数组件中，每一次更新都是一次新的函数执行，一次函数组件的更新，里面的变量会重新声明。为了能让函数组件可以保存一些状态，执行一些副作用钩子，React Hooks 应运而生，它可以帮助记录 React 中组件的状态，处理一些额外的副作用。
 
 [React 组件通信](https://juejin.cn/post/6914464070506643470#heading-14)

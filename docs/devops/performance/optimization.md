@@ -174,3 +174,6 @@ CLS较差的常见原因及优化手段：
 - 使用 `Search Console’s Core Web Vitals report`查看网站功能整体情况
 - 使用 `Web Vitals 扩展`方便的看页面核心指标情况
 - 使用**前端监控平台**查看线上运行性能指标，全链路优化。
+
+
+[前端监控稳定性数据分析实践](https://mp.weixin.qq.com/s/QA6lY7JSlTQgWCoGS-aT8A)
