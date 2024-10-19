@@ -122,3 +122,7 @@ module.exports = {
   ],
 };
 ```
+
+## 性能优化总结
+
+![optimization2](/blog/images/devops/optimization2.png)

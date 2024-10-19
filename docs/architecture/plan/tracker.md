@@ -166,7 +166,6 @@ sendBeacon 是异步的，不会影响当前页到下一个页面的跳转速度
 - FiberNode 相关的属性，比如可以通过 child、return、sibling 三个指针来对 FiberNode 树进行遍历，memoizedProps 和 memoizedState 可以用来替代组件的 props 和 state 等；
 - 使用 babel 插件对代码进行改写，解决组件名称被混淆的问题。
 
-## SDK 设计
 
 [vivo积分任务体系的架构演进](https://mp.weixin.qq.com/s/kbAQTP1JeeDoTt-kId1Nog)
 

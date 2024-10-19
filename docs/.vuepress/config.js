@@ -23,6 +23,7 @@ const sidebar = {
         "javascript/proxy-reflect",
         "javascript/module",
         "javascript/decorator",
+        "javascript/ts"
       ],
     },
     {

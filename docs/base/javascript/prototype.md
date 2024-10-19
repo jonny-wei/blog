@@ -57,7 +57,7 @@ Object.getPrototypeOf(person) <===> Person.prototype
 
 ## 原型链
 
-当读取实例对象的属性时，如果找不到，就会查找与该对象关联的原型对象中的属性，如果还查不到，就去找原型的原型，一直找到为止，如果还找不到就是 null。在此过程中，由互相关联的原型组成的链状结构就是 **原型链**。
+当读取实例对象的属性时，如果找不到，就会查找与该对象关联的原型对象中的属性，如果还查不到，就去找原型的原型，一直找到为止，如果还找不到就是 null（也是对象）。在此过程中，由互相关联的原型组成的链状结构就是 **原型链**。
 
 ![原型/实例/构造函数/原型链关系图](/blog/images/javascript/prototype2.png)
 
@@ -72,11 +72,12 @@ person.constructor <===> Person.prototype.constructor <===> Persion
 ::: tip 注意
 
 - 在原型链中查找属性或方法，如果没有查找到相关属性或方法，返回的是 undefined，表示原型链中没有该属性或方法。
-- 而通过访问原型链中的原型对象，到达原型链终点，即 Object.prototype 的值为 null。
-- 通过 instanceof 操作符可以确定原型与实例的关系，判断一个实例是否属于某种类型。instanceof 操作符会递归查找原型链直到找到了或者到达顶层为止。
-- 当通过字面量方式创建对象时，它的原型就是 Object.prototype。
-- 通过 Object.create() 方式创建的对象会以传入的对象参数为对象的原型。
-- hasOwnProperty 判断对象的属性是否属于原型链
+- 原型链的末端是 Object.prototype，因为 Object 是所有其他对象的基类。Object.prototype 的原型是 null，这意味着它没有自己的原型，因此原型链在这里结束。当沿着原型链查找属性时，如果到达了 Object.prototype 仍然没有找到该属性，那么最终的返回值将是 `undefined`，而不是 null。
+- 当通过字面量方式创建对象时，它的原型就是 `Object.prototype`。
+- 通过 `Object.create()` 方式创建的对象会以传入的对象参数为对象的原型。
+- 通过 `Object.getPrototypeOf(obj)` 方法可以获取对象的原型（`obj.__proto__` 已废弃）。
+- 通过 `instanceof` 操作符可以确定原型与实例的关系，判断一个实例是否属于某种类型。instanceof 操作符会递归查找原型链直到找到了或者到达顶层为止。
+- 通过 `obj.hasOwnProperty('property')` 可以判断对象自身是否包含某个属性，不包括原型链上的属性。 而通过`'property' in obj` 可以判断对象自身或其原型链上是否包含某个属性。
 :::
 
 ## 问题
@@ -133,6 +134,8 @@ ES6 之前不能直接操作隐式原型，也不推荐你这么做。原因：�
 
 `__proto__` 属性已在 ECMAScript 6 语言规范中标准化，用于确保 Web 浏览器的兼容性。它不被推荐使用, 现在更推荐使用 `Object.getPrototypeOf/Reflect.getPrototypeOf` 和 `Object.setPrototypeOf/Reflect.setPrototypeOf`（尽管如此，设置对象的 `[[Prototype]]`是一个缓慢的操作，如果性能是一个问题，应该避免）。
 
+虽然可以修改原型对象，但这种做法通常不推荐，特别是在对象已经被实例化之后。修改原型对象会影响所有基于该原型创建的对象实例，这可能会导致不可预测的副作用和难以追踪的错误。此外，修改内置对象的原型（如Array.prototype或Object.prototype）可能会导致与第三方库的冲突，因为这些库可能依赖于原型对象的原始行为。如果你需要添加方法或属性，最好直接在构造函数中添加。如果你需要修改对象的行为，最好创建一个新的方法或属性，而不是修改现有的原型对象。
+
 ### Q3. new 一个对象发生了什么？
 
 new 关键词创建一个用户定义的对象类型的实例或具有构造函数的内置对象类型之一。
@@ -148,14 +151,14 @@ new 一个对象发生了什么？
 - （2）设置这个新对象的原型为构造函数的原型（设置对象的原型属性）
 - （3）执行构造函数，设置构造函数的 this 指向为新创建的对象，执行构造函数中定义的行为。（确定 this 指向）
 - （4）返回值处理
-  - 如果构造函数返回值是**引用类型**，则**返回构造函数的返回值**。构造函数返回了一个对象，在实例中只能访问返回的对象中的属性
-  - 如果构造函数的返回值是**基本类型**，则**返回新创建的对象**。尽管有返回值，但是相当于没有返回值进行处理。
+  - 如果构造函数返回值是**引用类型**，则**返回执行构造函数后的返回值**。构造函数返回了一个对象，在实例中只能访问返回的对象中的属性
+  - 如果构造函数的返回值是**基本类型(undefined、null、string、number、boolean、symbol、bigint(大于 2^53 - 1 的整数))**，则**返回新创建的对象**。尽管有返回值，但是相当于没有返回值进行处理。
 
 实现：
 
 ```js
 /**
- * 方法一 （推荐）
+ * 方法一
  * 
  * 工厂方法实现 new
  * objectFactory(constructor, ...restParams)
@@ -173,22 +176,17 @@ function myNew1() {
   // 区别：
   // 一个能访问的构造函数原型上的属性和方法 - 原型链
   // 一个能访问到构造函数本身上的属性和方法 - 借助 apply 改变 this 指向
-  obj.__proto__ = con.prototype; 
+  obj.__proto__ = con.prototype; // Object.setPrototypeOf(obj, con.prototype)
   // 绑定this，执行构造函数，使用 apply 借用构造函数，改变构造函数 this 的指向到新建的对象，这样 obj 就可以访问到构造函数中的属性
   // 执行并返回结果，arguments 数组经过上面 shift 的处理已经只剩下参数了，shift 可改变原数组 arguments
   let result = con.apply(obj, arguments);
-  // 确保 new 出来的是个对象
-  // 如果构造函数返回值是引用类型，则返回构造函数的返回值。构造函数返回了一个对象，在实例 中只能访问返回的对象中的属性
-  // 如果构造函数的返回值是基本类型，则返回新创建的对象。尽管有返回值，但是相当于没有返回值进行处理。
-  // 所以我们还需要判断返回的值是不是一个对象，如果是一个对象，我们就返回这个对象，如果没有，我们该返回什么就返回什么
-  // 返回值处理
-  // 当构造函数的返回值是基本类型时，不做处理，返回obj
-  // 当构造函数的返回值是引用类型时，返回结果
-  return typeof result === "object" ? result : obj;
+  // 返回值处理 确保 new 出来的是个对象
+  // 如果执行构造函数后返回的是一个对象且不是null，则返回该对象，否则返回创建的对象
+  return (typeof result === 'object' && result !== null) ? result : : obj;
 }
 
 /**
- * 方法二
+ * 方法二 （推荐）
  * @param {} constructor 
  * @param  {...any} restParams 
  * @returns 
@@ -197,11 +195,11 @@ function myNew1() {
  */
 function myNew2(constructor, ...restParams) {
   // 创建空对象，空对象关联构造函数的原型对象
-  const instance = Object.create(constructor.prototype);
+  const obj = Object.create(constructor.prototype);
   // 执行对象类的构造函数，同时该实例的属性和方法被 this 所引用，即 this 指向新构造的实例
-  const result = constructor.apply(instance, restParams);
-  // 判断构造函数的运行结果是否对象类型
-  return (typeof result === 'object' && result) || instance;
+  const result = constructor.apply(obj, restParams);
+  // 如果执行构造函数后返回的是一个对象且不是null，则返回该对象，否则返回创建的对象
+  return (typeof result === 'object' && result !== null) ? result : obj;
 }
 
 // 测试用例1
@@ -209,6 +207,10 @@ function Otaku(name, age) {
   this.name = name;
   this.age = age;
   this.habit = "Games";
+
+  // return {
+  //   name
+  // }
 }
 Otaku.prototype.strength = 60;
 Otaku.prototype.sayYourName = function () {

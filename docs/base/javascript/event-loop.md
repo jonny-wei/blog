@@ -86,18 +86,17 @@ JavaScript 引擎发起的任务称为微观任务
 - setTimeout
 - setInterval
 - setImmediate(Node 环境)
-- I/O，事件队列
+- I/O，事件队列 （如fs、http等Node.js模块的回调函数）
 - UI render
+- requestAnimationFrame(用于在下一次重绘（repaint）之前更新动画，有争议，处于渲染阶段，不在微任务队列，也不在宏任务队列)
 
 **micro-task 微任务** 大概包括:
 
 - process.nextTick(Node 环境)
-- Promise.[ then/catch/finally ]
-- Async/Await(实际就是 promise)
-- queueMicrotask
-- MutationObserver(html5 新特性)
-- requestAnimationFrame(有争议，处于渲染阶段，不在微任务队列，也不在宏任务队列)
-- Object.observe(已废弃)
+- Promise.[ then/catch/finally ] Promise 回调
+- Async 中 Await 的回调(实际就是 promise 的回调)
+- queueMicrotask（一个用于在当前宏任务的事件循环结束前执行的微任务）
+- MutationObserver(异步监测 DOM 树的变化，并在发生变化时执行相应的操作，回调不会立即执行，而是被添加到当前宏任务的微任务队列中)
 
 [在 JavaScript 中通过 queueMicrotask() 使用微任务](https://developer.mozilla.org/zh-CN/docs/Web/API/HTML_DOM_API/Microtask_guide)
 

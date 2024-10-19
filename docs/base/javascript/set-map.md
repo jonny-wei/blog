@@ -182,7 +182,7 @@ WeakMap 中，每个键对自己所引用对象的引用都是弱引用，在没
 
 ### 与 Map 的区别
 
-- WeakMap 只接受对象作为键名（null除外），不接受其他类型的值作为键名。
+- WeakMap 只接受对象、Symbol作为键名（null除外），不接受其他类型的值作为键名。（ES2023 扩展了 WeakMap 的功能，允许使用 Symbol 类型的键）
 - WeakMap 的键名所指向的对象都是弱引用，不计入垃圾回收机制。
 - WeakMap 没有 size 静态属性
 - WeakMap 没有 clear 方法

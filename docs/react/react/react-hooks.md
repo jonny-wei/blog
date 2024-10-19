@@ -827,7 +827,7 @@ export default function Root(){
 
 如上当 context 改变，能够达到正常上报的效果。有一个小细节，就是用 `React.memo` 来阻断 Root 组件改变 state 给 Home 组件带来的更新效应。
 
-## useQueryTable
+### useQueryTable
 
 带查询的分页加载长列表
 
@@ -1017,7 +1017,172 @@ function Index (){
 - `getTableData` 模拟了数据交互过程 ，其内部的代码逻辑不必纠结 。
 - `useCallback` 对 Table 的 React element 做缓存处理，这样频繁的表单控件更新，不会让 Table 组件重新渲染。
 
-## useCreateStore | useConnect
+### usePrevious
+
+用于获取在函数式组件中某个值的前一个状态。这在很多情况下都非常有用，比如当你需要比较新旧值时，或者在动画中需要上一个位置等。
+
+在 React 的类组件中，我们可以通过生命周期方法 componentDidUpdate 来获取前一个状态或属性的值，但是在函数式组件中，我们没有这样的生命周期方法。usePrevVal Hook 就是用来解决这个问题的。
+
+```js
+function usePrevious(value) {
+  // 创建一个 ref 对象来保存上一次的值
+  const ref = useRef();
+  
+  // 在 useEffect 中更新 ref 的值
+  useEffect(() => {
+    ref.current = value;
+  }, [value]);
+  
+  // 返回上一次的值
+  return ref.current;
+}
+
+// 测试用例
+import React, { useState } from 'react';
+import usePrevious from './usePrevious';
+
+function MyComponent() {
+  const [count, setCount] = useState(0);
+  const prevCount = usePrevious(count);
+
+  return (
+    <div>
+      <p>Current count: {count}</p>
+      <p>Previous count: {prevCount}</p>
+      <button onClick={() => setCount(count + 1)}>Increment</button>
+    </div>
+  );
+}
+```
+
+usePrevVal 通常需要结合 useRef 和 useEffect 来实现。利用 useRef 用于创建一个可变的引用，这个引用可以用来保存上一次的值。useEffect 则用于在组件挂载后执行副作用，这里用来保存上一次的值。
+
+### useVisible
+
+实现一个 useVisible Hook，其功能是检测 DOM 元素是否在浏览器视口内，我们可以使用 IntersectionObserver API。这个 API 允许我们异步观察目标元素与视口的交叉状态，非常适合用于懒加载图片、无限滚动列表、广告曝光统计等场景。
+
+```js
+import { useState, useEffect, useRef } from 'react';
+
+function useVisible(options) {
+  const { root = null, rootMargin = '0px', threshold = 0.1 } = options || {};
+  const [isVisible, setIsVisible] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+        } else {
+          setIsVisible(false);
+        }
+      });
+    }, { root, rootMargin, threshold });
+
+    if (ref.current) {
+      observer.observe(ref.current);
+    }
+
+    return () => {
+      if (ref.current) {
+        observer.unobserve(ref.current);
+      }
+    };
+  }, [root, rootMargin, threshold]);
+
+  return {
+    ref,
+    isVisible
+  };
+}
+```
+
+### useForceUpdate
+
+在 React 中，通常我们不需要强制组件重新渲染，因为 React 的状态更新和 props 变化会自动触发组件的重新渲染。但在某些特殊情况下，例如，当你需要在非 React 状态或 props 变化的情况下触发重新渲染，或者需要在特定逻辑后确保组件更新，你可能需要一个强制更新的方法。
+
+以下是一个 useForceUpdate Hook 的实现，它返回一个函数，调用这个函数可以强制组件重新渲染：
+
+```js
+import { useState, useCallback } from 'react';
+
+function useForceUpdate() {
+  const [, setTick] = useState(0);
+  const forceUpdate = useCallback(() => {
+    setTick(tick => tick + 1);
+  }, []);
+  return forceUpdate;
+}
+
+// 测试用例
+import React from 'react';
+import useForceUpdate from './useForceUpdate'; // 假设 useForceUpdate 在这个文件中定义
+
+function MyComponent() {
+  const forceUpdate = useForceUpdate();
+
+  return (
+    <div>
+      <p>This is a component that can force update itself.</p>
+      <button onClick={forceUpdate}>Force Update</button>
+    </div>
+  );
+}
+```
+
+工作原理是利用了 useState 的 setter 函数来改变一个状态变量。由于这个状态变量的改变，React 会触发组件的重新渲染。
+
+### useOnClickOutside
+
+允许你监听组件外部的点击事件。这在很多场景下都非常有用，比如在点击外部时关闭弹出框、下拉菜单等。
+
+```js
+import { useEffect, useRef } from 'react';
+
+function useOnClickOutside(ref, handler) {
+  useEffect(() => {
+    function handleClickOutside(event) {
+      // 如果 ref 当前指向的元素不包含事件的目标元素，则调用 handler
+      if (ref.current && !ref.current.contains(event.target)) {
+        handler();
+      }
+    }
+
+    // 监听整个文档的点击事件
+    document.addEventListener('mousedown', handleClickOutside);
+    // 监听整个文档的触摸事件
+    document.addEventListener('touchstart', handleClickOutside);
+
+    // 组件卸载时移除事件监听
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
+  }, [ref, handler]);
+}
+
+// 测试用例
+import React, { useRef } from 'react';
+import useOnClickOutside from './useOnClickOutside';
+
+function MyComponent() {
+  const ref = useRef(null);
+  const handleClickOutside = () => {
+    console.log('Clicked outside!');
+  };
+
+  useOnClickOutside(ref, handleClickOutside);
+
+  return (
+    <div ref={ref}>
+      Click outside of this box to trigger the console log.
+    </div>
+  );
+}
+```
+
+## React-Redux 中的 hooks
 
 用**两个自定义 hooks 实现 `React-Redux` 基本功能**。 一个是注入 Store 的 `useCreateStore` ，另外一个是负责订阅更新的 `useConnect` ，通过这个实践 demo ，将收获以下知识点：
 
@@ -1038,7 +1203,7 @@ function Index (){
 - 维护并传递负责更新的 `dispatch` 方法。
 - 一些重要 api 要暴露给 context 上下文，传递给每一个 `useConnect`。
 
-#### useCreateStore 设计
+### useCreateStore 设计
 
 首先 `useCreateStore` 是在靠近根部组件的位置的， 而且全局只需要一个，目的就是创建一个 `Store` ，并通过 `Provider` 传递下去。
 
@@ -1055,7 +1220,7 @@ const store = useCreateStore( reducer , initState )
 
 返回值：为 store 暴露的主要功能函数。
 
-#### Store设计
+### Store设计
 
 Store 为上述所说的调度中心，接收全局 reducer ，内部维护状态 state ，负责通知更新 ，收集用 useConnect 的组件。
 
@@ -1065,7 +1230,7 @@ const Store = new ReduxHooksStore(reducer,initState).exportStore()
 
 参数：接收两个参数，透传 useCreateStore 的参数。
 
-#### useConnect设计
+### useConnect设计
 
 使用 useConnect 的组件，将获得 dispatch 函数，用于更新 state ，还可以通过第一个参数订阅 state ，被订阅的 state 改变 ，会让组件更新。
 
@@ -1105,9 +1270,9 @@ export function useCreateStore(reducer,initState){
 - 接收 `reducer` 和 `initState` ，通过 ReduxHooksStore 产生一个 store ，不期望把 store 全部暴露给使用者，只需要暴露核心的方法，所以调用实例下的 `exportStore`抽离出核心方法。
 - 使用一个 `useRef` 保存核心方法，传递给 `Provider` 。
 
-### 3 状态管理者 —— ReduxHooksStore
+### ReduxHooksStore
 
-接下来看一下核心状态 ReduxHooksStore 。
+接下来看一下核心状态 ReduxHooksStore 状态管理者。
 
 ```js
 import { unstable_batchedUpdates } from 'react-dom'

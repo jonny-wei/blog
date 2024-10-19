@@ -15,7 +15,7 @@
 
 ## 装饰类
 
-装饰器是一个对类进行处理的函数。装饰器函数的第一个参数，就是所要装饰的目标类。装饰器对类的行为的改变，是代码编译时发生的，而不是在运行时。这意味着，装饰器能在编译阶段运行代码。也就是说，装饰器本质就是编译时执行的函数。
+装饰器是一个对类进行处理的函数。装饰器函数的第一个参数，就是所要装饰的目标类。装饰器对类的行为的改变，是代码编译时发生的，而不是在运行时。这意味着，装饰器能在编译阶段运行代码。也就是说，**装饰器本质就是编译时执行的函数**。
 
 ```js
 @annotation
@@ -45,6 +45,7 @@ function readonly(target, name, descriptor) {
 ## 应用
 
 实现防抖装饰器 `@debounce`
+
 ```js
 class Toggle extends React.Component {
 
@@ -103,6 +104,75 @@ function debounce(wait, immediate) {
       }
     };
   }
+}
+```
+
+### 类和方法的扩展
+
+装饰器可以用来为类或其方法添加额外的功能，而不需要改变原始的类定义。这在创建通用功能（如日志记录、性能监控、事务处理、缓存等）时非常有用。
+
+```js
+// 日志装饰器
+function logDecorator(target, propertyKey, descriptor) {
+  const originalMethod = descriptor.value;
+  descriptor.value = function(...args) {
+    console.log(`Calling ${propertyKey} with arguments:`, args);
+    const result = originalMethod.apply(this, args);
+    console.log(`Method ${propertyKey} returned:`, result);
+    return result;
+  };
+  return descriptor;
+}
+
+class MyClass {
+  @logDecorator
+  myMethod() {
+    return "Hello, World!";
+  }
+}
+```
+
+### 权限控制和访问管理
+
+装饰器可以用于实现权限控制，例如，检查用户是否有权访问特定的类方法。
+
+```js
+function authorizeDecorator(allowedRoles) {
+  return function(target, propertyKey, descriptor) {
+    const originalMethod = descriptor.value;
+    descriptor.value = function(...args) {
+      if (!allowedRoles.includes(this.userRole)) {
+        throw new Error("You do not have permission to access this method.");
+      }
+      return originalMethod.apply(this, args);
+    };
+  };
+}
+
+class SecureClass {
+  @authorizeDecorator(['admin', 'moderator'])
+  secureMethod() {
+    return "This is a secure method.";
+  }
+}
+```
+
+### 属性注入
+
+装饰器可以用于属性注入，例如，依赖注入框架中，自动注入依赖的服务或组件。
+
+```js
+function injectDecorator(service) {
+  return function(target, propertyKey) {
+    target[propertyKey] = service;
+  };
+}
+
+const myService = { /* service implementation */ };
+
+class DependencyInjection {
+  @injectDecorator(myService)
+  myService;
 }
 ```
 
