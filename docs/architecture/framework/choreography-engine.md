@@ -238,6 +238,8 @@ Node 节点模型功能聚焦于单层级的 schema 相关操作 。Node 节点�
 
 整体来看，一个 Project 包含若干个 DocumentModel 实例，每个 DocumentModel 包含一组 Node 构成一颗树(类似 DOM 树)，每个 Node 通过 Props 实例管理所有 Prop。整体的关系图如下。节点 & 属性模型等价于 JSON 数据结构，而编排的本质是产出 JSON 数据结构，现在可以重新表述为编排的本质是操作节点 & 属性模型了。
 
+![lowcode18](/blog/images/architecture/lowcode18.png)
+
 一个 Project 包含若干个 DocumentModel 实例，每个 DocumentModel 包含一组 Node 构成一颗树（类似 DOM），节点树的根节点的 componentName 只能是 Page / Component / Block 之一，每个 Node 通过 Props 实例管理所有 Prop。特别说明几点：
 
 - Prop 是递归实现的，也就是说底层 Props 也是一颗属性树；

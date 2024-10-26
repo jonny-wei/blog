@@ -1,7 +1,7 @@
 # Scheduler 调度器
 
 - 异步调度原理？
-- React 为什么不用 settimeout ？
+- React 为什么不用 setTimeout ？
 - 说一说React 的时间分片？
 - React 如何模拟 requestIdleCallback？
 - 简述一下调度流程？
@@ -18,7 +18,7 @@ React 似乎无法打破从 root 开始‘找不同’的命运，但是还是�
 
 ### 时间分片
 
-React 如何让浏览器控制 React 更新呢，首先浏览器每次执行一次事件循环（一帧）都会做如下事情：处理事件，执行 js ，调用 requestAnimation ，布局 Layout ，绘制 Paint ，在一帧执行后，如果没有其他事件，那么浏览器会进入休息时间，那么有的一些不是特别紧急 React 更新，就可以执行了。
+React 如何让浏览器控制 React 更新呢，首先浏览器每次执行一次事件循环（一帧）都会做如下事情：处理事件，执行 js ，调用 requestAnimationFrame ，布局 Layout ，绘制 Paint ，在一帧执行后，如果没有其他事件，那么浏览器会进入休息时间，那么有的一些不是特别紧急 React 更新，就可以执行了。
 
 那么首先就是**如何知道浏览器有空闲时间？**
 

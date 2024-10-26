@@ -68,7 +68,7 @@ function workLoopConcurrent() {
 
 ## 调度任务的初始化工作
 
-以组件类型的 fiber 调和流程来理解组件更新流程。类组件在 render 阶段的一个重要作用就是产生新的 children ，也就是我们常说的 rerender。只有产生新的 children ，接下来才能深度遍历 children ，改变视图。每一个需要调和的 fiber 都要经历一个过程叫做 beginWork ，在 beginWork 流程中将执行上述各种 fiber 的更新函数。
+以组件类型的 fiber 调和流程来理解组件更新流程。类组件在 render 阶段的一个重要作用就是产生新的 children ，也就是我们常说的 rerender。只有产生新的 children ，接下来才能深度遍历 children ，改变视图。每一个需要调和的 fiber 都要经历一个过程叫做 beginWork，在 beginWork 流程中将执行上述各种 fiber 的更新函数。
 
 那么对于组件类型 fiber 说，进入到 workLoop 中，那么一定会 `rerender` 吗？ 答案是否定的，解析来看几种情况。
 
@@ -197,7 +197,7 @@ function markUpdateLaneFromFiberToRoot(sourceFiber,lane){
 
 markUpdateLaneFromFiberToRoot 做的事很重要：
 
-- 首先会更新当前 fiber 上的更新优先级。在 fiber 章节我们讲过，fiber 架构采用 ‘连体婴’形式的双缓冲树，所有还要更新当前 fiber 的缓冲树 `alternate` 上的优先级。
+- 首先会更新当前 fiber 上的更新优先级。fiber 架构采用双缓冲树，所有还要更新当前 fiber 的缓冲树 `alternate` 上的优先级。
 - 然后会递归向上把父级连上的 childLanes 都更新，更新成当前的任务优先级。
 
 为什么向上递归更新父级的 childLanes ？

@@ -1,44 +1,26 @@
 # 入料引擎
 
-## 简介
+入料模块负责物料接入，能自动扫描、解析源码组件，并产出一份符合[**《中后台低代码组件描述协议》**](https://lowcode-engine.cn/site/docs/specs/material-spec#22-%E4%BD%8E%E4%BB%A3%E7%A0%81%E8%A7%84%E8%8C%83)的 **JSON Schema(物料解析输出符合搭建协议的描述)**。这份Schema包含基础信息和属性描述信息部分，低代码引擎会基于它们在运行时自动生成一份configure字段，用作设置面板展示。如果有需要补充的属性描述信息，或者需要定制体验增强部分(如修改Setter、调整展示顺序等)，可以手动修改生成的Schema。
 
-入料模块负责物料接入，能自动扫描、解析源码组件，并产出一份符合[**《中后台低代码组件描述协议》**](https://yuque.antfin-inc.com/mo/spec/spec-materials#cmYER)的 **JSON Schema(其实就是物料解析输出复符合搭建协议的schema的模块)**。这份Schema包含基础信息和属性描述信息部分，低代码引擎会基于它们在运行时自动生成一份configure字段，用作设置面板展示。如果有需要补充的属性描述信息，或者需要定制体验增强部分(如修改Setter、调整展示顺序等)，可以手动修改生成的Schema。
+源码物料 ---> 协议 ---> 入料模块(接入器、扫描器、解析器、转换器、生成器、校验器) ---> JSON Schema描述文件(低代码物料) ---> 设计器
 
-**源码物料 ---> 协议 ---> 入料模块(接入器、扫描器、解析器、转换器、生成器、校验器) ---> JSON Schema描述文件(低代码物料) ---> 设计器**
+## 整体架构
 
-## 入料方式
+![lowcode9](/blog/images/architecture/lowcode9.png)
 
-```javascript
-import parse from '@ali/lowcode-material-parser';
+**架构说明与解析（重点）：**
 
-// 本地入料
-(async () => {
-  const options = {
-    entry: '/path/to/component',
-    accesser: 'local' // 本地代码入料，默认值为'local'，可省略
-  };
+入料引擎核先要完成的工作是接收 MATERIAL 通过多种不同的接入渠道发起接入请求，经扫描器扫描分析出 MATERIAL 的入口文件和层次结构(中间态schema)后，再由解析器解析 MATERIAL 源码生成一棵 AST 并从中提取出一些关键信息，并交由生成器生成引擎产物的整个过程。
 
-  const result = await parse(options);
-  console.log(JSON.stringify(result, null, 2)); // 输出符合协议的schema
-})();
+整个过程可以分为扫描、解析、生成产物三个阶段，每个阶段都有对应的处理器来进行处理，分别对应扫描器、解析器、生成器。
 
-// 在线入料
-(async () => {
-  const options = {
-    entry: 'mc-hello@1.0.7',
-    accesser: 'online',
-  }
-  const result = await parse(options);
-  console.log(JSON.stringify(result, null, 2));
-})();
+在流程开始阶段，MATERIAL 会先向引擎核心发起接入请求，引擎核心会将这个请求分发给扫描器，扫描器 再根据 MATERIAL 接入渠道的不同来调度不同的扫描器，如：Local 渠道会映射到 LocalScanner、Web 渠道会映射到  WebScanner。因为每种不同的渠道都有其特殊场景特点，Local 渠道适用于拥有一套完整的本地开发环境的开发者，更关注于 MATERIAL 功能实现； Web 渠道适用于使用者，更关注于功能使用。
 
-// 组件接入 WebIDE
-本地开发时，如果使用build-scripts脚手架，
-可以直接使用相应插件：@alife/build-plugin-lowcode。
-如果使用其他脚手架，可以参照上面本地入料的代码，自行开发脚本；
-在物料中心，可以在界面上直接点击“解析生成”，后端服务会自动调用入料模块，生成schema，
-可以进一步手动修改。
-```
+进入扫描阶段后，扫描器将请求映射到对应的扫描器后，扫描器就会立即开始对 MATERIAL 源码进行扫描分析，得出 MATERIAL **入口文件**和**层次结构**，然后会将这些信息传递下一阶段的解析器，此时会进入到解析阶段。
+
+进入解析阶段后，解析器会分析并识别出 MATERIAL 所处的生态（DSLType），如：React、Vue、Rax。每种生态会分别对应一个解析器，如：React 会对应 ReactParser、Vue 会对应 VueParser。解析器 ③ 会解析 MATERIAL 源码并生成一棵语法树 AST，然后分析语法树 AST 从中抽取出下一阶段需要的关键信息，如：exportName、props、defaultProps 等。
+
+进入生成阶段后，生成器会先判断 MATERIAL 的接入渠道是哪一种，如果是 Local，则调度 LocalGenerator；如果是 Web，则调度 WebGenerator；然后再根据解析器传递过来的信息生成引擎产物，主要包括：MANIFEST 配置文件、CONTAINER 装饰文件和最终会被使用到的 MATERIAL 物料。这一阶段存在的业务扩展点是一键上传和可视化配置 MANIFEST，一键上传功能可以根据实际的需求场景将 MATERIAL 上传到对应的平台，可视化配置则可以根据实际的需求来定制需要让用户可视化地进行配置。
 
 ## 原理
 
@@ -72,24 +54,6 @@ import parse from '@ali/lowcode-material-parser';
     "vm2": "^3.9.2" // vm2 是一个沙箱，可以使用列入白名单的 Node 内置模块运行不受信任的代码。安全！
 }
 ```
-
-### 整体架构
-
-![lowcode8](/blog/images/architecture/lowcode8.png)
-
-**架构说明与解析（重点）：**
-
-入料引擎核先要完成的工作是接收 MATERIAL 通过多种不同的接入渠道 ① 发起接入请求，经扫描器 ② 扫描分析出 MATERIAL 的入口文件和层次结构(中间态schema)后，再由解析器 ③ 解析 MATERIAL 源码生成一棵 AST并从中提取出一些关键信息，并交由生成器 ④ 生成 ⑤ 引擎产物的整个过程。
-
-整个过程可以分为扫描、解析、生成产物三个阶段，每个阶段都有对应的处理器来进行处理，分别对应扫描器 ②、解析器 ③、生成器 ④。
-
-在流程开始阶段，MATERIAL 会先向引擎核心发起接入请求，引擎核心会将这个请求分发给扫描器 ②，扫描器 ② 再根据 MATERIAL 接入渠道的不同来调度不同的扫描器，如：Local 渠道会映射到 LocalScanner、Web 渠道会映射到  WebScanner。因为每种不同的渠道都有其特殊场景特点，Local 渠道适用于拥有一套完整的本地开发环境的开发者，更关注于 MATERIAL 功能实现； Web 渠道适用于使用者，更关注于功能使用。
-
-进入扫描阶段后，扫描器 ② 将请求映射到对应的扫描器后，扫描器就会立即开始对 MATERIAL 源码进行扫描分析，得出 MATERIAL **入口文件**和**层次结构**，然后会将这些信息传递下一阶段的解析器，此时会进入到解析阶段。
-
-进入解析阶段后，解析器 ③ 会分析并识别出 MATERIAL 所处的生态（DSLType），如：React、Vue、Rax。每种生态会分别对应一个解析器，如：React 会对应 ReactParser、Vue 会对应 VueParser。解析器 ③ 会解析 MATERIAL 源码并生成一棵语法树 AST，然后分析语法树 AST 从中抽取出下一阶段需要的关键信息，如：exportName、props、defaultProps 等。
-
-进入生成阶段后，生成器 ④ 会先判断 MATERIAL 的接入渠道是哪一种，如果是 Local，则调度 LocalGenerator；如果是 Web，则调度 WebGenerator；然后再根据解析器 ③ 传递过来的信息生成引擎产物，主要包括：MANIFEST 配置文件、CONTAINER 装饰文件和最终会被使用到的 MATERIAL 物料。这一阶段存在的业务扩展点是一键上传和可视化配置 MANIFEST，一键上传功能可以根据实际的需求场景将 MATEIRAL 上传到对应的平台，可视化配置则可以根据实际的需求来定制需要让用户可视化地进行配置。
 
 ### 整体流程
 
@@ -162,6 +126,37 @@ export default async function (options: IMaterializeOptions): Promise<ComponentM
 ### 接入器
 
 用于定义物料化组件的接入渠道(接入配置项)，接入方式见上文(入料方式)，线上接入渠道需要本地化(localize)。
+
+```js
+  // 本地接入
+  if (accesser === 'local') {
+    const { root } = options as IMaterializeLocalOptions;
+    internalOptions.root = root;
+    if (!root) {
+      const stats = lstatSync(entry);
+      if (stats.isDirectory()) {
+        internalOptions.root = entry;
+      } else {
+        internalOptions.root = process.cwd();
+      }
+    } else if (!isAbsolute(entry)) {
+      internalOptions.entry = join(root, entry);
+    }
+  }
+
+  let workDir = internalOptions.root || '';
+  let moduleDir = '';
+
+  // 线上接入
+  if (accesser === 'online') {
+    // 本地化：创建临时文件，创建组件包
+    const result = await localize(internalOptions as IMaterializeOnlineOptions);
+    workDir = result.workDir;
+    moduleDir = result.moduleDir;
+    internalOptions.entry = result.entry ? join(moduleDir, result.entry) : moduleDir;
+    internalOptions.root = moduleDir;
+  }
+```
 
 ### 扫描器
 
@@ -305,6 +300,89 @@ TypeScript Compiler 会递归解析某个文件中出现及引用的全部类型
 
 **技术细节**：值得注意的是，**有些 js 文件里还会引入 css 文件**，而且从笔者了解的情况来看，这种情况在集团内部不在少数。这种组件不配合 webpack 使用，肯定会报错，但是**使用 webpack 会明显拖慢速度**，所以笔者采用了 **sandbox** **的方式**，**对 require 进来的类 css 文件进行 mock**。这里，笔者使用了 **vm2**  这个库，它对 node 自带的 vm 进行了封装，可以**劫持文件中的 require 方法**。因为 parse-prop-types 的修改在沙箱中会失效，所以笔者也 mock 了组件中的 prop-types 库。
 
+```js
+import parseDynamic from './dynamic';
+import parseJS from './js';
+import parseTS from './ts';
+import { install, installPeerAndDevDeps, syncTypeModules, installTypeDTS } from '../utils';
+import { IMaterialScanModel, DSLType } from '../types';
+import { debug } from '../core';
+
+const log = debug.extend('parse');
+
+export interface IParseArgs extends IMaterialScanModel {
+  accesser?: 'online' | 'local';
+  dslType?: DSLType;
+  npmClient?: string;
+  workDir: string;
+  moduleDir: string;
+  typingsFileAbsolutePath?: string;
+  mainFileAbsolutePath: string;
+  moduleFileAbsolutePath?: string;
+}
+
+export function isTSLike(str) {
+  return str.endsWith('ts') || str.endsWith('tsx');
+}
+
+export default async (args: IParseArgs) => {
+  const {
+    typingsFileAbsolutePath,
+    mainFileAbsolutePath,
+    moduleFileAbsolutePath = mainFileAbsolutePath,
+    useEntry = false,
+  } = args;
+  if (args.accesser === 'local') {
+    if (isTSLike(mainFileAbsolutePath)) {
+      await install(args);
+      // in case the developer forgets to install types
+      await installTypeDTS(args);
+      return parseTS(mainFileAbsolutePath, args);
+    } else if (typingsFileAbsolutePath) {
+      await installTypeDTS(args);
+      return parseTS(typingsFileAbsolutePath, args);
+    } else {
+      try {
+        return parseJS(moduleFileAbsolutePath || mainFileAbsolutePath);
+      } catch (e) {
+        log(e);
+        await install(args);
+        const info = parseDynamic(mainFileAbsolutePath);
+        if (!info || !info.length) {
+          throw Error();
+        }
+        return info;
+      }
+    }
+  } else if (args.accesser === 'online') {
+    // ts
+    const entryPath = useEntry ? mainFileAbsolutePath : typingsFileAbsolutePath;
+    if (entryPath && isTSLike(entryPath)) {
+      await syncTypeModules(args);
+      await install(args);
+      await installTypeDTS(args);
+      await installPeerAndDevDeps(args);
+      return parseTS(entryPath, args);
+    }
+    // js
+    try {
+      // try dynamic parsing first
+      await installPeerAndDevDeps(args);
+      const info = parseDynamic(mainFileAbsolutePath);
+      if (!info || !info.length) {
+        throw Error();
+      }
+      return info;
+    } catch (e) {
+      log(e);
+      // if error, use static js parsing instead
+      return parseJS(moduleFileAbsolutePath || mainFileAbsolutePath);
+    }
+  }
+  return parseJS(moduleFileAbsolutePath || mainFileAbsolutePath);
+};
+```
+
 ### 生成器
 
 生成引擎产物，主要包括：MANIFEST 配置文件、CONTAINER 装饰文件和最终会被使用到的 MATERIAL 物料。这一阶段存在的业务扩展点是一键上传和可视化配置 MANIFEST，一键上传功能可以根据实际的需求场景将 MATEIRAL 上传到对应的平台，可视化配置则可以根据实际的需求来定制需要让用户可视化地进行配置。
@@ -331,11 +409,108 @@ export default async function (
 
   return containerList; // 低代码组件协议的 json schema  低代码组件开发就是根据协议配置这份 schema 进行物料的流通和编辑器中使用
 }
+
+/**
+ * 生成 manifest
+ *
+ * @param {IMaterialParsedModel} matParsedModel
+ * @returns {Promise<
+ *     manifestObj: ComponentMeta, // 组件描述
+ *   >}
+ * @memberof LocalGenerator
+ */
+export async function genManifest(
+  matScanModel: IMaterialScanModel,
+  matParsedModel: IMaterialParsedModel,
+  options: IInternalMaterializeOptions,
+): Promise<ComponentMeta> {
+  const manifestObj: Partial<ComponentMeta> = {
+    componentName: matParsedModel.componentName,
+    title: matScanModel.pkgName,
+    docUrl: '',
+    screenshot: '',
+    devMode: 'proCode', // 需要入料的组件都是源码模式，低代码组件在平台上即可直接生成描述
+    npm: {
+      package: matScanModel.pkgName,
+      version: matScanModel.pkgVersion,
+      exportName: matParsedModel.meta?.exportName || matParsedModel.componentName,
+      main:
+        options.root && path.isAbsolute(matScanModel.mainFilePath)
+          ? path.relative(options.root, matScanModel.mainFilePath)
+          : matScanModel.mainFilePath,
+      destructuring: matParsedModel.meta?.exportName !== 'default',
+      subName: matParsedModel.meta?.subName || '',
+    },
+  };
+
+  // 填充 props
+  manifestObj.props = matParsedModel.props;
+  // 执行扩展点
+  return manifestObj as ComponentMeta;
+}
 ```
 
 ### 转换器
 
 计算、适配与转换
+
+```js
+// modules/material-parser/src/parse/transform.ts
+export function transformItem(name: string, item: any) {
+  const {
+    description,
+    flowType,
+    tsType,
+    type = tsType || flowType,
+    optional,
+    required = optional,
+    defaultValue,
+    ...others
+  } = item;
+  const result: any = {
+    name,
+  };
+
+  if (type) {
+    result.propType = transformType({
+      ...type,
+      ...omit(others, ['name']),
+      required: !!required,
+    });
+  }
+  if (description) {
+    if (description.includes('\n')) {
+      result.description = description.split('\n')[0];
+    } else {
+      result.description = description;
+    }
+  }
+  if (!isNil(defaultValue) && typeof defaultValue === 'object' && isEvaluable(defaultValue)) {
+    if (defaultValue === null) {
+      result.defaultValue = defaultValue;
+    } else if ('computed' in defaultValue) {
+      // parsed data from react-docgen
+      try {
+        if (isEvaluable(defaultValue.value)) {
+          result.defaultValue = safeEval(defaultValue.value);
+        } else {
+          result.defaultValue = defaultValue.value;
+        }
+      } catch (e) {
+        log(e);
+      }
+    } else {
+      // parsed data from react-docgen-typescript
+      result.defaultValue = defaultValue.value;
+    }
+  }
+  if (result.propType === undefined) {
+    delete result.propType;
+  }
+
+  return result;
+}
+```
 
 ### 校验器
 

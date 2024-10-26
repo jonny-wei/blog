@@ -311,6 +311,8 @@ const sidebar = {
         "framework/shadowbox",
         "framework/icestark",
         "framework/wujie",
+        "framework/lowcode-components",
+        "framework/lowcode-engine",
         "framework/ali-lowcode-engine",
         "framework/materialin-engine",
         "framework/choreography-engine",

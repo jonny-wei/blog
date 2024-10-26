@@ -1,6 +1,6 @@
 # Reconciler 调和器
 
-- 什么是 fiber? Fiber 架构解决了什么问题？
+- 什么是 fiber？ Fiber 架构解决了什么问题？
 - Fiber root 和 root fiber 有什么区别？
 - 不同 fiber 之间如何建立起关联的？
 - React 调和流程？
