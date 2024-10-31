@@ -296,7 +296,14 @@ const sidebar = {
       title: "小程序",
       collapsable: false,
       sidebarDepth: 1,
-      children: ["mini/framework", "mini/render", "mini/page", "mini/security"],
+      children: [
+        "mini/framework",
+        "mini/render",
+        "mini/page",
+        "mini/security",
+        "mini/taro",
+        "mini/performance",
+      ],
     },
   ],
   architecture: [
