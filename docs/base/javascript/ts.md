@@ -2,6 +2,8 @@
 
 [TypeScript 教程](https://wangdoc.com/typescript/)
 
+[TypeScript 高级使用技巧](https://www.lumin.tech/articles/typescript-tricks/)
+
 ## 问题
 
 ### Q1. 什么是动态类型与静态类型?

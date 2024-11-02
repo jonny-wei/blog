@@ -289,7 +289,9 @@ const sidebar = {
         "h5/web-worker",
         "h5/rn",
         "h5/rn-fabric",
-        "h5/rn-multithreads"
+        "h5/rn-multithreads",
+        "h5/rn-metro",
+        "h5/rn-code-push",
       ],
     },
     {
