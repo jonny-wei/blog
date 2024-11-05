@@ -450,3 +450,177 @@ JIT编译：
 - 适合需要动态优化和灵活性的场景，如服务器端应用和桌面应用。JIT编译器在程序运行时根据实际执行情况进行优化，可以生成更加高效的机器代码，提高程序的执行效率。
 - 适合需要跨平台运行的应用，因为JIT编译器可以根据运行它的具体平台（操作系统和硬件）进行适配和优化，具有较好的跨平台能力。
 - 适合在开发过程中需要快速迭代和修改代码的场景，因为JIT允许在运行时编译代码，从而可以更快地看到修改效果
+
+### Q10. JS 中的隐式转换？
+
+JavaScript中的隐式类型转换遵循一些规律和规则，这些规则在不同的运算和上下文中有所不同。了解这些规律有助于预测和控制代码的行为。以下是一些主要的隐式类型转换规律：
+
+1. 字符串转换
+
+- 任何对象（包括数组和函数）通过`String`方法或在字符串上下文中被转换为字符串时，都会调用该对象的`toString()`方法。
+- `null`和`undefined`在字符串上下文中被转换为空字符串`""`。
+- `Boolean`对象在字符串上下文中被转换为`"true"`或`"false"`。
+- `Number`对象被转换为其对应的字符串表示。
+
+2. 数字转换
+
+- 字符串在数字上下文中被转换为数字时，会移除空白字符，然后解析剩余部分。如果字符串以合法的数字开始，则转换为该数字；否则，转换为`NaN`。
+- `null`在数字上下文中被转换为`0`。
+- `undefined`在数字上下文中被转换为`NaN`。
+- `Boolean`对象在数字上下文中被转换为`1`（`true`）或`0`（`false`）。
+- `Number`对象保持不变。
+- `Symbol`对象在数字上下文中被转换为`NaN`。
+
+3. 布尔转换
+
+- 字符串在布尔上下文中被转换为`false`，除非字符串是非空的，此时转换为`true`。
+- `null`和`undefined`在布尔上下文中被转换为`false`。
+- `Number`对象被转换为`false`，除非该数字是`0`、`NaN`或`-0`，这些被转换为`false`，其他数字被转换为`true`。
+- `Boolean`对象保持不变。
+- `Symbol`对象在布尔上下文中被转换为`true`。
+
+4. 相等性比较（==）
+
+- 在相等性比较中，如果两个操作数类型不同，JavaScript会尝试将它们转换为相同的类型，然后进行比较。
+- `null`和`undefined`相等，都转换为对方。
+- `String`和`Number`比较时，字符串会被转换为数字。
+- `Boolean`对象比较时，会被转换为数字（`true`转换为`1`，`false`转换为`0`）。
+- 对象（包括数组和函数）和非对象比较时，对象会被转换为字符串，然后进行比较。
+
+5. 严格相等性比较（===）
+
+- 在严格相等性比较中，不会发生类型转换。如果两个操作数类型不同，比较结果为`false`。
+
+了解这些规律可以帮助你避免一些常见的JavaScript陷阱，并确保你的代码在不同环境下的行为一致。在实际编程中，最好尽量避免依赖隐式类型转换，而是显式地进行类型转换，以提高代码的可读性和可预测性。
+
+在JavaScript中，隐式类型转换会在表达式被计算时自动发生。以下是一些包含所有情况的详细例子：
+
+#### 数字转换（Number Conversion）
+
+1. **字符串转数字**：
+
+   ```javascript
+   "42" + 5 // "425"，字符串 "42" 被转换成数字 42
+   "3.14" - 1 // 2.14，字符串 "3.14" 被转换成数字 3.14
+   "0" === false // true，字符串 "0" 被转换成数字 0，然后与 false（转换为 0）比较
+   ```
+
+2. **布尔值转数字**：
+
+   ```javascript
+   true + 5 // 6，布尔值 true 被转换成数字 1
+   false - 7 // -7，布尔值 false 被转换成数字 0
+   ```
+
+3. **null转数字**：
+
+   ```javascript
+   null + 10 // 10，null 被转换成数字 0
+   ```
+
+4. **undefined转数字**：
+
+   ```javascript
+   undefined + 20 // NaN，undefined 被转换成 NaN
+   ```
+
+5. **对象转数字**：
+
+   ```javascript
+   ({ value: 10 }) + 5 // 15，对象被转换成字符串，然后 "[value: 10]" 被转换成数字 NaN，但在这个例子中，我们通常使用 Object 的 valueOf 或 toString 方法来获取值
+   ```
+
+#### 字符串转换（String Conversion）
+
+1. **数字转字符串**：
+
+   ```javascript
+   5 + "test" // "5test"，数字 5 被转换成字符串 "5"
+   ```
+
+2. **布尔值转字符串**：
+
+   ```javascript
+   false + "true" // "falsetrue"，布尔值 false 被转换成字符串 "false"
+   ```
+
+3. **null转字符串**：
+
+   ```javascript
+   null + "null" // "nullnull"，null 被转换成字符串 "null"
+   ```
+
+4. **undefined转字符串**：
+
+   ```javascript
+   undefined + "undefined" // "undefinedundefined"，undefined 被转换成字符串 "undefined"
+   ```
+
+5. **对象转字符串**：
+
+   ```javascript
+   ({}) + "object" // "[object Object]object"，对象被转换成字符串 "[object Object]"
+   ```
+
+#### 布尔转换（Boolean Conversion）
+
+1. **字符串转布尔值**：
+
+   ```javascript
+   "" ? false : true // false，空字符串转换成布尔值 false
+   "non-empty" ? false : true // true，非空字符串转换成布尔值 true
+   ```
+
+2. **数字转布尔值**：
+
+   ```javascript
+   0 ? false : true // false，数字 0 转换成布尔值 false
+   1 ? false : true // true，数字 1 转换成布尔值 true
+   ```
+
+3. **null转布尔值**：
+
+   ```javascript
+   null ? false : true // false，null 转换成布尔值 false
+   ```
+
+4. **undefined转布尔值**：
+
+   ```javascript
+   undefined ? false : true // false，undefined 转换成布尔值 false
+   ```
+
+5. **对象转布尔值**：
+
+   ```javascript
+   ({}) ? false : true // true，对象转换成布尔值 true
+   ```
+
+#### 相等性比较（Equality Comparison）
+
+1. **字符串与数字的比较**：
+
+   ```javascript
+   "5" == 5 // true，字符串 "5" 被转换成数字 5 后与 5 比较
+   ```
+
+2. **布尔值与数字的比较**：
+
+   ```javascript
+   true == 1 // true，布尔值 true 被转换成数字 1 后与 1 比较
+   false == 0 // true，布尔值 false 被转换成数字 0 后与 0 比较
+   ```
+
+3. **null与数字的比较**：
+
+   ```javascript
+   null == 0 // true，null 被转换成数字 0 后与 0 比较
+   ```
+
+4. **undefined与数字的比较**：
+
+   ```javascript
+   undefined == 0 // false，undefined 被转换成 NaN，NaN 与任何值（包括 0）比较都返回 false
+   ```
+
+这些例子展示了JavaScript中隐式类型转换的一些常见情况。了解这些规则对于编写可靠的JavaScript代码至关重要，因为隐式类型转换可能会导致不易察觉的错误。

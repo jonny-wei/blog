@@ -674,3 +674,159 @@ SSR 开发需要注意：
    - 适用于需要精确控制监听的数据源、需要比较新旧值或需要控制回调函数触发时机的场景。
 
 总结来说，watch提供了更精确的控制，允许你指定侦听的数据源并比较变化前后的值，而watchEffect及其变体则提供了一种更自动化的方式来追踪依赖和执行副作用，适用于不同的场景和需求。
+
+### Q5. vue component 中 name 的作用？
+
+组件的名字有以下用途：
+
+- 在组件自己的模板中递归引用自己时
+- 在 Vue 开发者工具中的组件树显示时
+- 在组件抛出的警告追踪栈信息中显示时
+- 使用 name 选项使你可以覆盖推导出的名称，或是在没有推导出名字时显式提供一个。(例如没有使用构建工具时，或是一个内联的非单文件组件)
+- 有一种场景下 name 必须是已显式声明的：即 `<KeepAlive>` 通过其 include / exclude prop 来匹配其需要缓存的组件时。
+
+::: tip 注意
+在 3.2.34 或以上的版本中，使用 `<script setup>` 的单文件组件会自动根据文件名生成对应的 name 选项，即使是在配合 `<KeepAlive>` 使用时也无需再手动声明。
+:::
+
+### Q6. vue scope 的原理?
+
+CSS作用域化：当 `<style>` 标签带有 scoped attribute 的时候，它的 CSS 只会影响当前组件的元素，和 Shadow DOM 中的样式封装类似。
+
+```vue
+<style scoped>
+.example {
+  color: red;
+}
+</style>
+
+<template>
+  <div class="example">hi</div>
+</template>
+
+// 转换为
+<style>
+.example[data-v-f3f3eg9] {
+  color: red;
+}
+</style>
+
+<template>
+  <div class="example" data-v-f3f3eg9>hi</div>
+</template>
+```
+
+使用 scoped 后，父组件的样式将不会渗透到子组件中。不过，子组件的根节点会同时被父组件的作用域样式和子组件的作用域样式影响。这样设计是为了让父组件可以从布局的角度出发，调整其子组件根元素的样式。
+
+处于 scoped 样式中的选择器如果想要做更“深度”的选择，也即：影响到子组件，可以使用 `:deep()` 这个伪类
+
+```css
+<style scoped>
+.a :deep(.b) {
+  /* ... */
+}
+</style>
+
+// 编译后
+.a[data-v-f3f3eg9] .b {
+  /* ... */
+}
+```
+
+### Q7. CSS Modules 与 scope 的区别？
+
+一个 `<style module>` 标签会被编译为 CSS Modules 并且将生成的 CSS class 作为 `$style` 对象暴露给组件：
+
+```vue
+<template>
+  <p :class="$style.red">This should be red</p>
+</template>
+
+<style module>
+.red {
+  color: red;
+}
+</style>
+```
+
+CSS Modules 和 Vue 的 `style scoped` 都是用于封装CSS样式，确保样式的作用域局限于当前组件的技术。不过，它们在实现方式和使用场景上有所不同：
+
+#### CSS Modules
+
+1. **局部作用域**：
+   - CSS Modules 通过将类名和动画名转换为唯一值来实现局部作用域。例如，一个名为 `.button` 的类在编译后可能变成 `.Button_1J3p3t-nsPc`，这样的命名冲突的概率极低，从而实现了局部作用域。
+
+2. **JavaScript 交互**：
+   - 使用CSS Modules时，你需要通过JavaScript导入样式，这允许你利用JavaScript的模块系统来管理样式。
+
+3. **构建时处理**：
+   - CSS Modules 的处理发生在构建时，构建工具（如Webpack）会将CSS文件中的类名替换为唯一的标识符。
+
+4. **全局样式**：
+   - CSS Modules 默认不支持全局样式。如果你需要全局样式，需要使用 `:global` 伪类或者 `:local()` 函数来指定。
+
+5. **预处理器支持**：
+   - CSS Modules 可以与各种CSS预处理器（如Sass、Less）一起使用，但需要构建工具的支持。
+
+6. **兼容性**：
+   - CSS Modules 需要构建步骤，因此不支持没有构建过程的旧浏览器。
+
+#### Vue `style scoped`
+
+1. **自动作用域化**：
+   - Vue 的 `style scoped` 属性在编译时自动将CSS样式的作用域限制在当前组件内。Vue通过在CSS选择器上添加一个唯一的属性（如 `data-v-<hash>`）来实现这一点。
+
+2. **HTML 模板中的直接使用**：
+   - 在Vue单文件组件（.vue文件）中，你可以直接在`<style>`标签中使用`scoped`属性，无需通过JavaScript导入样式。
+
+3. **运行时处理**：
+   - Vue 的 `style scoped` 在运行时处理样式的作用域化，不需要构建步骤。
+
+4. **全局样式**：
+   - Vue 允许在全局范围内定义样式，这些样式可以被子组件继承。
+
+5. **预处理器支持**：
+   - Vue 的 `style scoped` 同样支持CSS预处理器，并且可以直接在.vue文件中使用。
+
+6. **兼容性**：
+   - Vue 的 `style scoped` 不需要构建步骤，因此可以在没有构建过程的环境中使用，如直接在浏览器中通过`<script>`标签引入Vue。
+
+CSS Modules 提供了一种通过构建工具实现的模块化CSS的方法，它允许你在JavaScript中导入样式，并且可以很好地与模块打包器和预处理器集成。而Vue的`style scoped`提供了一种更简单、无需构建步骤的方式来实现样式的作用域化，它直接在Vue单文件组件中工作，并且可以利用Vue的构建工具链来处理预处理器。
+
+### Q8. CSS 模块化的方式？
+
+Q28. CSS 模块化的方式？
+
+CSS 模块化是一种将CSS封装成独立、可重用单元的方法，有助于提高大型应用的可维护性和可扩展性。以下是一些流行的CSS模块化方式：
+
+1. **CSS Modules**：
+   - CSS Modules 是一种由Webpack推广的技术，它通过将CSS类名和动画名转换为唯一值来实现局部作用域。这种方式需要构建工具支持，并且可以在构建过程中处理CSS文件。
+
+2. **BEM (Block Element Modifier)**：
+   - BEM 是一种命名约定，用于创建可预测和可重用的CSS类名。它将UI分解为块（独立的组件）、元素（块的子部分）和修饰符（块或元素的变体）。
+
+3. **SMACSS (Scalable and Modular Architecture for CSS)**：
+   - SMACSS 是一种组织CSS的架构方法，它定义了五种类别：基础、布局、模块、状态和主题。这种结构有助于创建模块化的CSS代码。
+
+4. **OOCSS (Object Oriented CSS)**：
+   - OOCSS 是一种CSS编程范式，它鼓励将CSS视为对象的集合，这些对象可以被继承和重用，以创建更少、更具体的样式。
+
+5. **SUIT CSS**：
+   - SUIT CSS 是一个CSS命名约定，它遵循组件化和可嵌套的类名模式，以实现更模块化的CSS代码。
+
+6. **Atomic CSS/Utility-First CSS**：
+   - 这种模式强调使用功能性的、原子级的样式类，这些类可以组合在一起以创建复杂的UI组件。Tailwind CSS是这种模式的一个流行例子。
+
+7. **PostCSS**：
+   - PostCSS 是一个工具，可以让你使用JavaScript插件来转换CSS。它可以用来实现CSS模块化，例如通过插件如`postcss-modules`来实现。
+
+8. **Styled-Components**：
+   - 这是一个用于React的CSS-in-JS库，它允许你在JavaScript中直接编写CSS代码，并自动将其封装到组件的局部作用域中。
+
+9. **CSS-in-JS**：
+   - CSS-in-JS是一种将CSS代码直接嵌入到JavaScript模块中的技术。这种方法可以自动处理样式的作用域问题，并且可以与任何前端框架一起使用。
+
+10. **预处理器**：
+    - 像Sass、Less和Stylus这样的预处理器提供了变量、混合（mixins）、函数等功能，可以帮助你创建模块化的CSS代码。
+
+每种方法都有其优势和适用场景。在实际项目中，你可能会根据项目需求、团队习惯和构建工具的支持来选择一种或多种方法来实现CSS模块化。
