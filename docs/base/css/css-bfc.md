@@ -16,12 +16,13 @@ BFC 原理，渲染规则：
 - BFC 就是页面上的一个隔离的独立容器，容器里面的子元素不会影响到外面元素，反之亦然
 
 ## 产生条件
+
  以下条件会创建新的 BFC：
 
-- 根元素
-- float 属性不为 none(脱离文档流，浮动元素)
-- position 属性为 absolute 或 fixed (绝对与固定定位)
-- display 属性为 inline-block、table-cell、table-caption、flex、inline-flex、grid、inline-grid、flow-root(最佳，无副作用)，定义成块级的非块级元素。
+- 根元素， HTML 元素本身就是 BFC
+- 浮动元素：float 属性不为 none(脱离文档流，浮动元素)
+- 绝对定位元素：position 属性为 absolute 或 fixed (绝对与固定定位)
+- 非块级盒子的块级容器：display 属性为 inline-block、table-cell、table-caption、flex、inline-flex、grid、inline-grid、flow-root(最佳，无副作用)，定义成块级的非块级元素。
 - overflow 属性不为 visible（- overflow: auto/ hidden)，非溢出的可见元素。
 
 ::: tip 注意

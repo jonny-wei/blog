@@ -88,6 +88,8 @@ JavaScript 引擎发起的任务称为微观任务
 - setImmediate(Node 环境)
 - I/O，事件队列 （如fs、http等Node.js模块的回调函数）
 - UI render
+- postMessage
+- MessageChannel
 - requestAnimationFrame(用于在下一次重绘（repaint）之前更新动画，有争议，处于渲染阶段，不在微任务队列，也不在宏任务队列)
 
 **micro-task 微任务** 大概包括:
@@ -181,6 +183,7 @@ setTimeout(() => {
 double intervalMilliseconds = std::max(oneMillisecond, interval * oneMillisecond); 
 
 ```
+
 传入 0 和传入 1 结果都是 oneMillisecond，即 1ms。这样解释了为何 1ms 和 0ms 行为是一致的，那 4ms 到底是怎么回事？我再次确认了HTML规范，发现虽然有 4ms 的限制，但是是存在条件的，详见规范第 11 点：
 
 > If nesting level is greater than 5, and timeout is less than 4, then set timeout to 4. 如果嵌套级别大于 5,timeout 小于 4，则将 timeout 设置为 4。
@@ -196,7 +199,7 @@ double intervalMilliseconds = std::max(oneMillisecond, interval * oneMillisecond
   - immediates，通过 setImmediate 注册的函数
   - close handlers，close 事件的回调，比如 TCP 连接断开
 
-* 同步任务及每个阶段之后都会清空 microtask 队列
+- 同步任务及每个阶段之后都会清空 microtask 队列
   - 优先清空 next tick queue，即通过 process.nextTick 注册的函数
   - 再清空 other queue，常见的如 Promise
 
@@ -217,6 +220,282 @@ double intervalMilliseconds = std::max(oneMillisecond, interval * oneMillisecond
 - setImmediate 和 setTimeout(fn, 0) 哪个回调先执行，需要看他们本身在哪个阶段注册的，如果在定时器回调或者 I/O 回调里面，setImmediate 肯定先执行。如果在最外层或者 setImmediate 回调里面，哪个先执行取决于当时机器状况。
 - process.nextTick 不在 Event Loop 的任何阶段，他是一个特殊 API，他会立即执行，然后才会继续执行 Event Loop
 
+## 问题
+
+### Q1. NodeJS 和浏览器中的事件循环有什么区别？
+
+Node.js 事件循环的主要特点：
+
+1. 阶段性结构：
+   Node.js 的事件循环分为多个阶段，每个阶段都有其特定的任务队列：
+   - timers：执行 setTimeout() 和 setInterval() 的回调
+   - pending callbacks：执行延迟到下一个循环迭代的 I/O 回调
+   - idle, prepare：仅系统内部使用
+   - poll：检索新的 I/O 事件，执行 I/O 相关的回调
+   - check：执行 setImmediate() 回调
+   - close callbacks：执行 close 事件的回调
+
+2. 执行顺序：
+   Node.js 按照上述顺序依次执行每个阶段的任务，而不是像浏览器那样简单地区分宏任务和微任务。
+
+3. process.nextTick()：
+   这是 Node.js 特有的函数，其回调会在当前操作完成后立即执行，优先于其他微任务。
+
+4. 微任务处理：
+   在 Node.js 中，微任务（如 Promise 回调）会在每个阶段结束后立即执行，而不是在所有宏任务之后。
+
+5. I/O 处理：
+   Node.js 更加关注 I/O 操作，poll 阶段专门用于处理 I/O 回调。
+
+6. setImmediate()：
+   这是 Node.js 特有的定时器函数，其回调会在 poll 阶段结束后的 check 阶段执行。
+
+7. 可自定义性：
+   Node.js 允许开发者通过 process.nextTick() 和 setImmediate() 更灵活地控制代码执行顺序。
+
+这种结构使得 Node.js 的事件循环更加复杂和精细，有助于更好地处理服务器端的各种异步操作和 I/O 任务。理解这些特点对于编写高效的 Node.js 应用程序至关重要。
+
+Node.js 和浏览器中的事件循环主要有以下区别：
+
+1. **执行环境**：
+   - 浏览器主要处理 DOM 操作、用户交互和网络请求等。
+   - Node.js 主要处理服务器端操作，如文件系统操作、网络通信等。
+
+2. **事件循环的阶段**：
+   - 浏览器的事件循环相对简单，主要分为宏任务和微任务两种。
+   - Node.js 的事件循环更复杂，分为多个阶段（timers、pending callbacks、idle/prepare、poll、check、close callbacks）。
+
+3. **微任务执行时机**：
+   - 浏览器在每个宏任务执行完后，会清空所有微任务队列。
+   - Node.js 在每个阶段结束时会执行微任务，而不是在所有宏任务之后。
+
+4. **API 差异**：
+   - 浏览器特有 API：如 setTimeout、setInterval、requestAnimationFrame。
+   - Node.js 特有 API：如 setImmediate、process.nextTick。
+
+5. **process.nextTick**：
+   - Node.js 独有，优先级高于所有微任务，在每个阶段结束时立即执行。
+   - 浏览器中没有对应的机制。
+
+6. **setImmediate vs setTimeout**：
+   - Node.js 中 setImmediate 在 check 阶段执行，setTimeout 在 timers 阶段执行。
+   - 浏览器中没有 setImmediate，只能使用 setTimeout。
+
+7. **I/O 处理**：
+   - Node.js 更关注 I/O 操作，有专门的 poll 阶段处理 I/O 回调。
+   - 浏览器主要关注用户交互和 DOM 操作，I/O 操作相对较少。
+
+8. **任务优先级**：
+   - 浏览器中，微任务总是优先于宏任务执行。
+   - Node.js 中，不同阶段的任务优先级不同，process.nextTick 的优先级最高。
+
+9. **渲染时机**：
+   - 浏览器在每轮事件循环结束后可能会进行页面渲染。
+   - Node.js 不涉及 UI 渲染。
+
+### Q2. event loop 执行顺序
+
+- 首先执行 script 宏任务
+- 执行同步任务，遇见微任务进入微任务队列，遇见宏任务进入宏任务队列
+- 当前宏任务执行完出队，检查微任务列表，有则依次执行，直到全部执行完
+- 执行浏览器 UI 线程的渲染工作
+- 检查是否有 Web Worker 任务，有则执行
+- 执行下一个宏任务，回到第二步，依此循环，直到宏任务和微任务队列都为空
+
+## Q3. 事件循环输出题
+
+```js
+var promise = new Promise((resolve, reject) => {
+    console.log(1)
+    resolve()   // 将 promise 的状态改为了 resolved ，并且将 resolve 值保存下来，此处没有传值
+    console.log(2)
+})
+promise.then(()=>{
+    console.log(3)
+})
+console.log(4)
+// 1
+// 2
+// 4
+// 3
+```
+
+```js
+var promise = new Promise((resolve, reject) => {
+    console.log(1)
+})
+promise.then(()=>{
+    console.log(2)  // 因为 promise中并没有resolve ，所以 then 方法不会执行
+})
+console.log(3)
+// 1
+// 3
+```
+
+```js
+var promise = new Promise((resolve, reject) => {
+    console.log(1)
+})
+promise.then(console.log(2))
+console.log(3)
+// 1
+// 2
+// 3
+```
+
+```js
+Promise.resolve(1)
+  .then(2)
+  .then(Promise.resolve(3))
+  .then(console.log)  
+// 1
+
+// then(2) 、 then(Promise.resolve(3)) 发生了值穿透，直接执行最后一个 then ，输出 1
+```
+
+```js
+var promise = new Promise((resolve, reject) => {
+    console.log(1)
+    resolve()
+    reject() // promise 的状态已经改为了 resolved ，不能再重新翻转
+})
+promise.then(()=>{
+    console.log(2)
+}).catch(()=>{
+    console.log(3)
+})
+console.log(4)
+// 1
+// 4
+// 2
+```
+
+```js
+Promise.resolve(1)  // 首先 resolve(1)， 状态改为了 resolved ，并且将 resolve 值保存下来
+  .then(res => {
+    console.log(res);
+    return 2;  // 返回 return 2 实际上是包装成了 resolve(2)
+  })
+  .catch(err => {
+    return 3;
+  })
+  .then(res => {
+    console.log(res);
+  });
+// 1
+// 2
+```
+
+```js
+setTimeout(() => {
+  console.log(1)
+})
+Promise.resolve().then(() => {
+  console.log(2)
+})
+console.log(3)
+// 3
+// 2
+// 1
+```
+
+```js
+var promise = new Promise((resolve, reject) => {
+  console.log(1)
+  setTimeout(() => {
+    console.log(2)
+    resolve()
+  }, 1000)
+})
+
+promise.then(() => {
+  console.log(3)
+})
+promise.then(() => {
+  console.log(4)
+})
+console.log(5)
+// 1
+// 5
+// 2
+// 3
+// 4
+```
+
+```js
+var date = new Date() 
+
+console.log(1, new Date() - date) 
+
+setTimeout(() => {
+    console.log(2, new Date() - date)
+}, 500) 
+
+Promise.resolve().then(console.log(3, new Date() - date)) 
+
+while(new Date() - date < 1000) {} 
+
+console.log(4, new Date() - date)
+
+// 1 0
+// 3 0
+// 4 1000
+// 2 1001
+```
+
+```js
+async function async1() {
+    console.log('async1 start')
+    await async2()
+    console.log('async1 end')
+}
+async function async2() {
+    console.log('async2')
+}
+console.log('script start')
+setTimeout(function () {
+    console.log('settimeout')
+})
+async1()
+new Promise(function (resolve) {
+    console.log('promise1')
+    resolve()
+}).then(function () {
+    console.log('promise2')
+})
+console.log('script end')
+
+// script start
+// async1 start
+// async2
+// promise1
+// script end
+// async1 end
+// promise2
+// settimeout
+```
+
+```js
+const p = Promise.resolve();
+(async () => {
+    await p;
+    console.log('await end');
+})();
+p.then(() => {
+    console.log('then 1');
+}).then(() => {
+    console.log('then 2');
+});
+
+// chrome中运行结果是 await end -> then 1 -> then 2 ，在node中是 then 1 -> then 2 -> await end 
+```
+
+- Promise 构造函数是同步执行的， then 方法是异步执行的
+- .then 或者 .catch 的参数期望是函数，传入非函数则会直接执行
+- Promise的状态一经改变就不能再改变，构造函数中的 resolve 或 reject 只有第一次执行有效，多次调用没有任何作用
+- .then方法是能接收两个参数的，第一个是处理成功的函数，第二个是处理失败的函数，再某些时候你可以认为catch是.then第二个参数的简便写法
+- 当遇到 promise.then 时， 如果当前的 Promise 还处于 pending 状态，我们并不能确定调用 resolved 还是 rejected ，只有等待 promise 的状态确定后，再做处理，所以我们需要把我们的两种情况的处理逻辑做成 callback 放入 promise 的回调数组内，当 promise 状态翻转为 resolved 时，才将之前的 promise.then 推入微任务队列
+
 ::: warning 参考文献
 [setTimeout 和 setImmediate 到底谁先执行，本文让你彻底理解 Event Loop](https://juejin.cn/post/6844904100195205133)
 
@@ -234,5 +513,5 @@ double intervalMilliseconds = std::max(oneMillisecond, interval * oneMillisecond
 
 [彻底弄懂 JavaScript 执行机制](https://juejin.cn/post/6844903512845860872)
 
-[说一下事件循环机制(node、浏览器) ](https://github.com/lgwebdream/FE-Interview/issues/26)
+[说一下事件循环机制(node、浏览器)](https://github.com/lgwebdream/FE-Interview/issues/26)
 :::

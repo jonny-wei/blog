@@ -16,6 +16,8 @@
 
 [元素水平垂直居中的方法有哪些？如果元素不定宽高呢？](https://mp.weixin.qq.com/s/r17roT-aEdElmmgNeg7qdg)
 
+[实现元素水平垂直居中的 N 种方式](https://github.com/sisterAn/blog/issues/119)
+
 #### 水平居中
 
 - 内联元素：`text-align: center`

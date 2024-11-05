@@ -73,6 +73,96 @@ WebView 主要包括两类缓存：
 - 浏览器自带的网页数据缓存，这是所有的浏览器都支持的、由HTTP协议定义的缓存。
 - H5 缓存，这是由 web 页面的开发者设置的，H5 缓存主要包括了 App Cache、DOM Storage、Local Storage、Web SQL Database 存储机制等。
 
+## 问题
+
+### Q1. 从页面 A 打开一个新页面 B，B 页面关闭（包括意外崩溃），如何通知 A 页面？
+
+A、B 页面通信方式有：
+
+- url 传参
+- postmessage：允许来自不同源的脚本采用异步方式进行有效的通信，可以实现跨文本文档、多窗口、跨域消息传递，可在多用于窗口间数据通信，这也使它成为跨域通信的一种有效的解决方案。
+- localStorage：仅允许你访问一个Document 源（origin）的对象 Storage；存储的数据将保存在浏览器会话中。如果 A 打开的 B 页面和 A 是不同源，则无法访问同一  Storage。
+- WebSocket
+- SharedWorker：代表一种特定类型的 worker，可以从几个浏览上下文中访问，例如几个窗口、iframe 或其他 worker。它们实现一个不同于普通 worker 的接口，具有不同的全局作用域, SharedWorkerGlobalScope
+- Service Worker：一个可以长期运行在后台的 Worker，能够实现与页面的双向通信。多页面共享间的 Service Worker 可以共享，将 Service Worker 作为消息的处理中心（中央站）即可实现广播效果。
+
+页面正常关闭时，会先执行 window.onbeforeunload ，然后执行 window.onunload ，我们可以在这两个方法里向 A 页面通信。崩溃就不一样了，页面看不见了，JS 都不运行了，那还有什么办法可以获取B页面的崩溃？可以利用 window 对象的 load 和 beforeunload 事件，通过心跳监控来获取 B 页面的崩溃：
+
+在页面加载时（load 事件）在 sessionStorage 记录 good_exit 状态为 pending，如果用户正常退出（beforeunload 事件）状态改为 true，如果 crash 了，状态依然为 pending，在用户第2次访问网页的时候（第2个load事件），查看 good_exit 的状态，如果仍然是 pending 就是可以断定上次访问网页崩溃了！
+
+但有一个问题，用 sessionStorage 保存状态，在用户关闭了B页面，sessionStorage 值就会丢失，所以换种方式，使用 Service Worker 来实现：
+
+- Service Worker 有自己独立的工作线程，与网页区分开，网页崩溃了，Service Worker 一般情况下不会崩溃；
+- Service Worker 生命周期一般要比网页还要长，可以用来监控网页的状态；
+- 网页可以通过 `navigator.serviceWorker.controller.postMessage` API 向掌管自己的 SW 发送消息
+
+基于以上几点优势，完整设计一套流程如下：
+
+- B 页面加载后，通过 `postMessage` API 每 5s 给 sw 发送一个心跳，表示自己的在线，sw 将在线的网页登记下来，更新登记时间；
+- B 页面在 `beforeunload` 时，通过 `postMessage` API 告知自己已经正常关闭，sw 将登记的网页清除；
+- 如果 B页面在运行的过程中 crash 了，sw 中的 `running` 状态将不会被清除，更新时间停留在奔溃前的最后一次心跳；
+- A 页面 Service Worker 每 10s 查看一遍登记中的网页，发现登记时间已经超出了一定时间（比如 15s）即可判定该网页 crash 了。
+
+```js
+// B
+if (navigator.serviceWorker.controller !== null) {
+  let HEARTBEAT_INTERVAL = 5 * 1000 // 每五秒发一次心跳
+  let sessionId = uuid() // B页面会话的唯一 id
+  let heartbeat = function () {
+    navigator.serviceWorker.controller.postMessage({
+      type: 'heartbeat',
+      id: sessionId,
+      data: {} // 附加信息，如果页面 crash，上报的附加数据
+    })
+  }
+  window.addEventListener("beforeunload", function() {
+    navigator.serviceWorker.controller.postMessage({
+      type: 'unload',
+      id: sessionId
+    })
+  })
+  setInterval(heartbeat, HEARTBEAT_INTERVAL);
+  heartbeat();
+}
+
+// A
+// 每 10s 检查一次，超过15s没有心跳则认为已经 crash
+const CHECK_CRASH_INTERVAL = 10 * 1000 
+const CRASH_THRESHOLD = 15 * 1000
+const pages = {}
+let timer
+function checkCrash() {
+  const now = Date.now()
+  for (var id in pages) {
+    let page = pages[id]
+    if ((now - page.t) > CRASH_THRESHOLD) {
+      // 上报 crash
+      delete pages[id]
+    }
+  }
+  if (Object.keys(pages).length == 0) {
+    clearInterval(timer)
+    timer = null
+  }
+}
+
+worker.addEventListener('message', (e) => {
+  const data = e.data;
+  if (data.type === 'heartbeat') {
+    pages[data.id] = {
+      t: Date.now()
+    }
+    if (!timer) {
+      timer = setInterval(function () {
+        checkCrash()
+      }, CHECK_CRASH_INTERVAL)
+    }
+  } else if (data.type === 'unload') {
+    delete pages[data.id]
+  }
+})
+```
+
 [前端工程师所需要了解的WebView](https://juejin.cn/post/6932083257286590477#heading-6)
 
 [Android WebView H5 秒开方案总结](https://juejin.cn/post/7016883220025180191#heading-5)

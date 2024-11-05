@@ -325,7 +325,8 @@ const sidebar = {
         "framework/ali-lowcode-engine",
         "framework/materialin-engine",
         "framework/choreography-engine",
-        "framework/lowcode-extend"
+        "framework/lowcode-extend",
+        // "framework/lowcode-tango"
       ],
     },
     {
@@ -333,7 +334,6 @@ const sidebar = {
       collapsable: false,
       sidebarDepth: 1,
       children: [
-        // "plan/auth",
         "plan/i18n",
         "plan/color-thief",
         "plan/pay",
@@ -341,6 +341,9 @@ const sidebar = {
         "plan/virtual-list",
         "plan/masonry",
         "plan/file-transfer",
+        // "plan/auth",
+        // "plan/webComponents",
+        // "plan/webRTC",
         "plan/webTransport",
         "plan/webCodecs"
       ],
