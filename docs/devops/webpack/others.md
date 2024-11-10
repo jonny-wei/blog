@@ -1,5 +1,105 @@
 # Webpack 相关
 
+## Babel Plugin 开发
+
+Babel 插件的作用是在构建时通过修改 JavaScript 代码的 AST 来实现代码转换，Babel 插件工作流程可以分为以下几个步骤：
+
+- 解析源代码：Babel 将 JavaScript 源代码解析为 AST（抽象语法树）。
+- 遍历 AST：Babel 插件遍历 AST，根据需要修改 AST 节点。
+- 生成代码：Babel 将修改后的 AST 转换回 JavaScript 代码，并输出最终的代码
+
+一个简单的 Babel 插件的核心是一个函数，它接收 babel 对象作为参数，并返回一个包含 visitor 对象的配置。visitor 对象定义了对 AST 节点的访问规则。
+
+```js
+// index.js
+module.exports = function (babel) {
+  const { types: t } = babel;  // 解构出 types API，用于创建和判断 AST 节点
+
+  return {
+    visitor: {
+      CallExpression(path) {
+        // 检查是否是 console.log 调用
+        if (t.isMemberExpression(path.node.callee) &&
+            path.node.callee.object.name === 'console' &&
+            path.node.callee.property.name === 'log') {
+          // 替换为 console.warn
+          path.node.callee.property.name = 'warn';
+        }
+      },
+    },
+  };
+};
+
+```
+
+babel-types 提供了许多工具函数，用于创建、判断和修改 AST 节点。常见的函数包括：
+
+- 节点判断：
+  - `t.isIdentifier(node)`：判断节点是否是 Identifier。
+  - `t.isCallExpression(node)`：判断节点是否是 CallExpression。
+- 节点创建：
+  - `t.callExpression(callee, args)`：创建一个 CallExpression 节点。
+  - `t.identifier(name)`：创建一个 Identifier 节点。
+- 节点修改：
+  - `t.updateExpression()`：更新现有的节点，返回修改后的新节点。
+
+visitor 对象是插件的核心，包含了一组方法，每个方法用于访问特定类型的 AST 节点。常见的节点类型有：
+
+- Identifier：标识符（如变量、函数名）。
+- CallExpression：函数调用。
+- Literal：字面量（如数字、字符串）。
+- MemberExpression：成员访问（如 object.property）。
+- VariableDeclaration：变量声明。
+
+Babel 插件提供了 pre、visitor 和 post 钩子来让插件在不同阶段进行操作：
+
+- pre：在 Babel 执行转换之前执行，可以用来做一些初始化操作。
+- visitor：遍历 AST 节点并修改节点。
+- post：在转换后执行，可以用于最终操作，如调试输出等。
+
+## Webpack Plugin 开发
+
+Webpack 插件是 Webpack 中非常强大的机制，它通过与 Webpack 的生命周期钩子（Hooks）交互，允许开发者在构建的不同阶段插入自定义逻辑，进行优化、修改输出内容等。Webpack 插件是用来在 Webpack 构建过程中，做一些自定义的操作，例如：
+
+- 修改输出内容：比如修改打包结果，注入额外的文件或修改生成的 HTML。
+- 优化构建流程：比如压缩文件、处理静态资源、代码分割、缓存等。
+- 分析和报告：生成构建过程的报告，帮助开发者了解构建的详细信息。
+
+插件与 Loader 的区别：
+
+- Loader：在构建过程的前期（比如在将源文件转化为模块时）对文件进行处理。它主要用于转换文件，如将 TypeScript 转换为 JavaScript、将 SCSS 转换为 CSS 等。
+- Plugin：插件是在 Webpack 构建的整个生命周期中执行的，可以对构建的任何阶段进行自定义修改，范围更广。
+
+Webpack 插件通过与 Webpack 的生命周期钩子（Hooks）交互，能够在不同的构建阶段进行操作。插件通过访问 Webpack 的 Compiler 或 Compilation 对象来执行相关任务。Webpack 的构建过程被划分为多个阶段，每个阶段都有对应的钩子。插件可以在这些钩子上插入自定义逻辑：
+
+- beforeRun：在 Webpack 启动之前执行。
+- run：当 Webpack 启动时执行。
+- emit：文件生成之前执行，通常用于修改生成的文件。
+- done：构建完成后执行，通常用于记录构建结果或生成报告。
+
+Webpack 插件的核心是 apply 方法，这个方法会在插件实例化后被 Webpack 调用。插件通过在 apply 方法中注册自己感兴趣的钩子来参与 Webpack 的构建过程。
+
+```js
+class MyPlugin {
+  // 插件的核心方法：apply
+  apply(compiler) {
+    // 通过 compiler 对象访问 Webpack 的生命周期钩子
+    compiler.hooks.emit.tapAsync('MyPlugin', (compilation, callback) => {
+      console.log('Webpack is emitting the files...');
+      // 在 emit 阶段执行一些操作，如修改生成的文件
+      // 这里是一个异步操作，完成后需要调用 callback 通知 Webpack
+      callback();
+    });
+  }
+}
+
+module.exports = MyPlugin;
+```
+
+- `apply(compiler)`：每个 Webpack 插件都需要实现 apply 方法，它接收一个 compiler 实例，compiler 是 Webpack 编译过程的核心对象，包含了 Webpack 构建的所有信息。
+- `compiler.hooks`：Webpack 提供了丰富的生命周期钩子，通过 compiler.hooks 可以注册钩子，例如 emit、done、compilation 等。
+- `tapAsync` 和 `tap`：tap 是同步钩子，tapAsync 是异步钩子，允许在执行插件时使用回调或 Promise。
+
 ## Webpack 异步加载
 
 Webpack 异步加载原理是实现路由懒加载的基础。
@@ -594,7 +694,7 @@ PageConfig Web 和 PageServer 中有构建后的所有版本信息，理论上�
 
 使用环境变量，将当前环境、`CDN`、`CDN_HOST`、`Version`等注入环境变量中，构建时消费 & 将产物上传不同的 `CDN` 即可。
 
-#### Q5.  前端代码从 tsx/jsx 到部署上线被用户访问，中间大致会经历哪些过程？
+#### Q5. 前端代码从 tsx/jsx 到部署上线被用户访问，中间大致会经历哪些过程？
 
 经历本地开发、远程构建打包部署、安全检查、上传 `CDN`、`Nginx`做流量转发、对静态资源做若干加工处理等过程。
 

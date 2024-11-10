@@ -1533,3 +1533,475 @@ function CompD(){
 - CompA 和 CompB 模拟组件双向通信。
 - CompC 组件接收 CompA 和 CompB 通信内容，并映射到 `mes1 ，mes2` 属性上。
 - CompD 没有 mapStoreToState ，没有订阅 state ，state 变化组件不会更新，只是用 dispatch 清空状态。
+
+## React Hooks 总结
+
+### useState - 状态管理
+
+#### 原理
+
+`useState` 用于在函数组件中添加状态。它返回当前状态和更新该状态的函数。每次调用更新函数时，React 会重新渲染组件并更新状态。
+
+#### 使用场景
+
+适用于组件内部的简单状态管理，如表单输入、按钮点击等。
+
+#### 注意事项
+
+- 状态更新是异步的，更新后的值不会立即反映在当前执行的代码中。
+- 不适用于复杂的状态逻辑，复杂场景建议使用 `useReducer`。
+
+#### 示例
+
+```jsx
+import React, { useState } from 'react';
+
+function Counter() {
+  const [count, setCount] = useState(0);
+
+  return (
+    <div>
+      <p>Current Count: {count}</p>
+      <button onClick={() => setCount(count + 1)}>Increment</button>
+    </div>
+  );
+}
+```
+
+### useEffect - 副作用管理
+
+#### 原理
+
+`useEffect` 用于处理副作用，如数据获取、事件监听等。它允许我们在组件渲染后执行某些操作，可以通过传递依赖项来控制副作用的执行时机。
+
+#### 使用场景
+
+- 数据获取、API 调用。
+- 订阅事件（如 WebSocket、DOM 事件等）。
+- 设置定时器或执行清理任务。
+
+#### 注意事项
+
+- 副作用函数会在每次渲染后执行，如果依赖项发生变化，则会重新执行。
+- 若不提供依赖数组，副作用会在每次渲染时执行。
+
+#### 示例
+
+```jsx
+import React, { useState, useEffect } from 'react';
+
+function FetchData() {
+  const [data, setData] = useState(null);
+
+  useEffect(() => {
+    fetch('https://api.example.com/data')
+      .then(response => response.json())
+      .then(data => setData(data));
+  }, []);  // 空依赖数组，表示只在组件挂载时执行一次
+
+  return (
+    <div>
+      <h1>Data</h1>
+      {data ? <pre>{JSON.stringify(data, null, 2)}</pre> : <p>Loading...</p>}
+    </div>
+  );
+}
+```
+
+---
+
+### useContext - 全局状态管理
+
+#### 原理
+
+`useContext` 允许你在组件树中消费 Context 的值，避免层层传递 props。它返回当前的 Context 值，默认值会在 `Provider` 中提供。
+
+#### 使用场景
+
+- 跨多个组件传递全局数据，如主题、语言设置、用户认证信息等。
+- 当需要在多个组件之间共享数据时，避免 props 层层传递。
+
+#### 注意事项
+
+- 只有在组件树的 `Provider` 内部的组件才能访问到 Context 值。
+- 不适用于传递非常频繁变化的值，可能会导致性能问题。
+
+#### 示例
+
+```jsx
+import React, { createContext, useContext } from 'react';
+
+const ThemeContext = createContext('light');
+
+function ThemedComponent() {
+  const theme = useContext(ThemeContext);  // 获取当前主题
+
+  return (
+    <div style={{ background: theme === 'dark' ? '#333' : '#fff', color: theme === 'dark' ? '#fff' : '#000' }}>
+      <p>This is a {theme} themed component!</p>
+    </div>
+  );
+}
+
+function App() {
+  return (
+    <ThemeContext.Provider value="dark">
+      <ThemedComponent />
+    </ThemeContext.Provider>
+  );
+}
+```
+
+---
+
+### useReducer - 复杂状态管理
+
+#### 原理
+
+`useReducer` 是 `useState` 的增强版，适用于处理复杂的状态逻辑。它类似于 Redux 中的 reducer 模式，返回当前状态和 dispatch 函数，后者用于派发操作来更新状态。
+
+#### 使用场景
+
+- 管理复杂的状态逻辑，尤其是多个状态字段之间有复杂的交互时。
+- 适用于大型表单、多步骤的状态更新等场景。
+
+#### 注意事项
+
+- `useReducer` 的更新函数返回的是一个新的状态对象，因此你必须明确更新规则。
+- 对于简单状态管理，不需要使用 `useReducer`，此时 `useState` 足够。
+
+#### 示例
+
+```jsx
+import React, { useReducer } from 'react';
+
+const initialState = { count: 0 };
+
+function reducer(state, action) {
+  switch (action.type) {
+    case 'increment':
+      return { count: state.count + 1 };
+    case 'decrement':
+      return { count: state.count - 1 };
+    default:
+      return state;
+  }
+}
+
+function Counter() {
+  const [state, dispatch] = useReducer(reducer, initialState);
+
+  return (
+    <div>
+      <p>Count: {state.count}</p>
+      <button onClick={() => dispatch({ type: 'increment' })}>Increment</button>
+      <button onClick={() => dispatch({ type: 'decrement' })}>Decrement</button>
+    </div>
+  );
+}
+```
+
+---
+
+### useCallback - 函数缓存
+
+#### 原理
+
+`useCallback` 返回一个缓存版本的函数，它只有在依赖项发生变化时才会更新。通常用于避免函数的重新创建，减少子组件的不必要重新渲染。
+
+#### 使用场景
+
+- 当函数被频繁传递给子组件时，避免每次渲染时重新创建函数，减少不必要的渲染。
+- 对于性能敏感的组件，尤其是大量列表渲染时。
+
+#### 注意事项
+
+- 不要滥用 `useCallback`，仅在有性能瓶颈时才使用，过度使用会增加代码复杂性。
+
+#### 示例
+
+```jsx
+import React, { useState, useCallback } from 'react';
+
+function Parent() {
+  const [count, setCount] = useState(0);
+
+  const increment = useCallback(() => {
+    setCount(count + 1);
+  }, [count]);  // 只有在 count 变化时才会重新创建函数
+
+  return <Child onIncrement={increment} />;
+}
+
+function Child({ onIncrement }) {
+  return <button onClick={onIncrement}>Increment</button>;
+}
+```
+
+---
+
+### useMemo - 缓存计算结果
+
+#### 原理
+
+`useMemo` 用于缓存计算结果，它只有在依赖项变化时才会重新计算。适用于避免不必要的昂贵计算，提升性能。
+
+#### 使用场景
+
+- 在进行昂贵计算（如复杂的数据过滤、排序、计算等）时，避免每次渲染时都重新计算。
+- 在大量列表渲染时缓存计算结果。
+
+#### 注意事项
+
+- 不要过度使用 `useMemo`，它本身也会消耗性能，仅在性能瓶颈明显时使用。
+
+#### 示例
+
+```jsx
+import React, { useMemo, useState } from 'react';
+
+function ExpensiveCalculation() {
+  const [count, setCount] = useState(0);
+
+  const calculatedValue = useMemo(() => {
+    console.log('Calculating...');
+    return count * 2;  // 假设这是一个昂贵的计算
+  }, [count]);
+
+  return (
+    <div>
+      <p>Calculated Value: {calculatedValue}</p>
+      <button onClick={() => setCount(count + 1)}>Increment</button>
+    </div>
+  );
+}
+```
+
+---
+
+### useRef - 引用存储
+
+#### 原理
+
+`useRef` 用于访问 DOM 元素或存储可变数据。它返回一个可以持久化的对象，其 `current` 属性可以保存任何值。与 `useState` 不同，`useRef` 更新不会触发组件重新渲染。
+
+#### 使用场景
+
+- 用于访问 DOM 元素，例如焦点控制、获取输入框的值等。
+- 存储跨渲染周期的可变数据，如定时器 ID、前一个状态等。
+
+#### 注意事项
+
+- `useRef` 的值是不会触发组件重新渲染的，因此通常用于不需要更新 UI 的数据存储。
+
+#### 示例
+
+```jsx
+import React, { useRef } from 'react';
+
+function InputFocus() {
+  const inputRef = useRef();
+
+  const focusInput = () => {
+    inputRef.current.focus();  // 访问 DOM 元素并聚焦
+  };
+
+  return (
+    <div>
+      <input ref={inputRef} type="text" />
+      <button onClick={focusInput}>Focus Input</button>
+    </div>
+  );
+}
+```
+
+### useImperativeHandle - 暴露方法与状态
+
+`useImperativeHandle` 是 React 中用于与父组件通过 `ref` 共享实例方法和属性的 Hook。它允许你修改通过 `ref` 传递给父组件的值，这样你可以控制暴露给父组件的实例值，而不仅仅是 DOM 元素本身。通常情况下，`ref` 被用来引用 DOM 元素。然而，`useImperativeHandle` 允许你通过 `ref` 向父组件暴露自定义的实例方法或属性，而不仅仅是 DOM 引用。这对于实现封装性非常有用。
+
+#### 原理
+
+`useImperativeHandle` 允许你将组件内部的某些方法或状态暴露给父组件。与 `useRef` 相似，`useImperativeHandle` 也可以在渲染周期中使用，但是它提供了一个更精细的控制方式，可以使父组件仅访问你想要暴露的 API，而不会暴露整个组件的内部实现。
+
+#### 使用场景
+
+- **封装组件**：当你有一个组件需要向父组件暴露一些特定的操作方法，但又不希望父组件直接访问整个组件的内部状态时。
+- **动态控制组件方法**：例如，暴露子组件的某些方法（如重置表单、获取输入框的值等），并允许父组件触发这些操作。
+- **非 UI 操作**：当你希望父组件能触发子组件的某些方法，而这些方法不涉及直接渲染或状态更新时。
+
+#### 注意事项
+
+- `useImperativeHandle` 应该与 `forwardRef` 一起使用，因为它需要通过 `ref` 传递给父组件。
+- `useImperativeHandle` 仅在通过 `ref` 访问组件时有效，`ref` 仅用于父组件与子组件之间的交互，子组件内部的状态或方法不会直接暴露给外部。
+- 使用 `useImperativeHandle` 时，它不会导致组件重新渲染，因此不适合用于传递变化的 UI 状态。
+
+#### 示例
+
+下面是 `useImperativeHandle` 的一个完整示例，展示了如何通过 `ref` 向父组件暴露一些实例方法。
+
+```jsx
+import React, { useState, useImperativeHandle, forwardRef } from 'react';
+
+// 创建一个可转发 ref 的子组件
+const Child = forwardRef((props, ref) => {
+  const [count, setCount] = useState(0);
+
+  // 使用 useImperativeHandle 暴露给父组件的 API
+  useImperativeHandle(ref, () => ({
+    increment: () => setCount(prevCount => prevCount + 1),
+    reset: () => setCount(0),
+  }));
+
+  return <div>Current Count: {count}</div>;
+});
+
+// 父组件
+function Parent() {
+  const childRef = React.useRef();
+
+  const handleIncrement = () => {
+    childRef.current.increment();  // 调用子组件的 increment 方法
+  };
+
+  const handleReset = () => {
+    childRef.current.reset();  // 调用子组件的 reset 方法
+  };
+
+  return (
+    <div>
+      <Child ref={childRef} />
+      <button onClick={handleIncrement}>Increment</button>
+      <button onClick={handleReset}>Reset</button>
+    </div>
+  );
+}
+
+export default Parent;
+```
+
+1. `Child` 组件使用 `forwardRef` 来传递 `ref` 给子组件。`forwardRef` 使得 `Child` 可以接收外部 `ref`，并通过 `useImperativeHandle` 来暴露一些方法给父组件。
+2. 在 `useImperativeHandle` 中，我们定义了 `increment` 和 `reset` 方法，它们将会被暴露给父组件。这些方法分别用于增加计数器和重置计数器。
+3. 父组件通过 `childRef` 访问子组件，并调用 `increment` 和 `reset` 方法来控制子组件的状态。
+
+### useTransition - 异步渲染优化
+
+#### 原理
+
+`useTransition` 用于标记一些状态更新为“过渡”状态，React 会把这些更新延迟到空闲时间再执行，从而避免阻塞用户交互。
+
+#### 使用场景
+
+- 在需要处理大量渲染操作时，避免在用户交互过程中导致界面卡顿。常用于复杂应用的异步渲染，如大量列表渲染时。
+
+#### 注意事项
+
+- `useTransition` 只对某些类型的更新起作用，如涉及 UI 渲染的更新，不会影响副作用。
+
+#### 示例
+
+```jsx
+import React, { useState, useTransition } from 'react';
+
+function App() {
+  const [isPending, startTransition] = useTransition();
+  const [list, setList] = useState([]);
+
+  const handleClick = () => {
+    startTransition(() => {
+      setList([...list, 'New Item']);  // 将更新包装在 startTransition 中
+    });
+  };
+
+  return (
+    <div>
+      <button onClick={handleClick}>Add Item</button>
+      {isPending ? <p>Loading...</p> : <ul>{list.map(item => <li key={item}>{item}</li>)}</ul>}
+    </div>
+  );
+}
+```
+
+---
+
+### useDeferredValue - 延迟值更新
+
+#### 原理
+
+`useDeferredValue` 将更新延迟到浏览器的空闲时间段，允许 React 先渲染更重要的 UI，再延迟处理那些不影响交互体验的更新。
+
+#### 使用场景
+
+- 用于降低 UI 渲染延迟，如处理输入框的内容更新。
+
+#### 注意事项
+
+- `useDeferredValue` 在低优先级更新时能够有效减少卡顿现象，但不会阻止更新本身。
+
+#### 示例
+
+```jsx
+import React, { useState, useDeferredValue } from 'react';
+
+function Search() {
+  const [query, setQuery] = useState('');
+  const deferredQuery = useDeferredValue(query);
+
+  return (
+    <div>
+      <input 
+        type="text" 
+        value={query} 
+        onChange={(e) => setQuery(e.target.value)} 
+        placeholder="Search..."
+      />
+      <p>Search results for: {deferredQuery}</p>
+    </div>
+  );
+}
+```
+
+### useId - ID 标识符
+
+`useId` 是 React 18 引入的一个新的 Hook，用于生成唯一的 ID 标识符。这个 Hook 的主要目的是在渲染过程中为每个组件生成稳定的、全局唯一的 ID，特别适用于需要唯一标识符的场景，例如为表单元素或可访问的标签生成 `id`
+
+#### 原理
+
+`useId` 返回一个唯一的 ID 字符串，这个 ID 会在组件的生命周期内保持一致，确保每次渲染时都能够获得相同的值。它在组件重新渲染时保证生成的 ID 是稳定的，因此可以避免因渲染过程中的 ID 重复而导致的问题。
+
+#### 使用场景
+
+- **表单元素**：为 `<label>` 和 `<input>` 元素生成唯一的 `id`，确保无障碍访问和标签与输入框的关联。
+- **可访问性**：为组件生成唯一的 `id`，以便与 ARIA 属性（如 `aria-labelledby`、`aria-describedby`）一起使用。
+- **组件库开发**：在开发通用组件时，确保每个组件的 `id` 唯一且不冲突。
+
+#### 注意事项
+
+- `useId` 生成的 ID 是基于组件实例的，因此它不会在每次渲染时变化，这对于生成稳定、唯一的 ID 是必要的。
+- `useId` 仅用于生成唯一 ID，不适用于在多个组件实例中共享状态。
+
+#### 示例
+
+```jsx
+import React, { useId } from 'react';
+
+function Form() {
+  const id = useId();  // 使用 useId 生成唯一 ID
+
+  return (
+    <div>
+      <label htmlFor={id}>Username:</label>
+      <input id={id} type="text" />
+    </div>
+  );
+}
+```
+
+在这个例子中，`useId` 用来为 `<label>` 和 `<input>` 元素生成唯一的 ID，确保它们的关联，同时避免重复或冲突。
+
+#### 具体优点
+
+- **无障碍支持**：通过为表单元素、描述文本等提供唯一标识符，`useId` 可以提高可访问性，特别是在使用 `label` 和 `input` 时，确保用户能够通过 `for` 属性正确地将标签与输入框关联。
+- **避免 ID 冲突**：在 React 渲染过程中，`useId` 保证了每个渲染组件的 ID 唯一，避免了手动管理 ID 导致的冲突问题。
+- **跨服务器渲染一致性**：当应用涉及服务器端渲染（SSR）时，`useId` 保证客户端和服务器端渲染的 ID 一致，防止出现 hydration 错误。
+
+`useId` 是一个专门用于生成唯一标识符的 Hook，极大简化了需要唯一 ID 的场景，特别是在表单和可访问性增强中，它能够避免手动管理 ID 时出现的重复或不一致问题，是 React 18 中对可访问性和组件化开发的重要补充。

@@ -231,18 +231,18 @@ const { unstable_batchedUpdates } = ReactDOM
     setTimeout(() => {
       unstable_batchedUpdates(() => {
         this.setState({ number: this.state.number + 1 }, () => {
-        console.log('callback1', this.state.number);
-      });
-      console.log(this.state.number);
-      this.setState({ number: this.state.number + 1 }, () => {
-        console.log('callback2', this.state.number);
-      });
-      console.log(this.state.number);
-      this.setState({ number: this.state.number + 1 }, () => {
-        console.log('callback3', this.state.number);
-      });
-      console.log(this.state.number);
-      });
+          console.log('callback1', this.state.number);
+        });
+        console.log(this.state.number);
+        this.setState({ number: this.state.number + 1 }, () => {
+          console.log('callback2', this.state.number);
+        });
+        console.log(this.state.number);
+        this.setState({ number: this.state.number + 1 }, () => {
+          console.log('callback3', this.state.number);
+        });
+        console.log(this.state.number);
+      });   
     });
   };
 

@@ -201,14 +201,6 @@ const sidebar = {
       ],
     },
   ],
-  // node: [
-  //   {
-  //     title: "基础与实战",
-  //     sidebarDepth: 2,
-  //     collapsable: false,
-  //     children: [""],
-  //   },
-  // ],
   devops: [
     {
       title: "Webpack",
@@ -307,6 +299,17 @@ const sidebar = {
         "mini/performance",
       ],
     },
+    // {
+    //   title: "NodeJS",
+    //   collapsable: false,
+    //   sidebarDepth: 1,
+    //   children: [
+    //     "node/bff",
+    //     "node/sql",
+    //     "node/redis",
+    //     "node/SRE"
+    //   ],
+    // },
   ],
   architecture: [
     {
@@ -334,14 +337,17 @@ const sidebar = {
       collapsable: false,
       sidebarDepth: 1,
       children: [
-        "plan/i18n",
         "plan/color-thief",
+        "plan/i18n",
+        "plan/sdk",
         "plan/pay",
         "plan/tracker",
         "plan/virtual-list",
         "plan/masonry",
         "plan/file-transfer",
-        // "plan/auth",
+        "plan/auth",
+        // "plan/components",
+        // "plan/cli",
         // "plan/webComponents",
         // "plan/webRTC",
         "plan/webTransport",
@@ -405,7 +411,6 @@ module.exports = {
       { text: "前端基础", link: "/base/" },
       { text: "Vue", link: "/vue/" },
       { text: "React", link: "/react/" },
-      // { text: "Node", link: "/node/" },
       { text: "前端工程化", link: "/devops/" },
       { text: "泛客户端", link: "/mobile/" },
       { text: "架构与方案", link: "/architecture/" },
@@ -423,7 +428,6 @@ module.exports = {
       "/base/": sidebar.base,
       "/vue/": sidebar.vue,
       "/react/": sidebar.react,
-      "/node/": sidebar.node,
       "/devops/": sidebar.devops,
       "/mobile/": sidebar.mobile,
       "/architecture/": sidebar.architecture,

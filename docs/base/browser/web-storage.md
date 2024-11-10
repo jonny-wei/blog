@@ -28,6 +28,7 @@ h5之前，存储主要用cookies，缺点：
 - 操作缺陷。Cookie的原生api不友好，需要自行封装
 
 ### 参数
+
 |参数|说明|
 |:---|:---|
 |key|cookie key|
@@ -44,9 +45,11 @@ HTML5 提供了两种在客户端存储数据的新方法：localStorage 和 ses
 webStorage 是本地存储，数据不是由服务器请求传递的。从而它可以存储大量的数据，而不影响网站的性能。
 
 ### 目的
+
 Web Storage的目的是为了克服由cookie带来的一些限制，当数据需要被严格控制在客户端上时，无须持续地将数据发回服务器。比如客户端需要保存的一些用户行为或数据，或从接口获取的一些短期内不会更新的数据，都可以利用Web Storage来存储。
 
 ### localStorage
+
 以键值对(Key-Value)的方式存储，永久存储，永不失效，除非手动删除。IE8+支持，每个域名限制5M
 打开同域的新页面也能访问得到。可以存储数组、数字、对象等可以被序列化为字符串的内容
 
@@ -60,6 +63,7 @@ window.localStorage.clear()
 ```
 
 ### sessionStorage
+
 sessionStorage 在关闭页面后即被清空，而 localStorage 则会一直保存。很多时候数据只需要在用户浏览一组页面期间使用，关闭窗口后数据就可以丢弃了，这种情况使用 sessionStorage 就比较方便。
 注意，**刷新页面 sessionStorage 不会清除，但是打开同域新页面访问不到**。
 
@@ -79,10 +83,12 @@ IndexedDB 是一种底层 API，用于在客户端存储大量的结构化数据
 indexedDB 就是一个非关系型数据库，它不需要你去写一些特定的 sql 语句来对数据库进行操作，因为它是 nosql 的，数据形式使用的是 json。IndexedDB 很适合存储大量数据，它的 API 是异步调用的。
 
 ### 特点
+
 - IndexedDB 是一种低级 API，用于客户端存储大量结构化数据。该 API 使用索引来实现对该数据的高性能搜索。
 - 为应用创建离线版本。
 
 ### 操作方式
+
 1. 打开数据库并且开启一个事务。
 2. 创建一个 object store。
 3. 构建一个请求来执行一些数据库操作，像增加或提取数据等。
@@ -90,19 +96,21 @@ indexedDB 就是一个非关系型数据库，它不需要你去写一些特定�
 5. 在操作结果上进行一些操作（可以在 request 对象中找到）
 
 ### 基础 API
+
 - 建立打开indexedDB：window.indexedDB.open("testDB")
 - 关闭indexedDB：indexdb.close()；
 - 删除indexedDB：window.indexedDB.deleteDatabase(indexdb)。
 
 ::: tip 注意
+
 - 键值对存储。内部采用对象仓库存放数据，在这个对象仓库中数据采用键值对的方式来存储。
 - 异步操作。数据库的读写属于 I/O 操作, 浏览器中对异步 I/O 提供了支持。
 - 受同源策略限制，即无法访问跨域的数据库。
 :::
 
-具体查看 
+具体查看
 
-[indexedDB MDN](https://developer.mozilla.org/zh-CN/docs/Web/API/IndexedDB_API) 
+[indexedDB MDN](https://developer.mozilla.org/zh-CN/docs/Web/API/IndexedDB_API)
 
 [indexedDB 操作](https://www.jianshu.com/p/bb116c7a74b3)
 
@@ -114,6 +122,21 @@ indexedDB 就是一个非关系型数据库，它不需要你去写一些特定�
 |挂载对象|DOM|BOM|BOM|BOM|BOM|BOM|
 |传输|cookie数据始终在同源的http请求中携带（即使不需要）仅在本地保存，不会传输|仅在本地保存，不会传输|仅在本地保存，不会传输|仅在本地保存，不会传输|
 |存储大小|4k|5M左右，各浏览器的存储空间有差异|5M左右，各浏览器的存储空间有差异
-|有效期|在设置的cookie过期时间之前一直有效|始终有效，窗口或浏览器关闭也一直保存|仅在当前浏览器窗口关闭前有效|始终有效，窗口或浏览器关闭也一直保存|始终有效，窗口或浏览器关闭也一直保存|
-|作用域|所有同源窗口中都是共享的|所有同源窗口中都是共享的|不在不同的浏览器页面中共享，即使是同一个页面|所有同源窗口中都是共享的|所有同源窗口中都是共享的|
-|易用性|原生接口不友好，需要自己封装|Web Storage 提供api 接口，易用|Web Storage 提供api 接口，易用|提供了api 接口，易用|提供了api 接口，易用|
+|有效期|在设置的cookie过期时间之前一直有效，可以设置过期时间，也可以设置为会话级别的（浏览器关闭时过期）|始终有效，窗口或浏览器关闭也一直保存|仅在当前浏览器窗口关闭前有效|始终有效，窗口或浏览器关闭也一直保存|始终有效，窗口或浏览器关闭也一直保存|
+|作用域|属于服务器端，每次请求都会自动发送到服务器，适用于需要在服务器端读取的场景；所有同源窗口中都是共享的；设置 domain 后子域也共享|所有同源窗口中都是共享的|数据只在页面会话期间有效，关闭标签页或窗口后数据被清除；即使多个标签页访问的是同一域名下的同一页面，它们也无法共享 sessionStorage 数据|所有同源窗口中都是共享的|所有同源窗口中都是共享的|
+|安全性|可以设置为 HttpOnly，防止 XSS 攻击；常用于存储会话信息，如用户登录状态|存储在客户端，容易受到 XSS 攻击；适用于存储不敏感的大量数据|存储在客户端，容易受到 XSS 攻击；适用于存储临时数据，如表单数据|存储在客户端，容易受到 XSS 攻击；适用于存储大量结构化数据，如数据库应用|
+
+## 存储方式跨域
+
+cookie、localStorage 、sessionStorage 和 indexedDB 都是客户端存储技术，但它们在跨域访问方面有所不同：
+
+- Cookie
+  - Cookie 是可以跨域的，但需要服务器在设置 Cookie 时指定 `domain` 属性，并且 Path 属性通常设置为 `/`。这样，**同一域名下的所有子域都可以访问该 Cookie**。
+  - 为了实现跨域 Cookie 共享，服务器需要设置 `Access-Control-Allow-Credentials` 为 true，并且 `Access-Control-Allow-Origin` 不能使用 `*`，**必须指定具体的域名**。同时，客户端请求时需要携带 `credentials: 'include'` 或者在 XMLHttpRequest 中设置 `withCredentials = true`;
+- localStorage 、sessionStorage 和 indexedDB
+  - 根据同源策略，localStorage 、sessionStorage 和 indexedDB 默认情况下不能被跨域访问。它们只能被同一域名、协议和端口下的页面访问。
+  - 但是，可以通过以下几种方法实现跨域访问：
+    - **使用 iframe 嵌套**：在一个页面中嵌入另一个页面的 iframe，并将其 src 属性设置为存储数据的页面所在的域名下的页面地址。然后，可以通过 iframe 的 contentWindow 访问存储在另一个域名下的数据。
+    - **使用代理页面**：创建一个代理页面，该页面与目标域名具有相同的域，并通过这个代理页面来操作 localStorage 或 sessionStorage。
+    - **跨域资源共享（CORS）**：这是一种现代的跨域技术，可以让前端直接跨域访问 localStorage 或 sessionStorage 中的数据。不过，这需要后端配置适当的 HTTP 头部，以允许跨域访问。
+    - **使用 postMessage API**：这是一种浏览器提供的 API，用于在不同窗口或跨域的 iframe 之间进行安全的消息传递。可以在不同域名的页面中使用 postMessage 将数据从一个窗口传递到另一个窗口，并在目标窗口中将数据存储到 localStorage 或 sessionStorage 中

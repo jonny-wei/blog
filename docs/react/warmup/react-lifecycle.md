@@ -333,7 +333,6 @@ getSnapshotBeforeUpdate(prevProps,preState){}
 
 - prevProps更新前的props
 - prevState更新前的state
--
 
 获取更新前 DOM 的状态。该生命周期是在 commit 阶段的before Mutation ( DOM 修改前)，此时 DOM 还没有更新，但是在接下来的 Mutation 阶段会被替换成真实 DOM 。此时是获取 DOM 信息的最佳时期，getSnapshotBeforeUpdate 将返回一个值作为一个snapShot(快照)，传递给 componentDidUpdate作为第三个参数。
 
@@ -724,6 +723,5 @@ useEffect 对 React 执行栈来看是异步执行的，而 componentDidMount / 
 ### Q3. 类组件生命周期
 
 ![生命周期总览](/blog/images/react/生命周期总览.png)
-
 
 [React 18.2 - 生命周期](https://juejin.cn/post/7188450404105977914)
